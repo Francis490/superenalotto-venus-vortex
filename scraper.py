@@ -41,35 +41,31 @@ def fetch_latest_draw():
         'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8'
     }
 
-    # FONTE 1: SuperEnalotto.net (Static HTML - Accessibile da IP Cloud)
+    # FONTE 1: SuperEnalotto.net
     try:
         print("[CONNECTING] Tentativo 1: SuperEnalotto.net...")
         res = requests.get("https://www.superenalotto.net/estrazioni", headers=headers, timeout=15)
         if res.status_code == 200:
             soup = BeautifulSoup(res.text, 'html.parser')
-            
-            # Cerca concorso e data
             text_block = soup.get_text()
-            conc_match = re.search(r'Concorso\s*n°?\s*(\d+)', text_block, re.IGNORECASE)
+
+            # Regex ampliata per catturare "Concorso n. X", "Concorso N° X", "Estrazione X"
+            conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text_block, re.IGNORECASE)
             date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text_block)
 
             concorso_num = conc_match.group(1) if conc_match else "N/D"
             data_estrazione = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
 
-            # Cerca i pallini dei numeri estratti
             numbers = []
             for tag in soup.find_all(['li', 'span', 'td']):
                 val = tag.text.strip()
                 if val.isdigit() and 1 <= int(val) <= 90:
-                    # Filtra solo se fa parte della struttura estrazione
                     parent_class = " ".join(tag.get('class', []))
-                    if 'ball' in parent_class.lower() or 'numero' in parent_class.lower() or 'sym' in parent_class.lower():
+                    if any(k in parent_class.lower() for k in ['ball', 'numero', 'sym']):
                         numbers.append(int(val))
 
-            # Se i filtri di classe falliscono, cerca per sequenza pura nei tag numerici
             if len(numbers) < 6:
                 raw_nums = re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', res.text)
-                # Estrai la prima sestina coerente senza duplicati consecutivi
                 clean_seq = []
                 for n in [int(x) for x in raw_nums]:
                     if len(clean_seq) < 6 and n not in clean_seq:
@@ -80,12 +76,12 @@ def fetch_latest_draw():
                 sestina = sorted(numbers[:6])
                 jolly = numbers[6] if len(numbers) > 6 else None
                 star = numbers[7] if len(numbers) > 7 else None
-                print(f"[SUCCESS] Dati estratti da Fonte 1: Concorso {concorso_num}, Sestina {sestina}")
+                print(f"[SUCCESS] Concorso {concorso_num} del {data_estrazione} - Sestina: {sestina}")
                 return concorso_num, data_estrazione, sestina, jolly, star
     except Exception as e:
         print(f"[WARN] Fonte 1 fallita: {e}")
 
-    # FONTE 2: Agimeg.it (Backup News Outlet)
+    # FONTE 2: Agimeg.it
     try:
         print("[CONNECTING] Tentativo 2: Agimeg.it...")
         res = requests.get("https://www.agimeg.it/estrazioni-superenalotto/", headers=headers, timeout=15)
@@ -93,17 +89,15 @@ def fetch_latest_draw():
             soup = BeautifulSoup(res.text, 'html.parser')
             page_text = soup.get_text()
 
-            conc_match = re.search(r'concorso\s*numero\s*(\d+)', page_text, re.IGNORECASE)
+            conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', page_text, re.IGNORECASE)
             date_match = re.search(r'(\d{2}/\d{2}/\d{4})', page_text)
 
             concorso_num = conc_match.group(1) if conc_match else "N/D"
             data_estrazione = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
 
-            # Cerca sestina nel testo
             sestina_match = re.search(r'(?:sestina|combinazione|numeri estratti)[^\d]*(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})', page_text, re.IGNORECASE)
             if sestina_match:
                 sestina = sorted([int(sestina_match.group(i)) for i in range(1, 7)])
-                print(f"[SUCCESS] Dati estratti da Fonte 2: Sestina {sestina}")
                 return concorso_num, data_estrazione, sestina, None, None
     except Exception as e:
         print(f"[WARN] Fonte 2 fallita: {e}")
