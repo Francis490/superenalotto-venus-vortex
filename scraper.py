@@ -244,6 +244,7 @@ def main():
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📌 <b>Concorso:</b> {concorso} ({data_str})\n"
         f"🎲 <b>Sestina:</b> <code>{sestina}</code>\n"
+        f"⭐ <b>Jolly:</b> <code>{se_data.get('jolly', 'N/D')}</code> | 🌟 <b>SuperStar:</b> <code>{se_data.get('superstar', 'N/D')}</code>\n"
         f"📊 <b>Somma:</b> <code>{somma}</code> (Z-Score: <code>{z_score}</code>)\n"
         f"👁️ <b>Anti-Massa Score:</b> <code>{calculate_anti_mass_score(sestina)}</code>\n\n"
         f"🧠 <b>PREVISIONI MACHINE LEARNING (RANDOM FOREST):</b>\n"
