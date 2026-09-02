@@ -8,19 +8,20 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*'
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8'
 }
 
-def send_telegram_alert(message):
+def send_telegram_alert(html_message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("[WARN] Credenziali Telegram mancanti nelle variabili d'ambiente.")
+        print("[WARN] Credenziali Telegram mancanti.")
         return
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
-        "parse_mode": "Markdown"
+        "text": html_message,
+        "parse_mode": "HTML"
     }
 
     try:
@@ -33,62 +34,68 @@ def send_telegram_alert(message):
         print(f"[TELEGRAM ERROR] Impossibile inviare il messaggio: {e}")
 
 def fetch_latest_draw():
-    # Endpoints ufficiali Sisal / SuperEnalotto non soggetti a firewall IP
-    endpoints = [
-        {
-            "name": "Sisal Official API",
-            "url": "https://www.sisal.it/api/site/superenalotto/estrazioni/ultimaconcorso",
-            "type": "sisal"
-        },
-        {
-            "name": "SuperEnalotto Public Endpoint",
-            "url": "https://www.superenalotto.it/api/v1/draws/latest",
-            "type": "superenalotto"
-        }
+    sources = [
+        "https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto",
+        "https://www.superenalotto.it/api/v1/draws/latest",
+        "https://www.sisal.it/api/site/superenalotto/estrazioni/ultimaconcorso"
     ]
 
-    for ep in endpoints:
+    for url in sources:
         try:
-            print(f"[CONNECTING] Tentativo di connessione con {ep['name']}...")
-            res = requests.get(ep["url"], headers=HEADERS, timeout=10)
+            print(f"[CONNECTING] Prova connessione a: {url}")
+            res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
                 data = res.json()
-                if ep["type"] == "sisal":
-                    concorso_info = data.get("concorso", {})
-                    estrazione_info = data.get("estrazione", {})
-                    
-                    concorso_num = str(concorso_info.get("numero", ""))
-                    data_estrazione = concorso_info.get("dataEstrazione", datetime.now().strftime("%d/%m/%Y"))
-                    comb = estrazione_info.get("combinazioneVincenti", []) or estrazione_info.get("sestina", [])
-                    sestina = sorted([int(x) for x in comb[:6]])
-                    jolly = estrazione_info.get("numeroJolly")
-                    star = estrazione_info.get("superStar")
-                    return concorso_num, data_estrazione, sestina, jolly, star
                 
-                elif ep["type"] == "superenalotto":
-                    concorso_num = str(data.get("number", ""))
-                    data_estrazione = data.get("date", "")
+                # Parsing Gazzetta dello Sport
+                if "archive" in data and len(data["archive"]) > 0:
+                    latest = data["archive"][0]
+                    num = str(latest.get("number", ""))
+                    date = latest.get("date", "")
+                    sestina = sorted([int(x) for x in latest.get("combination", [])])
+                    jolly = latest.get("jolly")
+                    star = latest.get("star")
+                    return num, date, sestina, jolly, star
+                
+                # Parsing Superenalotto.it
+                elif "combination" in data:
+                    num = str(data.get("number", ""))
+                    date = data.get("date", "")
                     sestina = sorted([int(x) for x in data.get("combination", [])])
                     jolly = data.get("jolly")
                     star = data.get("star")
-                    return concorso_num, data_estrazione, sestina, jolly, star
-        except Exception as e:
-            print(f"[WARN] {ep['name']} fallito: {e}")
+                    return num, date, sestina, jolly, star
+
+                # Parsing Sisal
+                elif "concorso" in data:
+                    c = data.get("concorso", {})
+                    e = data.get("estrazione", {})
+                    num = str(c.get("numero", ""))
+                    date = c.get("dataEstrazione", "")
+                    comb = e.get("combinazioneVincenti", []) or e.get("sestina", [])
+                    sestina = sorted([int(x) for x in comb[:6]])
+                    jolly = e.get("numeroJolly")
+                    star = e.get("superStar")
+                    return num, date, sestina, jolly, star
+
+        except Exception as err:
+            print(f"[WARN] Fonte {url} non raggiungibile: {err}")
             continue
 
-    raise Exception("Impossibile contattare i server di estrazione Sisal/SuperEnalotto.")
+    raise Exception("Tutte le fonti API sono temporaneamente irraggiungibili.")
 
 def fetch_and_sync():
     try:
         concorso_num, data_estrazione, sestina, jolly, star = fetch_latest_draw()
         somma_sestina = sum(sestina)
+        in_range = 220 <= somma_sestina <= 320
 
         db_data = {
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "latest_concorso": concorso_num,
             "latest_sestina": sestina,
             "somma": somma_sestina,
-            "in_gaussian_range": 220 <= somma_sestina <= 320,
+            "in_gaussian_range": in_range,
             "jolly": jolly,
             "superstar": star
         }
@@ -96,21 +103,21 @@ def fetch_and_sync():
         with open("venus_database.json", "w", encoding="utf-8") as f:
             json.dump(db_data, f, indent=2)
 
-        range_status = "✅ IN RANGE GAUSSIANO (220-320)" if 220 <= somma_sestina <= 320 else "⚠️ FUORI NORMA"
+        status_tag = "<b>✅ IN RANGE GAUSSIANO (220-320)</b>" if in_range else "<b>⚠️ FUORI NORMA</b>"
 
         msg = (
-            f"🌀 *VENUS VORTEX DATABASE UPDATED*\n\n"
-            f"📌 *Concorso N°:* {concorso_num} del {data_estrazione}\n"
-            f"🎲 *Sestina Estratta:* `{sestina}`\n"
-            f"📊 *Somma Totale:* `{somma_sestina}` ({range_status})\n"
-            f"⭐ *Jolly:* {jolly} | *SuperStar:* {star}\n\n"
-            f"⚙️ *Matrice e Modelli Statistici Aggiornati.*"
+            f"🌀 <b>VENUS VORTEX DATABASE UPDATED</b>\n\n"
+            f"📌 <b>Concorso N°:</b> {concorso_num} del {data_estrazione}\n"
+            f"🎲 <b>Sestina Estratta:</b> <code>{sestina}</code>\n"
+            f"📊 <b>Somma Totale:</b> <code>{somma_sestina}</code> ({status_tag})\n"
+            f"⭐ <b>Jolly:</b> {jolly} | <b>SuperStar:</b> {star}\n\n"
+            f"⚙️ <i>Matrice e Modelli Statistici Aggiornati.</i>"
         )
         
         send_telegram_alert(msg)
 
     except Exception as e:
-        error_msg = f"❌ *VENUS VORTEX SYNC FAILED*\n\nErrore durante la sincronizzazione: `{str(e)}`"
+        error_msg = f"❌ <b>VENUS VORTEX SYNC FAILED</b>\n\nErrore: <code>{str(e)}</code>"
         send_telegram_alert(error_msg)
         raise e
 
