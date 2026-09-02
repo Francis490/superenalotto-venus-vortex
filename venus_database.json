@@ -1,22 +1,22 @@
 {
-  "last_updated": "2026-09-02 14:15:04",
+  "last_updated": "2026-09-02 14:39:11",
   "latest_draw": {
     "concorso": "01092026",
     "data": "01/09/2026",
     "sestina": [
-      55,
-      60,
-      62,
-      62,
-      75,
-      88
+      42,
+      47,
+      59,
+      64,
+      67,
+      71
     ],
-    "jolly": 32,
-    "superstar": 40
+    "jolly": 88,
+    "superstar": 75
   },
   "quant_metrics": {
-    "somma": 402,
-    "z_score": 2.84,
+    "somma": 350,
+    "z_score": 1.69,
     "anti_mass_index": 1.0
   },
   "ml_predictions": []
