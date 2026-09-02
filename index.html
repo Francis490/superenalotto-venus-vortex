@@ -1,214 +1,495 @@
 <!DOCTYPE html>
-<html lang="it" class="dark">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Venus Vortex Intelligence Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        vortex: { 800: '#0f172a', 900: '#020617', accent: '#3b82f6', gold: '#eab308' }
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Venus Vortex - SuperEnalotto Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* Tavolozza Colori Stile Sisal SuperEnalotto */
+    :root {
+      --sisal-green: #00843D;
+      --sisal-dark-green: #005928;
+      --sisal-light-green: #E6F4ED;
+      --sisal-gold: #FFC72C;
+      --sisal-gold-dark: #E5A800;
+      --bg-color: #F0F3F6;
+      --text-dark: #1E293B;
+      --card-bg: #FFFFFF;
+      --jolly-color: #E63946;
+      --star-color: #FFB703;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Sisal Style */
+    header {
+      background: linear-gradient(135deg, var(--sisal-dark-green) 0%, var(--sisal-green) 100%);
+      color: white;
+      padding: 22px 15px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      border-bottom: 5px solid var(--sisal-gold);
+    }
+
+    .header-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .brand-badge {
+      background: var(--sisal-gold);
+      color: var(--sisal-dark-green);
+      font-weight: 900;
+      font-size: 1.2rem;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 15px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Main Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      margin-bottom: 25px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #F1F5F9;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .concorso-info h2 {
+      color: var(--sisal-dark-green);
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .last-sync {
+      background: var(--sisal-light-green);
+      color: var(--sisal-dark-green);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--sisal-green);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 132, 61, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 132, 61, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 132, 61, 0); }
+    }
+
+    /* Palline Sestina Sisal Style */
+    .section-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      color: #475569;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 15px;
+    }
+
+    .balls-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0 30px;
+    }
+
+    .ball {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFE082, #FFC72C 60%, #E5A800 100%);
+      color: #1A1A1A;
+      font-weight: 900;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15), inset 0 -3px 5px rgba(0,0,0,0.2), inset 0 3px 5px rgba(255,255,255,0.8);
+      border: 2px solid #FFF;
+      transition: transform 0.2s ease;
+    }
+
+    .ball:hover {
+      transform: translateY(-4px) scale(1.05);
+    }
+
+    .ball-jolly {
+      background: radial-gradient(circle at 35% 35%, #FF8A80, #E63946 60%, #B71C1C 100%);
+      color: white;
+    }
+
+    .ball-star {
+      background: radial-gradient(circle at 35% 35%, #FFF176, #FFB703 60%, #F57F17 100%);
+      color: #1A1A1A;
+      border: 2px solid var(--sisal-gold);
+    }
+
+    .ball-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ball-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #64748B;
+      text-transform: uppercase;
+    }
+
+    .divider {
+      width: 2px;
+      height: 40px;
+      background-color: #CBD5E1;
+      margin: 0 5px;
+    }
+
+    /* Griglia Statistiche & Gaussiana */
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stat-box {
+      background: #F8FAFC;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #64748B;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--sisal-dark-green);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-top: 8px;
+    }
+
+    .badge-success {
+      background-color: var(--sisal-light-green);
+      color: var(--sisal-dark-green);
+      border: 1px solid #A3E635;
+    }
+
+    .badge-warning {
+      background-color: #FEF3C7;
+      color: #D97706;
+      border: 1px solid #FCD34D;
+    }
+
+    /* Progress Bar Gaussiana */
+    .gaussian-bar-container {
+      margin-top: 15px;
+    }
+
+    .bar-bg {
+      height: 12px;
+      background: #E2E8F0;
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-target-zone {
+      position: absolute;
+      left: 39.5%;
+      width: 19.8%;
+      height: 100%;
+      background-color: rgba(0, 132, 61, 0.25);
+      border-left: 2px solid var(--sisal-green);
+      border-right: 2px solid var(--sisal-green);
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--sisal-green);
+      border-radius: 6px;
+      transition: width 0.8s ease-in-out;
+    }
+
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #94A3B8;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.8rem;
+      color: #64748B;
+      border-top: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      margin-top: auto;
+    }
+
+    footer a {
+      color: var(--sisal-green);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    /* Loader */
+    #loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border-left-color: var(--sisal-green);
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-12">
+<body>
 
-    <!-- Header -->
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-blue-600 rounded-lg text-white">
-                    <i class="fa-solid fa-atom text-xl animate-spin-slow"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-wider text-white">VENUS VORTEX <span class="text-blue-500 text-xs px-2 py-0.5 rounded bg-blue-950 border border-blue-800">PRO v2.0</span></h1>
-                    <p class="text-xs text-slate-400" id="last-update">Aggiornamento in corso...</p>
-                </div>
-            </div>
-            <span id="status-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                ● Sistema Attivo
-            </span>
-        </div>
-    </header>
+  <header>
+    <div class="header-container">
+      <div class="brand-badge">Sisal</div>
+      <div>
+        <h1>SuperEnalotto - Venus Vortex</h1>
+        <p class="subtitle">Analisi Statistica & Monitoraggio Real-time</p>
+      </div>
+    </div>
+  </header>
 
-    <main class="max-w-7xl mx-auto px-4 mt-8 space-y-8">
+  <main>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p style="font-weight: 600; color: #64748B;">Sincronizzazione dati in corso...</p>
+    </div>
 
-        <!-- Metrics Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-xl">
-                <p class="text-xs text-slate-400 uppercase font-semibold">Ultimo Concorso</p>
-                <h3 class="text-2xl font-bold mt-1 text-blue-400" id="draw-num">--</h3>
-                <p class="text-xs text-slate-500 mt-1" id="draw-date">--/--/----</p>
-            </div>
-            <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-xl md:col-span-2">
-                <p class="text-xs text-slate-400 uppercase font-semibold mb-2">Sestina Estratta</p>
-                <div class="flex flex-wrap gap-2" id="draw-balls">
-                    <!-- Numbers will be loaded here -->
-                </div>
-            </div>
-            <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-xl">
-                <p class="text-xs text-slate-400 uppercase font-semibold">Somma & Gaussiana</p>
-                <h3 class="text-2xl font-bold mt-1" id="draw-sum">--</h3>
-                <p class="text-xs mt-1" id="gaussian-status">--</p>
-            </div>
+    <div id="content" style="display: none;">
+      <!-- Main Draw Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="concorso-info">
+            <h2>Concorso N° <span id="concorso-num">-</span></h2>
+          </div>
+          <div class="last-sync">
+            <div class="pulse-dot"></div>
+            Ultimo Sync: <span id="last-updated">-</span>
+          </div>
         </div>
 
-        <!-- Predictions Section -->
-        <section class="bg-slate-900/80 border border-blue-900/40 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
-            <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
-                Predizioni Ottimizzate per la Prossima Giocata (Venus Vortex Engine)
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="predictions-container">
-                <!-- Prediction cards loaded via JS -->
-            </div>
-        </section>
-
-        <!-- Charts & Analytics -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Chart -->
-            <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
-                <h3 class="text-sm font-semibold text-slate-300 mb-4">Andamento Somme (Curva di Gauss Limit: 220-320)</h3>
-                <canvas id="gaussianChart" height="200"></canvas>
-            </div>
-            <!-- Hot/Cold Numbers -->
-            <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl space-y-6">
-                <div>
-                    <h3 class="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> Numeri Caldi (Top Frequenti)
-                    </h3>
-                    <div class="flex flex-wrap gap-2" id="hot-numbers"></div>
-                </div>
-                <hr class="border-slate-800">
-                <div>
-                    <h3 class="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-snowflake"></i> Numeri Freddi (Ritardatari)
-                    </h3>
-                    <div class="flex flex-wrap gap-2" id="cold-numbers"></div>
-                </div>
-            </div>
+        <div class="section-title">Combinazione Vincente Estratta</div>
+        <div class="balls-container" id="sestina-container">
+          <!-- Render dinamico -->
         </div>
-    </main>
 
-    <script>
-        async function loadData() {
-            try {
-                const res = await fetch('venus_database.json?t=' + new Date().getTime());
-                const data = await res.json();
+        <!-- Matrice e Statistiche Gauss -->
+        <div class="grid-stats">
+          <div class="stat-box">
+            <div class="stat-label">Somma Sestina</div>
+            <div class="stat-value" id="somma-val">0</div>
+            <div class="gaussian-bar-container">
+              <div class="bar-bg">
+                <div class="bar-target-zone" title="Range Gaussiano Ottimale (220-320)"></div>
+                <div class="bar-fill" id="somma-bar" style="width: 0%;"></div>
+              </div>
+              <div class="bar-labels">
+                <span>Min (21)</span>
+                <span>Target (220-320)</span>
+                <span>Max (525)</span>
+              </div>
+            </div>
+          </div>
 
-                document.getElementById('last-update').innerText = 'Ultimo Sync: ' + data.last_updated;
-                document.getElementById('draw-num').innerText = 'N° ' + data.latest_concorso;
-                document.getElementById('draw-date').innerText = data.latest_sostina_date || '';
-                document.getElementById('draw-sum').innerText = data.somma;
+          <div class="stat-box">
+            <div class="stat-label">Stato Range Gaussiano</div>
+            <div id="gaussian-status">
+              <!-- Render dinamico -->
+            </div>
+            <p style="font-size: 0.75rem; color: #64748B; margin-top: 8px; line-height: 1.3;">
+              Valore ideale per la matrice Venus Vortex compreso tra 220 e 320.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
-                const gStatus = document.getElementById('gaussian-status');
-                if (data.in_gaussian_range) {
-                    gStatus.innerText = '✅ In Range Gaussiano (220-320)';
-                    gStatus.className = 'text-xs mt-1 text-emerald-400 font-semibold';
-                } else {
-                    gStatus.innerText = '⚠️ Fuori Norma';
-                    gStatus.className = 'text-xs mt-1 text-amber-400 font-semibold';
-                }
+  <footer>
+    <p>Powered by <strong>Venus Vortex Engine</strong> &bull; Aggiornato automaticamente tramite GitHub Actions</p>
+    <p style="margin-top: 5px;"><a href="venus_database.json" target="_blank">Apri API JSON Grezzo</a></p>
+  </footer>
 
-                // Sestina Balls
-                const ballsContainer = document.getElementById('draw-balls');
-                ballsContainer.innerHTML = '';
-                (data.latest_sestina || []).forEach(n => {
-                    ballsContainer.innerHTML += `<span class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md border border-blue-400">${n}</span>`;
-                });
-                if (data.jolly) {
-                    ballsContainer.innerHTML += `<span class="w-10 h-10 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-md border border-amber-300" title="Jolly">J:${data.jolly}</span>`;
-                }
+  <script>
+    async function loadData() {
+      try {
+        const response = await fetch('venus_database.json?t=' + new Date().getTime());
+        if (!response.ok) throw new Error('Impossibile caricare il database');
+        
+        const data = await response.json();
 
-                // Predictions
-                const predContainer = document.getElementById('predictions-container');
-                predContainer.innerHTML = '';
-                (data.predictions_next_draw || []).forEach(p => {
-                    predContainer.innerHTML += `
-                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl">
-                            <span class="text-xs font-bold text-blue-400 uppercase">${p.nome}</span>
-                            <div class="flex flex-wrap gap-1.5 my-3">
-                                ${p.sestina.map(num => `<span class="w-8 h-8 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center border border-slate-700">${num}</span>`).join('')}
-                            </div>
-                            <div class="flex justify-between text-xs text-slate-400">
-                                <span>Somma: <strong class="text-white">${p.somma}</strong></span>
-                                <span>Acc: <strong class="text-emerald-400">${p.coerenza_gaussiana}</strong></span>
-                            </div>
-                        </div>
-                    `;
-                });
+        // Popola informazioni base
+        document.getElementById('concorso-num').textContent = data.latest_concorso || 'N/D';
+        document.getElementById('last-updated').textContent = data.last_updated || 'N/D';
+        document.getElementById('somma-val').textContent = data.somma || 0;
 
-                // Hot/Cold
-                const hotContainer = document.getElementById('hot-numbers');
-                const coldContainer = document.getElementById('cold-numbers');
-                hotContainer.innerHTML = (data.stats?.hot_numbers || []).map(n => `<span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-lg">${n}</span>`).join('');
-                coldContainer.innerHTML = (data.stats?.cold_numbers || []).map(n => `<span class="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg">${n}</span>`).join('');
+        // Render Sestina
+        const container = document.getElementById('sestina-container');
+        container.innerHTML = '';
 
-                // Chart
-                renderChart(data.history || []);
-
-            } catch (err) {
-                console.error("Errore caricamento dati:", err);
-            }
+        if (data.latest_sestina && Array.isArray(data.latest_sestina)) {
+          data.latest_sestina.forEach(num => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'ball-wrapper';
+            wrapper.innerHTML = `<div class="ball">${num}</div>`;
+            container.appendChild(wrapper);
+          });
         }
 
-        function renderChart(history) {
-            const ctx = document.getElementById('gaussianChart').getContext('2d');
-            const reversed = [...history].reverse();
-            const labels = reversed.map(h => 'Conc. ' + h.concorso);
-            const sums = reversed.map(h => h.somma);
+        // Render Jolly
+        if (data.jolly !== null && data.jolly !== undefined) {
+          const div = document.createElement('div');
+          div.className = 'divider';
+          container.appendChild(div);
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Somma Sestina',
-                            data: sums,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Limite Min (220)',
-                            data: Array(sums.length).fill(220),
-                            borderColor: 'rgba(239, 68, 68, 0.5)',
-                            borderDash: [5, 5],
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Limite Max (320)',
-                            data: Array(sums.length).fill(320),
-                            borderColor: 'rgba(239, 68, 68, 0.5)',
-                            borderDash: [5, 5],
-                            pointRadius: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { color: '#94a3b8' } } },
-                    scales: {
-                        x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-                    }
-                }
-            });
+          const wrapper = document.createElement('div');
+          wrapper.className = 'ball-wrapper';
+          wrapper.innerHTML = `
+            <div class="ball ball-jolly">${data.jolly}</div>
+            <div class="ball-label">Jolly</div>
+          `;
+          container.appendChild(wrapper);
         }
 
-        window.onload = loadData;
-    </script>
+        // Render SuperStar
+        if (data.superstar !== null && data.superstar !== undefined) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'ball-wrapper';
+          wrapper.innerHTML = `
+            <div class="ball ball-star">${data.superstar}</div>
+            <div class="ball-label">SuperStar</div>
+          `;
+          container.appendChild(wrapper);
+        }
+
+        // Calcolo Barra di Progresso
+        const percent = Math.min(Math.max(((data.somma - 21) / (525 - 21)) * 100, 0), 100);
+        document.getElementById('somma-bar').style.width = percent + '%';
+
+        // Badge Stato Gaussiano
+        const statusElem = document.getElementById('gaussian-status');
+        if (data.in_gaussian_range) {
+          statusElem.innerHTML = `<span class="status-badge badge-success">✅ IN RANGE GAUSSIANO (220-320)</span>`;
+        } else {
+          statusElem.innerHTML = `<span class="status-badge badge-warning">⚠️ FUORI NORMA GAUSSIANA</span>`;
+        }
+
+        // Mostra contenuto
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loading').innerHTML = `
+          <p style="color: #E63946; font-weight: 700;">❌ Errore durante il caricamento dei dati.</p>
+          <p style="font-size: 0.85rem; color: #64748B; margin-top: 5px;">Assicurati che il file <code>venus_database.json</code> sia presente nel repository.</p>
+        `;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+  </script>
 </body>
 </html>
