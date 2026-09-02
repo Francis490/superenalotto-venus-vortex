@@ -7,9 +7,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 }
 
 def send_telegram_alert(html_message):
@@ -31,19 +29,19 @@ def send_telegram_alert(html_message):
         else:
             print(f"[TELEGRAM ERROR] Risposta server Telegram: {resp.text}")
     except Exception as e:
-        print(f"[TELEGRAM ERROR] Impossibile inviare il messaggio: {e}")
+        print(f"[TELEGRAM ERROR] Errore invio messaggio: {e}")
 
 def fetch_latest_draw():
-    sources = [
-        "https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto",
-        "https://www.superenalotto.it/api/v1/draws/latest",
-        "https://www.sisal.it/api/site/superenalotto/estrazioni/ultimaconcorso"
+    # Rotta tramite Proxy Bridge per bypassare i blocchi IP dei datacenter GitHub Actions
+    target_urls = [
+        "https://api.allorigins.win/raw?url=https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto",
+        "https://api.allorigins.win/raw?url=https://www.superenalotto.it/api/v1/draws/latest"
     ]
 
-    for url in sources:
+    for url in target_urls:
         try:
-            print(f"[CONNECTING] Prova connessione a: {url}")
-            res = requests.get(url, headers=HEADERS, timeout=15)
+            print(f"[CONNECTING] Connessione tramite Proxy Bridge: {url}")
+            res = requests.get(url, headers=HEADERS, timeout=20)
             if res.status_code == 200:
                 data = res.json()
                 
@@ -56,7 +54,7 @@ def fetch_latest_draw():
                     jolly = latest.get("jolly")
                     star = latest.get("star")
                     return num, date, sestina, jolly, star
-                
+
                 # Parsing Superenalotto.it
                 elif "combination" in data:
                     num = str(data.get("number", ""))
@@ -66,23 +64,11 @@ def fetch_latest_draw():
                     star = data.get("star")
                     return num, date, sestina, jolly, star
 
-                # Parsing Sisal
-                elif "concorso" in data:
-                    c = data.get("concorso", {})
-                    e = data.get("estrazione", {})
-                    num = str(c.get("numero", ""))
-                    date = c.get("dataEstrazione", "")
-                    comb = e.get("combinazioneVincenti", []) or e.get("sestina", [])
-                    sestina = sorted([int(x) for x in comb[:6]])
-                    jolly = e.get("numeroJolly")
-                    star = e.get("superStar")
-                    return num, date, sestina, jolly, star
-
         except Exception as err:
-            print(f"[WARN] Fonte {url} non raggiungibile: {err}")
+            print(f"[WARN] Tentativo fallito su {url}: {err}")
             continue
 
-    raise Exception("Tutte le fonti API sono temporaneamente irraggiungibili.")
+    raise Exception("Impossibile raggiungere i server di estrazione anche tramite proxy bridge.")
 
 def fetch_and_sync():
     try:
