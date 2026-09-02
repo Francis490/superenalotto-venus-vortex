@@ -131,7 +131,7 @@ def generate_hybrid_predictions(ml_probs, count=3):
 # 4. SCRAPER & GRAFICA
 # ==========================================
 def fetch_superenalotto():
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     res = requests.get("https://www.superenalotto.net/estrazioni", headers=headers, timeout=15)
     if res.status_code == 200:
         soup = BeautifulSoup(res.text, 'html.parser')
@@ -139,28 +139,31 @@ def fetch_superenalotto():
         conc = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
         date = re.search(r'(\d{2}/\d{2}/\d{4})', text)
 
-        # Prende la data reale trovata nella pagina (es. 01/09/2026)
-        found_date = date.group(1) if date else "01/09/2026"
-        # Converte la data in formato numerico pulito (es. 01092026) se manca il numero concorso
-        fallback_conc = found_date.replace("/", "")
-
-        numbers = []
-        for tag in soup.find_all(['li', 'span', 'td']):
+        # Estrazione mirata dei soli numeri della combinazione vincente
+        raw_numbers = []
+        for tag in soup.find_all(['li', 'span', 'div'], class_=re.compile(r'ball|numero|win', re.I)):
             val = tag.text.strip()
-            if val.isdigit() and 1 <= int(val) <= 90:
-                cls = " ".join(tag.get('class', []))
-                if any(k in cls.lower() for k in ['ball', 'numero', 'sym']):
-                    numbers.append(int(val))
+            if val.isdigit():
+                num = int(val)
+                if 1 <= num <= 90 and num not in raw_numbers:
+                    raw_numbers.append(num)
 
-        if len(numbers) >= 6:
+        # Seleziona esattamente i primi 6 numeri unici per la sestina
+        if len(raw_numbers) >= 6:
+            sestina = sorted(raw_numbers[:6])
+            jolly = raw_numbers[6] if len(raw_numbers) > 6 else None
+            superstar = raw_numbers[7] if len(raw_numbers) > 7 else None
+            
+            found_date = date.group(1) if date else "01/09/2026"
             return {
-                "concorso": conc.group(1) if conc else fallback_conc,
+                "concorso": conc.group(1) if conc else found_date.replace("/", ""),
                 "data": found_date,
-                "sestina": sorted(numbers[:6]),
-                "jolly": numbers[6] if len(numbers) > 6 else None,
-                "superstar": numbers[7] if len(numbers) > 7 else None
+                "sestina": sestina,
+                "jolly": jolly,
+                "superstar": superstar
             }
-    raise Exception("Impossibile recuperare l'estrazione.")
+            
+    raise Exception("Impossibile recuperare i dati ufficiali dell'estrazione.")
 
 def generate_advanced_chart(sestina, somma, z_score, ml_probs):
     plt.style.use('dark_background')
