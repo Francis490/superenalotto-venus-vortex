@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-02 10:56:08",
+  "last_updated": "2026-09-02 13:24:58",
   "latest_draw": {
     "concorso": "20260902",
     "data": "02/09/2026",
@@ -11,82 +11,13 @@
       75,
       88
     ],
-    "somma": 402,
-    "in_gaussian_range": false,
-    "z_score": 2.84,
-    "shannon_entropy": 1.918,
     "jolly": 32,
     "superstar": 40
   },
-  "analytics": {
-    "hot_numbers_top10": [
-      55,
-      60,
-      62,
-      75,
-      88,
-      1,
-      2,
-      3,
-      4,
-      5
-    ],
-    "cold_numbers_top10": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10
-    ],
-    "predictions_next_draw": [
-      [
-        3,
-        20,
-        47,
-        51,
-        59,
-        62
-      ],
-      [
-        3,
-        7,
-        16,
-        75,
-        86,
-        89
-      ],
-      [
-        12,
-        14,
-        27,
-        47,
-        72,
-        77
-      ]
-    ]
+  "quant_metrics": {
+    "somma": 402,
+    "z_score": 2.84,
+    "anti_mass_index": 1.0
   },
-  "history_summary": [
-    {
-      "concorso": "20260902",
-      "data": "02/09/2026",
-      "sestina": [
-        55,
-        60,
-        62,
-        62,
-        75,
-        88
-      ],
-      "somma": 402,
-      "jolly": 32,
-      "superstar": 40,
-      "entropy": 1.918,
-      "z_score": 2.84
-    }
-  ]
+  "ml_predictions": []
 }
