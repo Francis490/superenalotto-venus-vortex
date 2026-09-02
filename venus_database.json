@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-02 14:49:11",
+  "last_updated": "2026-09-02 15:25:41",
   "latest_draw": {
     "concorso": "01092026",
     "data": "01/09/2026",
@@ -22,38 +22,38 @@
   "ml_predictions": [
     {
       "sestina": [
-        3,
-        33,
-        34,
+        25,
+        38,
+        54,
+        58,
+        59,
+        74
+      ],
+      "ev_score": 1.0,
+      "ml_confidence": 0.0111
+    },
+    {
+      "sestina": [
+        10,
         44,
-        48,
-        50
+        51,
+        69,
+        80,
+        86
       ],
       "ev_score": 1.0,
       "ml_confidence": 0.0111
     },
     {
       "sestina": [
-        18,
-        22,
-        32,
-        34,
-        48,
-        50
+        19,
+        26,
+        29,
+        50,
+        63,
+        90
       ],
-      "ev_score": 1.0,
-      "ml_confidence": 0.0111
-    },
-    {
-      "sestina": [
-        35,
-        37,
-        39,
-        40,
-        42,
-        48
-      ],
-      "ev_score": 1.0,
+      "ev_score": 0.85,
       "ml_confidence": 0.0111
     }
   ]
