@@ -139,6 +139,10 @@ def fetch_superenalotto():
         conc = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
         date = re.search(r'(\d{2}/\d{2}/\d{4})', text)
 
+        # Se non trova il concorso numerico, usa la data formattata o la data trovata
+        found_date = date.group(1) if date else datetime.now().strftime("%d/%m/%Y")
+        default_conc = found_date.replace("/", "") # Converte 01/09/2026 in 01092026
+
         numbers = []
         for tag in soup.find_all(['li', 'span', 'td']):
             val = tag.text.strip()
@@ -149,8 +153,8 @@ def fetch_superenalotto():
 
         if len(numbers) >= 6:
             return {
-                "concorso": conc.group(1) if conc else datetime.now().strftime("%Y%m%d"),
-                "data": date.group(1) if date else datetime.now().strftime("%d/%m/%Y"),
+                "concorso": conc.group(1) if conc else default_conc,
+                "data": found_date,
                 "sestina": sorted(numbers[:6]),
                 "jolly": numbers[6] if len(numbers) > 6 else None,
                 "superstar": numbers[7] if len(numbers) > 7 else None
