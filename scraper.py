@@ -106,21 +106,38 @@ def calculate_anti_mass_score(sestina):
 def generate_hybrid_predictions(ml_probs, count=3):
     predictions = []
     attempts = 0
-    ranked_numbers = sorted(ml_probs.keys(), key=lambda k: ml_probs[k], reverse=True)
-    candidate_pool = ranked_numbers[:50] # Bacino di candidati ampliato
+    
+    all_numbers = list(range(1, 91))
+    # Pesi probabilistici per TUTTI i 90 numeri estratti dal RandomForest
+    weights = [ml_probs.get(n, 0.01) for n in all_numbers]
 
-    while len(predictions) < count and attempts < 15000:
+    while len(predictions) < count and attempts < 20000:
         attempts += 1
-        candidate = sorted(random.sample(candidate_pool, 6))
         
+        # Estrazione pesata senza reinserimento sull'INTERO tabellone (1-90)
+        candidate = []
+        temp_numbers = list(all_numbers)
+        temp_weights = list(weights)
+        
+        for _ in range(6):
+            chosen = random.choices(temp_numbers, weights=temp_weights, k=1)[0]
+            idx = temp_numbers.index(chosen)
+            candidate.append(chosen)
+            temp_numbers.pop(idx)
+            temp_weights.pop(idx)
+            
+        candidate = sorted(candidate)
         somma = sum(candidate)
         anti_mass_score = calculate_anti_mass_score(candidate)
 
-        # Filtri dinamici: se fa fatica a trovarne, rilascia gradualmente i vincoli
-        if attempts < 8000:
-            if not (200 <= somma <= 350): continue
-            if anti_mass_score < 0.70: continue
-        
+        # Regola di bilanciamento: forza la presenza di almeno un numero alto (> 50)
+        has_high_number = any(n > 50 for n in candidate)
+
+        if attempts < 10000:
+            if not (200 <= somma <= 340): continue
+            if anti_mass_score < 0.75: continue
+            if not has_high_number: continue # Copertura obbligatoria della fascia 51-90
+
         if candidate not in [p["sestina"] for p in predictions]:
             predictions.append({
                 "sestina": candidate,
@@ -128,15 +145,16 @@ def generate_hybrid_predictions(ml_probs, count=3):
                 "ml_confidence": round(sum(ml_probs.get(n, 0.05) for n in candidate) / 6, 4)
             })
 
-    # GARANZIA ASSOLUTA: Se per qualsiasi motivo la lista è vuota, forza la generazione
-    if not predictions:
-        for _ in range(count):
+    # Fallback di sicurezza con spettro completo
+    if len(predictions) < count:
+        while len(predictions) < count:
             cand = sorted(random.sample(range(1, 91), 6))
-            predictions.append({
-                "sestina": cand,
-                "ev_score": 0.85,
-                "ml_confidence": 0.05
-            })
+            if cand not in [p["sestina"] for p in predictions]:
+                predictions.append({
+                    "sestina": cand,
+                    "ev_score": calculate_anti_mass_score(cand),
+                    "ml_confidence": 0.05
+                })
 
     return predictions
 
