@@ -3,7 +3,7 @@ name: SuperEnalotto Venus Vortex Database Auto-Sync
 on:
   schedule:
     # 18:45 UTC corrisponde alle 20:45 CEST nei giorni 2 (Mar), 4 (Gio), 5 (Ven), 6 (Sab)
-    - cron: '45 18 * * 2,4,5,6'
+    - cron: '30 18 * * 2,4,5,6'
   workflow_dispatch:
 
 permissions:
