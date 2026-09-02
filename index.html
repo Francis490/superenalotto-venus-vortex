@@ -3,70 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Venus Vortex — Quantum Lottery Analytics</title>
+    <title>Venus Vortex — Divine ML Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #0b0f19; color: #e2e8f0; font-family: system-ui, sans-serif; }
-        .glow-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.25); box-shadow: 0 0 25px rgba(56, 189, 248, 0.08); }
-        .ball { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; font-weight: bold; background: linear-gradient(135deg, #0284c7, #0369a1); border: 2px solid #38bdf8; box-shadow: 0 0 14px rgba(56, 189, 248, 0.5); }
+        .glow-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(168, 85, 247, 0.3); box-shadow: 0 0 25px rgba(168, 85, 247, 0.1); }
+        .ball { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; font-weight: bold; background: linear-gradient(135deg, #7e22ce, #a855f7); border: 2px solid #c084fc; box-shadow: 0 0 12px rgba(168, 85, 247, 0.5); }
     </style>
 </head>
 <body class="p-4 md:p-8">
-
     <div class="max-w-6xl mx-auto space-y-6">
         
-        <!-- HEADER -->
         <div class="flex flex-col md:flex-row justify-between items-center glow-card p-6 rounded-2xl">
             <div>
-                <h1 class="text-3xl font-black text-cyan-400 tracking-wider">🌀 VENUS VORTEX BEAST</h1>
-                <p class="text-xs text-slate-400 mt-1">Markov Chain & Monte Carlo Predictive Engine</p>
+                <h1 class="text-3xl font-black text-purple-400 tracking-wider">⚡ VENUS VORTEX DIVINE</h1>
+                <p class="text-xs text-slate-400 mt-1">Random Forest Machine Learning & Anti-Mass EV Engine</p>
             </div>
             <div class="mt-4 md:mt-0 text-right">
-                <span id="sync-status" class="px-3 py-1 rounded-full text-xs bg-cyan-950 text-cyan-400 border border-cyan-800">Connessione...</span>
+                <span id="sync-status" class="px-3 py-1 rounded-full text-xs bg-purple-950 text-purple-400 border border-purple-800">Connessione...</span>
                 <p id="last-update" class="text-xs text-slate-500 mt-2">-</p>
             </div>
         </div>
 
-        <!-- MAIN GRID -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- ESTRAZIONE LIVE -->
             <div class="md:col-span-2 glow-card p-6 rounded-2xl space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-slate-100">📌 Ultima Estrazione (Concorso <span id="conc-num" class="text-cyan-400">-</span>)</h2>
-                    <span id="conc-date" class="text-xs text-slate-400">-</span>
-                </div>
-                
-                <div id="balls-container" class="flex flex-wrap gap-3 py-4"></div>
-                
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-800 text-center">
+                <h2 class="text-xl font-bold text-slate-100">📌 Ultima Estrazione (Concorso <span id="conc-num" class="text-purple-400">-</span>)</h2>
+                <div id="balls-container" class="flex flex-wrap gap-3 py-2"></div>
+                <div class="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800 text-center">
                     <div class="p-2 bg-slate-900/60 rounded-xl">
-                        <p class="text-xs text-slate-500">Somma</p>
+                        <p class="text-xs text-slate-500">Somma Sestina</p>
                         <p id="sum-val" class="text-lg font-bold text-cyan-400">-</p>
                     </div>
                     <div class="p-2 bg-slate-900/60 rounded-xl">
-                        <p class="text-xs text-slate-500">Z-Score</p>
+                        <p class="text-xs text-slate-500">Z-Score Gaussiano</p>
                         <p id="z-val" class="text-lg font-bold text-emerald-400">-</p>
                     </div>
                     <div class="p-2 bg-slate-900/60 rounded-xl">
-                        <p class="text-xs text-slate-500">Entropia</p>
-                        <p id="ent-val" class="text-lg font-bold text-purple-400">-</p>
-                    </div>
-                    <div class="p-2 bg-slate-900/60 rounded-xl">
-                        <p class="text-xs text-slate-500">Jolly / Star</p>
-                        <p id="star-val" class="text-lg font-bold text-amber-400">-</p>
+                        <p class="text-xs text-slate-500">Indice Anti-Massa</p>
+                        <p id="ev-val" class="text-lg font-bold text-purple-400">-</p>
                     </div>
                 </div>
             </div>
 
-            <!-- PREVISIONI 1-CLICK -->
             <div class="glow-card p-6 rounded-2xl space-y-4">
-                <h2 class="text-xl font-bold text-amber-400">🔮 Previsioni Monte Carlo</h2>
+                <h2 class="text-xl font-bold text-amber-400">🧠 Sestine Machine Learning</h2>
                 <p class="text-xs text-slate-400">Clicca su una sestina per copiarla negli appunti</p>
                 <div id="predictions-list" class="space-y-3 font-mono text-sm"></div>
             </div>
-
         </div>
 
     </div>
@@ -82,11 +65,9 @@
 
                 const latest = data.latest_draw;
                 document.getElementById('conc-num').innerText = latest.concorso;
-                document.getElementById('conc-date').innerText = latest.data;
-                document.getElementById('sum-val').innerText = latest.somma;
-                document.getElementById('z-val').innerText = latest.z_score;
-                document.getElementById('ent-val').innerText = latest.shannon_entropy + ' bits';
-                document.getElementById('star-val').innerText = (latest.jolly || '-') + ' / ' + (latest.superstar || '-');
+                document.getElementById('sum-val').innerText = data.quant_metrics.somma;
+                document.getElementById('z-val').innerText = data.quant_metrics.z_score;
+                document.getElementById('ev-val').innerText = data.quant_metrics.anti_mass_index;
 
                 const ballsDiv = document.getElementById('balls-container');
                 ballsDiv.innerHTML = '';
@@ -96,12 +77,15 @@
 
                 const predDiv = document.getElementById('predictions-list');
                 predDiv.innerHTML = '';
-                data.analytics.predictions_next_draw.forEach((s, idx) => {
-                    const sStr = s.join(', ');
+                data.ml_predictions.forEach((p, idx) => {
+                    const sStr = p.sestina.join(', ');
                     predDiv.innerHTML += `
-                        <div onclick="copyToClipboard('${sStr}')" class="p-3 bg-slate-900/90 hover:bg-slate-800 cursor-pointer rounded-xl border border-amber-500/30 text-amber-300 flex justify-between items-center transition">
-                            <span>#${idx + 1}: [ ${sStr} ]</span>
-                            <span class="text-xs bg-amber-500/20 px-2 py-1 rounded text-amber-400">📋 Copia</span>
+                        <div onclick="copyToClipboard('${sStr}')" class="p-3 bg-slate-900/90 hover:bg-slate-800 cursor-pointer rounded-xl border border-amber-500/30 text-amber-300 transition">
+                            <div class="flex justify-between items-center">
+                                <span>#${idx + 1}: [ ${sStr} ]</span>
+                                <span class="text-xs bg-amber-500/20 px-2 py-1 rounded text-amber-400">📋 Copia</span>
+                            </div>
+                            <div class="text-xs text-slate-400 mt-2">Anti-Massa EV: ${p.ev_score} | ML Conf: ${(p.ml_confidence * 100).toFixed(1)}%</div>
                         </div>`;
                 });
 
@@ -112,7 +96,7 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
-            alert('Sestina copiata negli appunti: ' + text);
+            alert('Sestina copiata: ' + text);
         }
 
         loadData();
