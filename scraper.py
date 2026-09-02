@@ -1,5 +1,6 @@
 import os
 import json
+import html
 import requests
 from datetime import datetime
 
@@ -7,12 +8,13 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*'
 }
 
 def send_telegram_alert(html_message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("[WARN] Credenziali Telegram mancanti.")
+        print("[WARN] Credenziali Telegram non configurate nei Secrets.")
         return
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -32,43 +34,41 @@ def send_telegram_alert(html_message):
         print(f"[TELEGRAM ERROR] Errore invio messaggio: {e}")
 
 def fetch_latest_draw():
-    # Rotta tramite Proxy Bridge per bypassare i blocchi IP dei datacenter GitHub Actions
-    target_urls = [
-        "https://api.allorigins.win/raw?url=https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto",
-        "https://api.allorigins.win/raw?url=https://www.superenalotto.it/api/v1/draws/latest"
+    # Rotte proxy multiple per garantire il recupero dei dati da GitHub Actions
+    proxy_sources = [
+        ("https://corsproxy.io/?https%3A%2F%2Fwww.gazzettadellosport.it%2Fapi%2Fv1%2Festrazioni%2Fsuperenalotto", "raw"),
+        ("https://api.codetabs.com/v1/proxy?quest=https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto", "raw"),
+        ("https://api.allorigins.win/get?url=https%3A%2F%2Fwww.gazzettadellosport.it%2Fapi%2Fv1%2Festrazioni%2Fsuperenalotto", "allorigins"),
+        ("https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto", "raw")
     ]
 
-    for url in target_urls:
+    for url, source_type in proxy_sources:
         try:
-            print(f"[CONNECTING] Connessione tramite Proxy Bridge: {url}")
-            res = requests.get(url, headers=HEADERS, timeout=20)
+            print(f"[CONNECTING] Prova connessione: {url}")
+            res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
-                data = res.json()
-                
-                # Parsing Gazzetta dello Sport
-                if "archive" in data and len(data["archive"]) > 0:
+                if source_type == "allorigins":
+                    wrapper = res.json()
+                    raw_contents = wrapper.get("contents", "")
+                    data = json.loads(raw_contents)
+                else:
+                    data = res.json()
+
+                if isinstance(data, dict) and "archive" in data and len(data["archive"]) > 0:
                     latest = data["archive"][0]
                     num = str(latest.get("number", ""))
                     date = latest.get("date", "")
                     sestina = sorted([int(x) for x in latest.get("combination", [])])
                     jolly = latest.get("jolly")
                     star = latest.get("star")
-                    return num, date, sestina, jolly, star
-
-                # Parsing Superenalotto.it
-                elif "combination" in data:
-                    num = str(data.get("number", ""))
-                    date = data.get("date", "")
-                    sestina = sorted([int(x) for x in data.get("combination", [])])
-                    jolly = data.get("jolly")
-                    star = data.get("star")
-                    return num, date, sestina, jolly, star
-
+                    if len(sestina) == 6:
+                        print(f"[SUCCESS] Dati recuperati correttamente da {url}")
+                        return num, date, sestina, jolly, star
         except Exception as err:
             print(f"[WARN] Tentativo fallito su {url}: {err}")
             continue
 
-    raise Exception("Impossibile raggiungere i server di estrazione anche tramite proxy bridge.")
+    raise Exception("Impossibile contattare i server di estrazione tramite i proxy disponibili.")
 
 def fetch_and_sync():
     try:
@@ -103,7 +103,8 @@ def fetch_and_sync():
         send_telegram_alert(msg)
 
     except Exception as e:
-        error_msg = f"❌ <b>VENUS VORTEX SYNC FAILED</b>\n\nErrore: <code>{str(e)}</code>"
+        escaped_err = html.escape(str(e))
+        error_msg = f"❌ <b>VENUS VORTEX SYNC FAILED</b>\n\nErrore: <code>{escaped_err}</code>"
         send_telegram_alert(error_msg)
         raise e
 
