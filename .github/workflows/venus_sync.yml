@@ -1,0 +1,37 @@
+name: SuperEnalotto Venus Vortex Database Auto-Sync
+
+on:
+  schedule:
+    # 18:45 UTC corrisponde alle 20:45 CEST nei giorni 2 (Mar), 4 (Gio), 5 (Ven), 6 (Sab)
+    - cron: '45 18 * * 2,4,5,6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-venus-db:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Inizializza Ambiente Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Esegui Scraper e Notifica Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scraper.py
+
+      - name: Commit e Push del Database JSON
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "cron(db): aggiornamento automatico estrazione Venus Vortex [skip ci]"
+          file_pattern: "venus_database.json"
+          commit_user_name: "Venus Vortex Auto-Sync Bot"
+          commit_user_email: "actions@github.com"
