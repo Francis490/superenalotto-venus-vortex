@@ -237,7 +237,7 @@ def generate_advanced_chart(sestina, somma, z_score, ml_probs):
 def main():
     se_data = fetch_superenalotto()
     sestina = se_data["sestina"]
-    concorso = se_data["concorso"]
+    concorso = str(se_data["concorso"])
     data_str = se_data["data"]
     somma = sum(sestina)
     z_score = round((somma - 273.0) / 45.5, 2)
@@ -247,16 +247,31 @@ def main():
         try:
             with open(HISTORY_FILE, "r", encoding="utf-8") as f:
                 history = json.load(f)
-        except Exception: history = []
+        except Exception: 
+            history = []
 
-    if not any(item.get("concorso") == concorso for item in history):
-        history.insert(0, {
-            "concorso": concorso, "data": data_str, "sestina": sestina,
-            "somma": somma, "z_score": z_score
-        })
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history, f, indent=2)
+    # Controllo Anti-Duplicato con conversione esplicita a stringa
+    estrazione_gia_presente = any(str(item.get("concorso")) == concorso for item in history)
 
+    if estrazione_gia_presente:
+        print(f"[INFO] Concorso {concorso} già presente in archivio. Nessun nuovo dato da elaborare.")
+        return  # Blocco preventivo: evita doppie notifiche Telegram e riesecuzioni inutili
+
+    # Se è un nuovo concorso, lo aggiunge in cima allo storico
+    history.insert(0, {
+        "concorso": concorso, 
+        "data": data_str, 
+        "sestina": sestina,
+        "somma": somma, 
+        "z_score": z_score
+    })
+    
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2)
+
+    print(f"[SUCCESS] Nuovo concorso {concorso} registrato con successo!")
+
+    # Machine Learning & Anti-Massa
     ml_probabilities = train_ml_predictive_model(history)
     predictions = generate_hybrid_predictions(ml_probabilities)
 
@@ -264,7 +279,8 @@ def main():
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "latest_draw": se_data,
         "quant_metrics": {
-            "somma": somma, "z_score": z_score,
+            "somma": somma, 
+            "z_score": z_score,
             "anti_mass_index": calculate_anti_mass_score(sestina)
         },
         "ml_predictions": predictions
