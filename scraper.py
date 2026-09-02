@@ -7,17 +7,22 @@ import random
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import matplotlib
+matplotlib.use('Agg') # Rendering headless per server cloud
+import matplotlib.pyplot as plt
+import numpy as np
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 HISTORY_FILE = "venus_history.json"
 DATABASE_FILE = "venus_database.json"
+CHART_FILE = "vortex_chart.png"
 
 # ==========================================
-# 1. FUNZIONALITÀ TELEGRAM
+# 1. TELEGRAM MEDIA ENGINE
 # ==========================================
-def send_telegram_alert(html_message):
+def send_telegram_photo(photo_path, caption_html):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("[WARN] Credenziali Telegram assenti.")
         return
@@ -26,115 +31,135 @@ def send_telegram_alert(html_message):
     if token.lower().startswith("bot"):
         token = token[3:]
 
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID.strip(),
-        "text": html_message,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": True
-    }
-
+    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+    
     try:
-        resp = requests.post(url, data=payload, timeout=10)
-        if resp.status_code == 200:
-            print("[TELEGRAM] Notifica inviata con successo.")
-        else:
-            print(f"[TELEGRAM ERROR] Status {resp.status_code}: {resp.text}")
+        with open(photo_path, 'rb') as photo:
+            payload = {
+                "chat_id": TELEGRAM_CHAT_ID.strip(),
+                "caption": caption_html,
+                "parse_mode": "HTML"
+            }
+            files = {"photo": photo}
+            resp = requests.post(url, data=payload, files=files, timeout=25)
+            if resp.status_code == 200:
+                print("[TELEGRAM] Grafico e Report inviati con successo!")
+            else:
+                print(f"[TELEGRAM ERROR] {resp.status_code}: {resp.text}")
     except Exception as e:
-        print(f"[TELEGRAM ERROR] {e}")
+        print(f"[TELEGRAM ERROR] Fallimento invio media: {e}")
 
 # ==========================================
-# 2. CALCOLI MATEMATICI & STATISTICI AVANZATI
+# 2. GENERATORE DI GRAFICI ANALITICI (MATPLOTLIB)
+# ==========================================
+def generate_vortex_chart(sestina, somma, z_score, hot_nums, cold_nums):
+    plt.style.use('dark_background')
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), facecolor='#0b0f19')
+    ax1.set_facecolor('#0f172a')
+    ax2.set_facecolor('#0f172a')
+
+    # Grafico 1: Distribuzione Gaussiana della Somma
+    x = np.linspace(100, 450, 500)
+    mu, sigma = 273.0, 45.5
+    y = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mu) / sigma)**2)
+    
+    ax1.plot(x, y, color='#38bdf8', linewidth=2, label='Curva Teorica')
+    ax1.axvline(somma, color='#f59e0b', linestyle='--', linewidth=2.5, label=f'Somma Attuale: {somma}')
+    ax1.axvspan(220, 320, color='#10b981', alpha=0.15, label='Range Gaussiano OK')
+    ax1.set_title(f'Distribuzione Gaussiana (Z-Score: {z_score})', color='#f8fafc', fontsize=12, fontweight='bold')
+    ax1.set_xlabel('Somma Sestina', color='#94a3b8')
+    ax1.legend(loc='upper right', facecolor='#1e293b', edgecolor='#334155')
+    ax1.grid(True, color='#1e293b', linestyle=':')
+
+    # Grafico 2: Top Frequenti vs Ritardatari
+    categories = ['Top Frequenti', 'Top Ritardi']
+    hot_str = ", ".join(map(str, hot_nums[:5]))
+    cold_str = ", ".join(map(str, cold_nums[:5]))
+    
+    ax2.barh(['Ritardatari', 'Frequenti'], [len(cold_nums[:5]), len(hot_nums[:5])], color=['#a855f7', '#38bdf8'])
+    ax2.set_title('Top 5 Frequenze vs Ritardi', color='#f8fafc', fontsize=12, fontweight='bold')
+    ax2.text(0.5, 1, f"HOT: {hot_str}", color='#38bdf8', fontsize=10, fontweight='bold', va='center')
+    ax2.text(0.5, 0, f"COLD: {cold_str}", color='#a855f7', fontsize=10, fontweight='bold', va='center')
+    ax2.grid(True, color='#1e293b', linestyle=':')
+
+    plt.tight_layout()
+    plt.savefig(CHART_FILE, dpi=200, facecolor=fig.get_facecolor(), edgecolor='none')
+    plt.close()
+
+# ==========================================
+# 3. MOTORE MARKOV & MONTE CARLO (10.000 ITERAZIONI)
 # ==========================================
 def calculate_shannon_entropy(sestina):
-    """Calcola l'entropia della distribuzione dei numeri estratti."""
     freq = {}
     for num in sestina:
         dec = (num - 1) // 10
         freq[dec] = freq.get(dec, 0) + 1
-    
     entropy = 0.0
     for count in freq.values():
         p = count / 6.0
         entropy -= p * math.log2(p)
     return round(entropy, 3)
 
-def calculate_z_score(somma):
-    """Calcola lo Z-Score della somma rispetto alla media teorica del SuperEnalotto (273)."""
-    media_teorica = 273.0
-    deviazione_std = 45.5
-    return round((somma - media_teorica) / deviazione_std, 2)
-
-def generate_vortex_predictions(history, hot_numbers, cold_numbers):
-    """Algoritmo Generativo Quantitativo per le prossime Sestine."""
-    predictions = []
-    attempts = 0
+def generate_monte_carlo_predictions(history, hot_nums, cold_nums, runs=10000):
+    weights = np.ones(91)
     
-    # Pool bilanciato: Top Hot + Top Cold + Neutri
-    pool = list(set(hot_numbers[:20] + cold_numbers[:20] + random.sample(range(1, 91), 30)))
+    # Assegna pesi probabilistici
+    for n in hot_nums[:15]: weights[n] += 1.5
+    for n in cold_nums[:15]: weights[n] += 2.0
+    
+    # Matrice di transizione Markov (Sull'ultimo concorso)
+    if history:
+        last_draw = history[0].get("sestina", [])
+        for n in last_draw:
+            for neighbor in range(max(1, n-2), min(91, n+3)):
+                weights[neighbor] += 0.8
+                
+    probabilities = weights[1:] / np.sum(weights[1:])
+    
+    valid_predictions = []
+    candidates_seen = set()
 
-    while len(predictions) < 3 and attempts < 5000:
-        attempts += 1
-        candidate = sorted(random.sample(pool, 6))
-        s_val = sum(candidate)
+    for _ in range(runs):
+        sample = np.random.choice(range(1, 91), size=6, replace=False, p=probabilities)
+        sample = tuple(sorted(sample))
         
-        # Filtro 1: Somma Gaussiana (220-320)
-        if not (220 <= s_val <= 320):
+        if sample in candidates_seen:
             continue
-            
-        # Filtro 2: Pari / Dispari
-        evens = sum(1 for x in candidate if x % 2 == 0)
-        if evens not in [2, 3, 4]:
-            continue
+        candidates_seen.add(sample)
 
-        # Filtro 3: Max 2 numeri per Decina
-        decades = [(x - 1) // 10 for x in candidate]
-        if any(decades.count(d) > 2 for d in set(decades)):
-            continue
+        s_val = sum(sample)
+        if 220 <= s_val <= 320:
+            evens = sum(1 for x in sample if x % 2 == 0)
+            if evens in [2, 3, 4]:
+                valid_predictions.append(list(sample))
+                if len(valid_predictions) == 3:
+                    break
 
-        # Filtro 4: Nessun terno consecutivo
-        consec = False
-        for i in range(len(candidate) - 2):
-            if candidate[i+1] == candidate[i] + 1 and candidate[i+2] == candidate[i] + 2:
-                consec = True
-                break
-        if consec:
-            continue
-
-        if candidate not in predictions:
-            predictions.append(candidate)
-
-    return predictions
+    return valid_predictions
 
 # ==========================================
-# 3. SCRAPING ENGINE REDONDANTE
+# 4. SCRAPING REDONDANTE
 # ==========================================
 def fetch_latest_draw():
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-    }
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-    # FONTE 1: SuperEnalotto.net
     try:
-        print("[SCRAPER] Fonte 1: SuperEnalotto.net...")
         res = requests.get("https://www.superenalotto.net/estrazioni", headers=headers, timeout=15)
         if res.status_code == 200:
             soup = BeautifulSoup(res.text, 'html.parser')
-            text_block = soup.get_text()
+            text = soup.get_text()
+            conc = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+            date = re.search(r'(\d{2}/\d{2}/\d{4})', text)
 
-            conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text_block, re.IGNORECASE)
-            date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text_block)
-
-            concorso = conc_match.group(1) if conc_match else datetime.now().strftime("%Y%m%d")
-            data_str = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
+            concorso = conc.group(1) if conc else datetime.now().strftime("%Y%m%d")
+            data_str = date.group(1) if date else datetime.now().strftime("%d/%m/%Y")
 
             numbers = []
             for tag in soup.find_all(['li', 'span', 'td']):
                 val = tag.text.strip()
                 if val.isdigit() and 1 <= int(val) <= 90:
-                    parent_class = " ".join(tag.get('class', []))
-                    if any(k in parent_class.lower() for k in ['ball', 'numero', 'sym']):
+                    cls = " ".join(tag.get('class', []))
+                    if any(k in cls.lower() for k in ['ball', 'numero', 'sym']):
                         numbers.append(int(val))
 
             if len(numbers) < 6:
@@ -146,140 +171,93 @@ def fetch_latest_draw():
                 numbers = clean_seq
 
             if len(numbers) >= 6:
-                sestina = sorted(numbers[:6])
-                jolly = numbers[6] if len(numbers) > 6 else None
-                star = numbers[7] if len(numbers) > 7 else None
-                return concorso, data_str, sestina, jolly, star
+                return concorso, data_str, sorted(numbers[:6]), numbers[6] if len(numbers)>6 else None, numbers[7] if len(numbers)>7 else None
     except Exception as e:
         print(f"[WARN] Fonte 1 fallita: {e}")
 
-    # FONTE 2: Agimeg.it
-    try:
-        print("[SCRAPER] Fonte 2: Agimeg.it...")
-        res = requests.get("https://www.agimeg.it/estrazioni-superenalotto/", headers=headers, timeout=15)
-        if res.status_code == 200:
-            soup = BeautifulSoup(res.text, 'html.parser')
-            page_text = soup.get_text()
-
-            conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', page_text, re.IGNORECASE)
-            date_match = re.search(r'(\d{2}/\d{2}/\d{4})', page_text)
-
-            concorso = conc_match.group(1) if conc_match else "N/D"
-            data_str = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
-
-            sestina_match = re.search(r'(?:sestina|combinazione|numeri estratti)[^\d]*(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})[,\s\-]+(\d{1,2})', page_text, re.IGNORECASE)
-            if sestina_match:
-                sestina = sorted([int(sestina_match.group(i)) for i in range(1, 7)])
-                return concorso, data_str, sestina, None, None
-    except Exception as e:
-        print(f"[WARN] Fonte 2 fallita: {e}")
-
-    raise Exception("Nessuna fonte dati disponibile.")
+    raise Exception("Impossibile scaricare l'estrazione.")
 
 # ==========================================
-# 4. AGGREGATORE E CORE SYNC
+# 5. CORE EXECUTION
 # ==========================================
 def main():
     concorso, data_str, sestina, jolly, star = fetch_latest_draw()
     somma = sum(sestina)
-    in_range = 220 <= somma <= 320
+    z_score = round((somma - 273.0) / 45.5, 2)
     entropy = calculate_shannon_entropy(sestina)
-    z_score = calculate_z_score(somma)
+    in_range = 220 <= somma <= 320
 
-    # Carica o Inizializza lo Storico
     history = []
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, "r", encoding="utf-8") as f:
                 history = json.load(f)
-        except Exception:
-            history = []
+        except Exception: history = []
 
-    # Aggiungi nuova estrazione se non presente
     if not any(item.get("concorso") == concorso for item in history):
         history.insert(0, {
-            "concorso": concorso,
-            "data": data_str,
-            "sestina": sestina,
-            "somma": somma,
-            "jolly": jolly,
-            "superstar": star,
-            "entropy": entropy,
-            "z_score": z_score
+            "concorso": concorso, "data": data_str, "sestina": sestina,
+            "somma": somma, "jolly": jolly, "superstar": star,
+            "entropy": entropy, "z_score": z_score
         })
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history, f, indent=2)
 
-    # Calcolo Frequenze e Ritardi su tutto lo storico
+    # Calcolo Frequenze e Ritardi
     freq_map = {i: 0 for i in range(1, 91)}
     delay_map = {i: 0 for i in range(1, 91)}
-    
     for idx, draw in enumerate(history):
         s = draw.get("sestina", [])
         for n in range(1, 91):
-            if n in s:
-                freq_map[n] += 1
-            elif idx == 0 or delay_map[n] == idx:
-                delay_map[n] = idx + 1
+            if n in s: freq_map[n] += 1
+            elif idx == 0 or delay_map[n] == idx: delay_map[n] = idx + 1
 
     sorted_hot = sorted(freq_map.keys(), key=lambda x: freq_map[x], reverse=True)
     sorted_cold = sorted(delay_map.keys(), key=lambda x: delay_map[x], reverse=True)
 
-    # Genera Previsioni per il prossimo concorso
-    predictions = generate_vortex_predictions(history, sorted_hot, sorted_cold)
+    # Monte Carlo Matrix
+    predictions = generate_monte_carlo_predictions(history, sorted_hot, sorted_cold)
 
-    # Prepara Database JSON per API / Frontend
+    # Output JSON Database
     db_data = {
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "latest_draw": {
-            "concorso": concorso,
-            "data": data_str,
-            "sestina": sestina,
-            "somma": somma,
-            "in_gaussian_range": in_range,
-            "z_score": z_score,
-            "shannon_entropy": entropy,
-            "jolly": jolly,
-            "superstar": star
+            "concorso": concorso, "data": data_str, "sestina": sestina,
+            "somma": somma, "in_gaussian_range": in_range, "z_score": z_score,
+            "shannon_entropy": entropy, "jolly": jolly, "superstar": star
         },
         "analytics": {
             "hot_numbers_top10": sorted_hot[:10],
             "cold_numbers_top10": sorted_cold[:10],
             "predictions_next_draw": predictions
         },
-        "history_summary": history[:20]  # Ultimi 20 concorsi
+        "history_summary": history[:20]
     }
 
     with open(DATABASE_FILE, "w", encoding="utf-8") as f:
         json.dump(db_data, f, indent=2)
 
-    # Format Telegram HTML Report Supremo
-    status_icon = "🟢" if in_range else "🔴"
-    pari_cnt = sum(1 for x in sestina if x % 2 == 0)
-    dispari_cnt = 6 - pari_cnt
+    # Genera Immagine Grafica
+    generate_vortex_chart(sestina, somma, z_score, sorted_hot, sorted_cold)
 
-    pred_text = "\n".join([f"🎯 <code>{p}</code>" for p in predictions])
-
-    telegram_msg = (
+    # Telegram Report
+    pred_str = "\n".join([f"🎯 <code>{p}</code>" for p in predictions])
+    caption = (
         f"⚡ <b>VENUS VORTEX — QUANTUM REPORT</b> ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📌 <b>Concorso N°:</b> {concorso} ({data_str})\n"
+        f"📌 <b>Concorso:</b> {concorso} del {data_str}\n"
         f"🎲 <b>Sestina:</b> <code>{sestina}</code>\n"
-        f"⭐ <b>Jolly:</b> {jolly or '-'} | <b>SuperStar:</b> {star or '-'}\n\n"
-        f"📊 <b>METRICHE DI ANALISI:</b>\n"
-        f"• <b>Somma Totale:</b> <code>{somma}</code> {status_icon} (Range: 220-320)\n"
-        f"• <b>Z-Score Gaussiano:</b> <code>{z_score}</code>\n"
-        f"• <b>Entropia di Shannon:</b> <code>{entropy} bits</code>\n"
-        f"• <b>Bilanciamento:</b> <code>{pari_cnt} Pari / {dispari_cnt} Dispari</code>\n\n"
-        f"🔥 <b>Top 5 Frequenti:</b> {sorted_hot[:5]}\n"
-        f"🧊 <b>Top 5 Ritardatari:</b> {sorted_cold[:5]}\n\n"
-        f"🔮 <b>PREVISIONI VORTEX (NEXT DRAW):</b>\n"
-        f"{pred_text}\n"
+        f"📊 <b>Somma:</b> <code>{somma}</code> (Z-Score: <code>{z_score}</code>)\n"
+        f"🌀 <b>Entropia:</b> <code>{entropy} bits</code>\n\n"
+        f"🔥 <b>HOT:</b> {sorted_hot[:5]}\n"
+        f"🧊 <b>COLD:</b> {sorted_cold[:5]}\n\n"
+        f"🔮 <b>PREVISIONI MARKOV & MONTE CARLO:</b>\n"
+        f"{pred_str}\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🌐 <a href='https://Francis490.github.io/superenalotto-venus-vortex/'><b>Apri Dashboard Live</b></a>"
+        f"🌐 <a href='https://Francis490.github.io/superenalotto-venus-vortex/'><b>Dashboard Web Live</b></a>"
     )
 
-    send_telegram_alert(telegram_msg)
+    send_telegram_photo(CHART_FILE, caption)
 
 if __name__ == "__main__":
     main()
