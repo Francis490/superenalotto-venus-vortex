@@ -3,16 +3,12 @@ import json
 import requests
 from datetime import datetime
 
-API_ENDPOINT = "https://www.gazzettadellosport.it/api/v1/estrazioni/superenalotto"
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# Intestazioni per simulare una richiesta da un browser reale (evita il blocco Errno 110)
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8',
-    'Referer': 'https://www.gazzettadellosport.it/estrazioni/superenalotto'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*'
 }
 
 def send_telegram_alert(message):
@@ -36,20 +32,56 @@ def send_telegram_alert(message):
     except Exception as e:
         print(f"[TELEGRAM ERROR] Impossibile inviare il messaggio: {e}")
 
+def fetch_latest_draw():
+    # Endpoints ufficiali Sisal / SuperEnalotto non soggetti a firewall IP
+    endpoints = [
+        {
+            "name": "Sisal Official API",
+            "url": "https://www.sisal.it/api/site/superenalotto/estrazioni/ultimaconcorso",
+            "type": "sisal"
+        },
+        {
+            "name": "SuperEnalotto Public Endpoint",
+            "url": "https://www.superenalotto.it/api/v1/draws/latest",
+            "type": "superenalotto"
+        }
+    ]
+
+    for ep in endpoints:
+        try:
+            print(f"[CONNECTING] Tentativo di connessione con {ep['name']}...")
+            res = requests.get(ep["url"], headers=HEADERS, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                if ep["type"] == "sisal":
+                    concorso_info = data.get("concorso", {})
+                    estrazione_info = data.get("estrazione", {})
+                    
+                    concorso_num = str(concorso_info.get("numero", ""))
+                    data_estrazione = concorso_info.get("dataEstrazione", datetime.now().strftime("%d/%m/%Y"))
+                    comb = estrazione_info.get("combinazioneVincenti", []) or estrazione_info.get("sestina", [])
+                    sestina = sorted([int(x) for x in comb[:6]])
+                    jolly = estrazione_info.get("numeroJolly")
+                    star = estrazione_info.get("superStar")
+                    return concorso_num, data_estrazione, sestina, jolly, star
+                
+                elif ep["type"] == "superenalotto":
+                    concorso_num = str(data.get("number", ""))
+                    data_estrazione = data.get("date", "")
+                    sestina = sorted([int(x) for x in data.get("combination", [])])
+                    jolly = data.get("jolly")
+                    star = data.get("star")
+                    return concorso_num, data_estrazione, sestina, jolly, star
+        except Exception as e:
+            print(f"[WARN] {ep['name']} fallito: {e}")
+            continue
+
+    raise Exception("Impossibile contattare i server di estrazione Sisal/SuperEnalotto.")
+
 def fetch_and_sync():
     try:
-        print("[CONNECTING] Connessione all'endpoint estrazioni...")
-        response = requests.get(API_ENDPOINT, headers=HEADERS, timeout=20)
-        response.raise_for_status()
-        
-        data = response.json()
-        latest_draw = data.get('archive', [])[0]
-        concorso_num = latest_draw.get("number")
-        data_estrazione = latest_draw.get("date")
-        sestina = sorted([int(x) for x in latest_draw.get("combination")])
+        concorso_num, data_estrazione, sestina, jolly, star = fetch_latest_draw()
         somma_sestina = sum(sestina)
-        jolly = latest_draw.get("jolly")
-        star = latest_draw.get("star")
 
         db_data = {
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
