@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venus Vortex Intelligence Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        vortex: { 800: '#0f172a', 900: '#020617', accent: '#3b82f6', gold: '#eab308' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-12">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-600 rounded-lg text-white">
+                    <i class="fa-solid fa-atom text-xl animate-spin-slow"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wider text-white">VENUS VORTEX <span class="text-blue-500 text-xs px-2 py-0.5 rounded bg-blue-950 border border-blue-800">PRO v2.0</span></h1>
+                    <p class="text-xs text-slate-400" id="last-update">Aggiornamento in corso...</p>
+                </div>
+            </div>
+            <span id="status-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                ● Sistema Attivo
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-8 space-y-8">
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-xl">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Ultimo Concorso</p>
+                <h3 class="text-2xl font-bold mt-1 text-blue-400" id="draw-num">--</h3>
+                <p class="text-xs text-slate-500 mt-1" id="draw-date">--/--/----</p>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-xl md:col-span-2">
+                <p class="text-xs text-slate-400 uppercase font-semibold mb-2">Sestina Estratta</p>
+                <div class="flex flex-wrap gap-2" id="draw-balls">
+                    <!-- Numbers will be loaded here -->
+                </div>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-800 p-5 rounded-xl">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Somma & Gaussiana</p>
+                <h3 class="text-2xl font-bold mt-1" id="draw-sum">--</h3>
+                <p class="text-xs mt-1" id="gaussian-status">--</p>
+            </div>
+        </div>
+
+        <!-- Predictions Section -->
+        <section class="bg-slate-900/80 border border-blue-900/40 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                Predizioni Ottimizzate per la Prossima Giocata (Venus Vortex Engine)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="predictions-container">
+                <!-- Prediction cards loaded via JS -->
+            </div>
+        </section>
+
+        <!-- Charts & Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart -->
+            <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+                <h3 class="text-sm font-semibold text-slate-300 mb-4">Andamento Somme (Curva di Gauss Limit: 220-320)</h3>
+                <canvas id="gaussianChart" height="200"></canvas>
+            </div>
+            <!-- Hot/Cold Numbers -->
+            <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl space-y-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> Numeri Caldi (Top Frequenti)
+                    </h3>
+                    <div class="flex flex-wrap gap-2" id="hot-numbers"></div>
+                </div>
+                <hr class="border-slate-800">
+                <div>
+                    <h3 class="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-snowflake"></i> Numeri Freddi (Ritardatari)
+                    </h3>
+                    <div class="flex flex-wrap gap-2" id="cold-numbers"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadData() {
+            try {
+                const res = await fetch('venus_database.json?t=' + new Date().getTime());
+                const data = await res.json();
+
+                document.getElementById('last-update').innerText = 'Ultimo Sync: ' + data.last_updated;
+                document.getElementById('draw-num').innerText = 'N° ' + data.latest_concorso;
+                document.getElementById('draw-date').innerText = data.latest_sostina_date || '';
+                document.getElementById('draw-sum').innerText = data.somma;
+
+                const gStatus = document.getElementById('gaussian-status');
+                if (data.in_gaussian_range) {
+                    gStatus.innerText = '✅ In Range Gaussiano (220-320)';
+                    gStatus.className = 'text-xs mt-1 text-emerald-400 font-semibold';
+                } else {
+                    gStatus.innerText = '⚠️ Fuori Norma';
+                    gStatus.className = 'text-xs mt-1 text-amber-400 font-semibold';
+                }
+
+                // Sestina Balls
+                const ballsContainer = document.getElementById('draw-balls');
+                ballsContainer.innerHTML = '';
+                (data.latest_sestina || []).forEach(n => {
+                    ballsContainer.innerHTML += `<span class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md border border-blue-400">${n}</span>`;
+                });
+                if (data.jolly) {
+                    ballsContainer.innerHTML += `<span class="w-10 h-10 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-md border border-amber-300" title="Jolly">J:${data.jolly}</span>`;
+                }
+
+                // Predictions
+                const predContainer = document.getElementById('predictions-container');
+                predContainer.innerHTML = '';
+                (data.predictions_next_draw || []).forEach(p => {
+                    predContainer.innerHTML += `
+                        <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl">
+                            <span class="text-xs font-bold text-blue-400 uppercase">${p.nome}</span>
+                            <div class="flex flex-wrap gap-1.5 my-3">
+                                ${p.sestina.map(num => `<span class="w-8 h-8 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center border border-slate-700">${num}</span>`).join('')}
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-400">
+                                <span>Somma: <strong class="text-white">${p.somma}</strong></span>
+                                <span>Acc: <strong class="text-emerald-400">${p.coerenza_gaussiana}</strong></span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Hot/Cold
+                const hotContainer = document.getElementById('hot-numbers');
+                const coldContainer = document.getElementById('cold-numbers');
+                hotContainer.innerHTML = (data.stats?.hot_numbers || []).map(n => `<span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-lg">${n}</span>`).join('');
+                coldContainer.innerHTML = (data.stats?.cold_numbers || []).map(n => `<span class="px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg">${n}</span>`).join('');
+
+                // Chart
+                renderChart(data.history || []);
+
+            } catch (err) {
+                console.error("Errore caricamento dati:", err);
+            }
+        }
+
+        function renderChart(history) {
+            const ctx = document.getElementById('gaussianChart').getContext('2d');
+            const reversed = [...history].reverse();
+            const labels = reversed.map(h => 'Conc. ' + h.concorso);
+            const sums = reversed.map(h => h.somma);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Somma Sestina',
+                            data: sums,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Limite Min (220)',
+                            data: Array(sums.length).fill(220),
+                            borderColor: 'rgba(239, 68, 68, 0.5)',
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Limite Max (320)',
+                            data: Array(sums.length).fill(320),
+                            borderColor: 'rgba(239, 68, 68, 0.5)',
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } },
+                    scales: {
+                        x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
