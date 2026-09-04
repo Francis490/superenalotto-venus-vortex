@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import sys
 import math
 import random
 import requests
@@ -42,6 +43,8 @@ def send_telegram_photo(photo_path, caption_html):
             resp = requests.post(url, data=payload, files={"photo": photo}, timeout=25)
             if resp.status_code == 200:
                 print("[TELEGRAM] Report e grafico ML inviati con successo!")
+            else:
+                print(f"[TELEGRAM ERROR] Errore API {resp.status_code}: {resp.text}")
     except Exception as e:
         print(f"[TELEGRAM ERROR] {e}")
 
@@ -108,13 +111,11 @@ def generate_hybrid_predictions(ml_probs, count=3):
     attempts = 0
     
     all_numbers = list(range(1, 91))
-    # Pesi probabilistici per TUTTI i 90 numeri estratti dal RandomForest
     weights = [ml_probs.get(n, 0.01) for n in all_numbers]
 
     while len(predictions) < count and attempts < 20000:
         attempts += 1
         
-        # Estrazione pesata senza reinserimento sull'INTERO tabellone (1-90)
         candidate = []
         temp_numbers = list(all_numbers)
         temp_weights = list(weights)
@@ -130,13 +131,12 @@ def generate_hybrid_predictions(ml_probs, count=3):
         somma = sum(candidate)
         anti_mass_score = calculate_anti_mass_score(candidate)
 
-        # Regola di bilanciamento: forza la presenza di almeno un numero alto (> 50)
         has_high_number = any(n > 50 for n in candidate)
 
         if attempts < 10000:
             if not (200 <= somma <= 340): continue
             if anti_mass_score < 0.75: continue
-            if not has_high_number: continue # Copertura obbligatoria della fascia 51-90
+            if not has_high_number: continue
 
         if candidate not in [p["sestina"] for p in predictions]:
             predictions.append({
@@ -145,7 +145,6 @@ def generate_hybrid_predictions(ml_probs, count=3):
                 "ml_confidence": round(sum(ml_probs.get(n, 0.05) for n in candidate) / 6, 4)
             })
 
-    # Fallback di sicurezza con spettro completo
     if len(predictions) < count:
         while len(predictions) < count:
             cand = sorted(random.sample(range(1, 91), 6))
@@ -159,51 +158,60 @@ def generate_hybrid_predictions(ml_probs, count=3):
     return predictions
 
 # ==========================================
-# 4. SCRAPER & GRAFICA
+# 4. SCRAPER DINAMICO & GRAFICA
 # ==========================================
 def fetch_superenalotto():
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    }
+    url = "https://www.superenalotto.net/estrazioni"
+    
     try:
-        res = requests.get("https://www.superenalotto.net/estrazioni", headers=headers, timeout=15)
+        res = requests.get(url, headers=headers, timeout=15)
         if res.status_code == 200:
             soup = BeautifulSoup(res.text, 'html.parser')
             text = soup.get_text()
-            conc = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-            date = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-
-            raw_numbers = []
-            for tag in soup.find_all(['li', 'span', 'div'], class_=re.compile(r'ball|numero|win', re.I)):
-                val = tag.text.strip()
+            
+            date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
+            conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+            
+            balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball')
+            extracted_nums = []
+            for b in balls:
+                val = b.text.strip()
                 if val.isdigit():
-                    num = int(val)
-                    if 1 <= num <= 90 and num not in raw_numbers:
-                        raw_numbers.append(num)
+                    n = int(val)
+                    if 1 <= n <= 90 and n not in extracted_nums:
+                        extracted_nums.append(n)
+            
+            # Selettore di riserva regex se i tag HTML cambiano
+            if len(extracted_nums) < 6:
+                all_digits = re.findall(r'\b(?:[1-9]|[1-8][0-9]|90)\b', text)
+                extracted_nums = []
+                for d in all_digits:
+                    n = int(d)
+                    if n not in extracted_nums:
+                        extracted_nums.append(n)
+                    if len(extracted_nums) == 8:
+                        break
 
-            if len(raw_numbers) >= 6:
-                sestina = sorted(raw_numbers[:6])
-                jolly = raw_numbers[6] if len(raw_numbers) > 6 else 90
-                superstar = raw_numbers[7] if len(raw_numbers) > 7 else 90
-                found_date = date.group(1) if date else "01/09/2026"
+            if len(extracted_nums) >= 6:
+                found_date = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
+                conc_num = conc_match.group(1) if conc_match else found_date.replace("/", "")
+                
+                print(f"[SCRAPER] Estrazione catturata con successo! Concorso {conc_num} del {found_date}")
                 return {
-                    "concorso": conc.group(1) if conc else found_date.replace("/", ""),
+                    "concorso": str(conc_num),
                     "data": found_date,
-                    "sestina": sestina,
-                    "jolly": jolly,
-                    "superstar": superstar
+                    "sestina": sorted(extracted_nums[:6]),
+                    "jolly": extracted_nums[6] if len(extracted_nums) > 6 else 90,
+                    "superstar": extracted_nums[7] if len(extracted_nums) > 7 else 90
                 }
     except Exception as e:
-        print(f"[WARN] Scraper online non disponibile ({e}). Attivazione fallback di sicurezza.")
+        print(f"[ERROR SCRAPER] Errore durante il recupero dei dati: {e}")
 
-    # Fallback di sicurezza blindato (Ultima estrazione reale ufficiale del 01/09/2026)
-    return {
-        "concorso": "01092026",
-        "data": "01/09/2026",
-        "sestina": [42, 47, 59, 64, 67, 71],
-        "jolly": 88,
-        "superstar": 75
-    }
-            
-    raise Exception("Impossibile recuperare i dati ufficiali dell'estrazione.")
+    print("[CRITICAL] Impossibile estrarre i dati online. Arresto preventivo per evitare falsi duplicati.")
+    sys.exit(1)
 
 def generate_advanced_chart(sestina, somma, z_score, ml_probs):
     plt.style.use('dark_background')
@@ -255,9 +263,9 @@ def main():
 
     if estrazione_gia_presente:
         print(f"[INFO] Concorso {concorso} già presente in archivio. Nessun nuovo dato da elaborare.")
-        return  # Blocco preventivo: evita doppie notifiche Telegram e riesecuzioni inutili
+        return
 
-    # Se è un nuovo concorso, lo aggiunge in cima allo storico
+    # Inserimento nuovo concorso in cima allo storico
     history.insert(0, {
         "concorso": concorso, 
         "data": data_str, 
@@ -267,7 +275,7 @@ def main():
     })
     
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, indent=2)
+        json.dump(history, f, indent=2, ensure_ascii=False)
 
     print(f"[SUCCESS] Nuovo concorso {concorso} registrato con successo!")
 
@@ -287,7 +295,7 @@ def main():
     }
 
     with open(DATABASE_FILE, "w", encoding="utf-8") as f:
-        json.dump(db_data, f, indent=2)
+        json.dump(db_data, f, indent=2, ensure_ascii=False)
 
     generate_advanced_chart(sestina, somma, z_score, ml_probabilities)
 
