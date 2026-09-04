@@ -2,8 +2,10 @@ name: SuperEnalotto Venus Vortex Database Auto-Sync
 
 on:
   schedule:
-    # 18:35 e 18:55 UTC = 20:35 e 20:55 CEST (Doppio controllo automatico ogni sera)
-    - cron: '35,55 18 * * *'
+    # 18:35, 18:55, 19:35, 19:55 UTC
+    # - In Ora Legale (CEST): equivale a 20:35, 20:55, 21:35, 21:55
+    # - In Ora Solare (CET): equivale a 19:35, 19:55, 20:35, 20:55
+    - cron: '35,55 18,19 * * *'
   workflow_dispatch:
 
 permissions:
@@ -12,7 +14,6 @@ permissions:
 jobs:
   update-venus-db:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
