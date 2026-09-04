@@ -1,11 +1,30 @@
 import os
 import json
 import requests
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import telebot
 from telebot import types
 
-# Importazione moduli nativi dallo scraper (senza modificarlo)
+# Importazione moduli dallo scraper nativo
 from scraper import train_ml_predictive_model, generate_hybrid_predictions
+
+# ---------------------------------------------------------
+# HEALTH-CHECK SERVER (PER SBLOCCARE IL PIANO FREE $0 SU RENDER)
+# ---------------------------------------------------------
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Venus Vortex Bot is Active!")
+
+    def log_message(self, format, *args):
+        return  # Silenzia i log HTTP standard
+
+def start_health_server():
+    port = int(os.getenv("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), HealthHandler)
+    server.serve_forever()
 
 # ---------------------------------------------------------
 # CONFIGURAZIONE AMBIENTE & SICUREZZA
@@ -199,5 +218,7 @@ def handle_callback(call):
         bot.send_message(chat_id, "🔒 Sessione chiusa correttamente.")
 
 if __name__ == "__main__":
+    # Avvio del server HTTP di Health-Check in un thread separato
+    threading.Thread(target=start_health_server, daemon=True).start()
     print("[SECURITY] Bot Interattivo avviato e in ascolto 24/7...")
     bot.infinity_polling(skip_pending=True)
