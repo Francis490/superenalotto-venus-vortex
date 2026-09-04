@@ -1,5 +1,6 @@
-requests
+pyTelegramBotAPI==4.16.1
+requests==2.31.0
+numpy
 beautifulsoup4
 matplotlib
-numpy
 scikit-learn
