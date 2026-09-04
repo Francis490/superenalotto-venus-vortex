@@ -158,7 +158,7 @@ def generate_hybrid_predictions(ml_probs, count=3):
     return predictions
 
 # ==========================================
-# 4. SCRAPER DINAMICO & GRAFICA
+# 4. SCRAPER DINAMICO & GRAFICA (CON JACKPOT)
 # ==========================================
 def fetch_superenalotto():
     headers = {
@@ -174,6 +174,14 @@ def fetch_superenalotto():
             
             date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
             conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+            
+            # Recupero Jackpot
+            jackpot_match = re.search(r'(?:jackpot|montepremi)\s*(?:stimato|prossimo)?\s*[:\-]?\s*(€?\s*[\d\.\,]+\s*(?:milioni|mila)?|€\s*[\d\.\,]+)', text, re.I)
+            jackpot_val = "N/D"
+            if jackpot_match:
+                jackpot_val = jackpot_match.group(1).strip()
+                if not jackpot_val.startswith("€"):
+                    jackpot_val = f"€ {jackpot_val}"
             
             balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball')
             extracted_nums = []
@@ -199,18 +207,19 @@ def fetch_superenalotto():
                 found_date = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
                 conc_num = conc_match.group(1) if conc_match else found_date.replace("/", "")
                 
-                print(f"[SCRAPER] Estrazione catturata con successo! Concorso {conc_num} del {found_date}")
+                print(f"[SCRAPER] Estrazione catturata! Concorso {conc_num} del {found_date} | Jackpot: {jackpot_val}")
                 return {
                     "concorso": str(conc_num),
                     "data": found_date,
                     "sestina": sorted(extracted_nums[:6]),
                     "jolly": extracted_nums[6] if len(extracted_nums) > 6 else 90,
-                    "superstar": extracted_nums[7] if len(extracted_nums) > 7 else 90
+                    "superstar": extracted_nums[7] if len(extracted_nums) > 7 else 90,
+                    "jackpot": jackpot_val
                 }
     except Exception as e:
         print(f"[ERROR SCRAPER] Errore durante il recupero dei dati: {e}")
 
-    print("[CRITICAL] Impossibile estrarre i dati online. Arresto preventivo per evitare falsi duplicati.")
+    print("[CRITICAL] Impossibile estrarre i dati online. Arresto preventivo.")
     sys.exit(1)
 
 def generate_advanced_chart(sestina, somma, z_score, ml_probs):
@@ -247,6 +256,7 @@ def main():
     sestina = se_data["sestina"]
     concorso = str(se_data["concorso"])
     data_str = se_data["data"]
+    jackpot_str = se_data.get("jackpot", "N/D")
     somma = sum(sestina)
     z_score = round((somma - 273.0) / 45.5, 2)
 
@@ -258,20 +268,21 @@ def main():
         except Exception: 
             history = []
 
-    # Controllo Anti-Duplicato con conversione esplicita a stringa
+    # Controllo Anti-Duplicato
     estrazione_gia_presente = any(str(item.get("concorso")) == concorso for item in history)
 
     if estrazione_gia_presente:
         print(f"[INFO] Concorso {concorso} già presente in archivio. Nessun nuovo dato da elaborare.")
         return
 
-    # Inserimento nuovo concorso in cima allo storico
+    # Inserimento nuovo concorso
     history.insert(0, {
         "concorso": concorso, 
         "data": data_str, 
         "sestina": sestina,
         "somma": somma, 
-        "z_score": z_score
+        "z_score": z_score,
+        "jackpot": jackpot_str
     })
     
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
@@ -309,6 +320,7 @@ def main():
         f"📌 <b>Concorso:</b> {concorso} ({data_str})\n"
         f"🎲 <b>Sestina:</b> <code>{sestina}</code>\n"
         f"⭐ <b>Jolly:</b> <code>{se_data.get('jolly', 'N/D')}</code> | 🌟 <b>SuperStar:</b> <code>{se_data.get('superstar', 'N/D')}</code>\n"
+        f"💰 <b>Jackpot Stimato:</b> <b>{jackpot_str}</b>\n"
         f"📊 <b>Somma:</b> <code>{somma}</code> (Z-Score: <code>{z_score}</code>)\n"
         f"👁️ <b>Anti-Massa Score:</b> <code>{calculate_anti_mass_score(sestina)}</code>\n\n"
         f"🧠 <b>PREVISIONI MACHINE LEARNING (RANDOM FOREST):</b>\n"
