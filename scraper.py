@@ -121,7 +121,7 @@ def generate_hybrid_predictions(ml_probs, count=3):
     all_numbers = list(range(1, 91))
     weights = [ml_probs.get(n, 0.01) for n in all_numbers]
 
-    while len(predictions) < count and attempts < 20000:
+    while len(predictions) < count and attempts < 50000:
         attempts += 1
         
         candidate = []
@@ -139,15 +139,29 @@ def generate_hybrid_predictions(ml_probs, count=3):
         somma = sum(candidate)
         anti_mass_score = calculate_anti_mass_score(candidate)
 
-        has_high_number = any(n > 50 for n in candidate)
-
-        if attempts < 10000:
-            if not (200 <= somma <= 340):
-                continue
-            if anti_mass_score < 0.75:
-                continue
-            if not has_high_number:
-                continue
+        # === INIZIO FILTRI FISICA VENUS ===
+        if attempts < 25000:
+            # 1. Filtro Gaussiano & Anti-Massa Base
+            if not (200 <= somma <= 340): continue
+            if anti_mass_score < 0.75: continue
+            
+            # 2. Modello Poissoniano Fascia Alta (>45)
+            grandi = sum(1 for n in candidate if n > 45)
+            if grandi < 2 or grandi > 5: continue
+            
+            # 3. Filtro Parità (Evita sestine tutte pari o tutte dispari)
+            pari = sum(1 for n in candidate if n % 2 == 0)
+            if pari == 0 or pari == 6: continue
+            
+            # 4. Algoritmo di Turbolenza: Cluster di Decadi (almeno 2 numeri nella stessa decina)
+            decadi = [n // 10 for n in candidate]
+            has_decade_cluster = any(decadi.count(d) >= 2 for d in set(decadi))
+            if not has_decade_cluster: continue
+            
+            # 5. Effetto Inerzia: Coppia Tesa (almeno due numeri con distanza <= 2)
+            diffs = [candidate[i+1] - candidate[i] for i in range(len(candidate)-1)]
+            if not any(d <= 2 for d in diffs): continue
+        # === FINE FILTRI FISICA VENUS ===
 
         if candidate not in [p["sestina"] for p in predictions]:
             predictions.append({
@@ -156,6 +170,7 @@ def generate_hybrid_predictions(ml_probs, count=3):
                 "ml_confidence": round(sum(ml_probs.get(n, 0.05) for n in candidate) / 6, 4)
             })
 
+    # Fallback di sicurezza in caso di esaurimento tentativi
     if len(predictions) < count:
         while len(predictions) < count:
             cand = sorted(random.sample(range(1, 91), 6))
@@ -167,7 +182,6 @@ def generate_hybrid_predictions(ml_probs, count=3):
                 })
 
     return predictions
-
 # ==========================================
 # 4. SCRAPER BLINDATO & PARSING DATA
 # ==========================================
