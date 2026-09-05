@@ -1,57 +1,58 @@
 {
-  "last_updated": "2026-09-04 06:42:06",
+  "last_updated": "2026-09-05 10:08:46",
   "latest_draw": {
-    "concorso": "04092026",
-    "data": "04/09/2026",
+    "concorso": "05092026",
+    "data": "05/09/2026",
     "sestina": [
       8,
-      11,
-      15,
+      44,
       60,
-      68,
-      76
+      73,
+      86,
+      89
     ],
-    "jolly": 9,
-    "superstar": 90
+    "jolly": 57,
+    "superstar": 42,
+    "jackpot": "N/D"
   },
   "quant_metrics": {
-    "somma": 238,
-    "z_score": -0.77,
-    "anti_mass_index": 0.85
+    "somma": 360,
+    "z_score": 1.91,
+    "anti_mass_index": 1.0
   },
   "ml_predictions": [
     {
       "sestina": [
-        12,
-        15,
-        56,
-        64,
-        65,
-        66
+        20,
+        22,
+        46,
+        49,
+        71,
+        90
       ],
       "ev_score": 1.0,
       "ml_confidence": 0.0111
     },
     {
       "sestina": [
-        5,
-        19,
-        24,
-        60,
+        14,
+        21,
+        54,
+        59,
         62,
-        89
+        75
       ],
-      "ev_score": 0.85,
+      "ev_score": 1.0,
       "ml_confidence": 0.0111
     },
     {
       "sestina": [
-        10,
+        20,
         29,
-        57,
-        72,
-        80,
-        82
+        42,
+        52,
+        68,
+        70
       ],
       "ev_score": 1.0,
       "ml_confidence": 0.0111
