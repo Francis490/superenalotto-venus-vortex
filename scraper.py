@@ -158,7 +158,7 @@ def generate_hybrid_predictions(ml_probs, count=3):
     return predictions
 
 # ==========================================
-# 4. SCRAPER DINAMICO & GRAFICA (CON JACKPOT)
+# 4. SCRAPER BLINDATO & PARSING JACKPOT
 # ==========================================
 def fetch_superenalotto():
     headers = {
@@ -172,17 +172,24 @@ def fetch_superenalotto():
             soup = BeautifulSoup(res.text, 'html.parser')
             text = soup.get_text()
             
-            date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-            conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-            
-            # Recupero Jackpot
-            jackpot_match = re.search(r'(?:jackpot|montepremi)\s*(?:stimato|prossimo)?\s*[:\-]?\s*(€?\s*[\d\.\,]+\s*(?:milioni|mila)?|€\s*[\d\.\,]+)', text, re.I)
+            # Estrazione Jackpot migliorata
             jackpot_val = "N/D"
-            if jackpot_match:
-                jackpot_val = jackpot_match.group(1).strip()
-                if not jackpot_val.startswith("€"):
-                    jackpot_val = f"€ {jackpot_val}"
+            jp_elem = soup.find(text=re.compile(r'jackpot|montepremi', re.I))
+            if jp_elem and jp_elem.parent:
+                jp_text = jp_elem.parent.get_text()
+                jp_match = re.search(r'€?\s*[\d\.\,]+\s*(?:milioni|mila)?', jp_text, re.I)
+                if jp_match:
+                    jackpot_val = jp_match.group(0).strip()
             
+            if jackpot_val == "N/D":
+                jp_fallback = re.search(r'€\s*[\d\.\,]{4,}', text)
+                if jp_fallback:
+                    jackpot_val = jp_fallback.group(0).strip()
+
+            if not jackpot_val.startswith("€") and jackpot_val != "N/D":
+                jackpot_val = f"€ {jackpot_val}"
+
+            # Estrazione numeri con selettore dedicato
             balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball')
             extracted_nums = []
             for b in balls:
@@ -192,22 +199,15 @@ def fetch_superenalotto():
                     if 1 <= n <= 90 and n not in extracted_nums:
                         extracted_nums.append(n)
             
-            # Selettore di riserva regex se i tag HTML cambiano
-            if len(extracted_nums) < 6:
-                all_digits = re.findall(r'\b(?:[1-9]|[1-8][0-9]|90)\b', text)
-                extracted_nums = []
-                for d in all_digits:
-                    n = int(d)
-                    if n not in extracted_nums:
-                        extracted_nums.append(n)
-                    if len(extracted_nums) == 8:
-                        break
-
             if len(extracted_nums) >= 6:
+                # Cerca la data specifica associata all'ultima estrazione
+                date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
+                conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+                
                 found_date = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
                 conc_num = conc_match.group(1) if conc_match else found_date.replace("/", "")
                 
-                print(f"[SCRAPER] Estrazione catturata! Concorso {conc_num} del {found_date} | Jackpot: {jackpot_val}")
+                print(f"[SCRAPER] Dati trovati: Concorso {conc_num} del {found_date} | Jackpot: {jackpot_val}")
                 return {
                     "concorso": str(conc_num),
                     "data": found_date,
@@ -217,7 +217,7 @@ def fetch_superenalotto():
                     "jackpot": jackpot_val
                 }
     except Exception as e:
-        print(f"[ERROR SCRAPER] Errore durante il recupero dei dati: {e}")
+        print(f"[ERROR SCRAPER] Errore connessione/parsing: {e}")
 
     print("[CRITICAL] Impossibile estrarre i dati online. Arresto preventivo.")
     sys.exit(1)
@@ -268,11 +268,18 @@ def main():
         except Exception: 
             history = []
 
-    # Controllo Anti-Duplicato
-    estrazione_gia_presente = any(str(item.get("concorso")) == concorso for item in history)
+    # DOPPIO SCUDO ANTI-DUPLICATO:
+    # 1. Controllo su ID Concorso
+    # 2. Controllo su UGUAGLIANZA SESTINA (se la sestina estratta è identica all'ultima registrata, è un duplicato!)
+    latest_sestina = history[0].get("sestina", []) if len(history) > 0 else []
+    
+    estrazione_gia_presente = (
+        any(str(item.get("concorso")) == concorso for item in history) or
+        (latest_sestina == sestina)
+    )
 
     if estrazione_gia_presente:
-        print(f"[INFO] Concorso {concorso} già presente in archivio. Nessun nuovo dato da elaborare.")
+        print(f"[INFO] L'estrazione {sestina} (Concorso {concorso}) è già presente in archivio. Nessun nuovo dato da elaborare.")
         return
 
     # Inserimento nuovo concorso
