@@ -2,7 +2,6 @@ import os
 import re
 import json
 import sys
-import math
 import random
 import requests
 import numpy as np
@@ -25,7 +24,7 @@ CHART_FILE = "vortex_chart.png"
 # ==========================================
 def send_telegram_photo(photo_path, caption_html):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("[WARN] Credenziali Telegram assenti.")
+        print("[WARN] Credenziali Telegram assenti. Notifica saltata.")
         return
 
     token = TELEGRAM_BOT_TOKEN.strip()
@@ -42,11 +41,11 @@ def send_telegram_photo(photo_path, caption_html):
             }
             resp = requests.post(url, data=payload, files={"photo": photo}, timeout=25)
             if resp.status_code == 200:
-                print("[TELEGRAM] Report e grafico ML inviati con successo!")
+                print("[TELEGRAM] Report e grafico ML inviati con successo su Telegram!")
             else:
-                print(f"[TELEGRAM ERROR] Errore API {resp.status_code}: {resp.text}")
+                print(f"[TELEGRAM ERROR] Risposta API {resp.status_code}: {resp.text}")
     except Exception as e:
-        print(f"[TELEGRAM ERROR] {e}")
+        print(f"[TELEGRAM ERROR] Impossibile inviare la notifica: {e}")
 
 # ==========================================
 # 2. MACHINE LEARNING ENGINE (RANDOM FOREST)
@@ -87,7 +86,11 @@ def train_ml_predictive_model(history, max_num=90):
     
     num_probs = {}
     for idx in range(max_num):
-        prob_val = probabilities[idx][0][1] if len(probabilities[idx][0]) > 1 else 0.05
+        prob_arr = probabilities[idx][0]
+        if len(prob_arr) > 1:
+            prob_val = prob_arr[1]
+        else:
+            prob_val = 0.05
         num_probs[idx + 1] = float(prob_val)
 
     return num_probs
@@ -97,13 +100,18 @@ def train_ml_predictive_model(history, max_num=90):
 # ==========================================
 def calculate_anti_mass_score(sestina):
     dates_count = sum(1 for n in sestina if n <= 31)
-    if dates_count >= 5: score = 0.20
-    elif dates_count == 4: score = 0.50
-    elif dates_count == 3: score = 0.85
-    else: score = 1.00
+    if dates_count >= 5:
+        score = 0.20
+    elif dates_count == 4:
+        score = 0.50
+    elif dates_count == 3:
+        score = 0.85
+    else:
+        score = 1.00
 
     diffs = [sestina[i+1] - sestina[i] for i in range(len(sestina)-1)]
-    if len(set(diffs)) == 1: score *= 0.1
+    if len(set(diffs)) == 1:
+        score *= 0.1
     return round(score, 2)
 
 def generate_hybrid_predictions(ml_probs, count=3):
@@ -134,9 +142,12 @@ def generate_hybrid_predictions(ml_probs, count=3):
         has_high_number = any(n > 50 for n in candidate)
 
         if attempts < 10000:
-            if not (200 <= somma <= 340): continue
-            if anti_mass_score < 0.75: continue
-            if not has_high_number: continue
+            if not (200 <= somma <= 340):
+                continue
+            if anti_mass_score < 0.75:
+                continue
+            if not has_high_number:
+                continue
 
         if candidate not in [p["sestina"] for p in predictions]:
             predictions.append({
@@ -158,7 +169,7 @@ def generate_hybrid_predictions(ml_probs, count=3):
     return predictions
 
 # ==========================================
-# 4. SCRAPER BLINDATO & PARSING JACKPOT
+# 4. SCRAPER BLINDATO & PARSING DATA
 # ==========================================
 def fetch_superenalotto():
     headers = {
@@ -172,25 +183,20 @@ def fetch_superenalotto():
             soup = BeautifulSoup(res.text, 'html.parser')
             text = soup.get_text()
             
-            # Estrazione Jackpot migliorata
+            # Parsing Jackpot
             jackpot_val = "N/D"
-            jp_elem = soup.find(text=re.compile(r'jackpot|montepremi', re.I))
-            if jp_elem and jp_elem.parent:
-                jp_text = jp_elem.parent.get_text()
-                jp_match = re.search(r'€?\s*[\d\.\,]+\s*(?:milioni|mila)?', jp_text, re.I)
-                if jp_match:
-                    jackpot_val = jp_match.group(0).strip()
-            
-            if jackpot_val == "N/D":
-                jp_fallback = re.search(r'€\s*[\d\.\,]{4,}', text)
+            jp_match = re.search(r'(?:jackpot|montepremi)[:\s]*€?\s*([\d\.\,]+\s*(?:milioni|mila)?)', text, re.I)
+            if jp_match:
+                jackpot_val = jp_match.group(1).strip()
+                if not jackpot_val.startswith("€"):
+                    jackpot_val = f"€ {jackpot_val}"
+            else:
+                jp_fallback = re.search(r'€\s*[\d\.\,]{4,}\s*(?:milioni|mila)?', text, re.I)
                 if jp_fallback:
                     jackpot_val = jp_fallback.group(0).strip()
 
-            if not jackpot_val.startswith("€") and jackpot_val != "N/D":
-                jackpot_val = f"€ {jackpot_val}"
-
-            # Estrazione numeri con selettore dedicato
-            balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball')
+            # Parsing Numeri
+            balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball')
             extracted_nums = []
             for b in balls:
                 val = b.text.strip()
@@ -199,25 +205,38 @@ def fetch_superenalotto():
                     if 1 <= n <= 90 and n not in extracted_nums:
                         extracted_nums.append(n)
             
+            if len(extracted_nums) < 6:
+                num_matches = re.findall(r'\b(?:[1-9]|[1-8][0-9]|90)\b', text)
+                extracted_nums = []
+                for nm in num_matches:
+                    n = int(nm)
+                    if n not in extracted_nums:
+                        extracted_nums.append(n)
+                    if len(extracted_nums) >= 8:
+                        break
+
             if len(extracted_nums) >= 6:
-                # Cerca la data specifica associata all'ultima estrazione
                 date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
                 conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
                 
                 found_date = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
                 conc_num = conc_match.group(1) if conc_match else found_date.replace("/", "")
                 
-                print(f"[SCRAPER] Dati trovati: Concorso {conc_num} del {found_date} | Jackpot: {jackpot_val}")
+                sestina = sorted(extracted_nums[:6])
+                jolly = extracted_nums[6] if len(extracted_nums) > 6 else 90
+                superstar = extracted_nums[7] if len(extracted_nums) > 7 else 90
+
+                print(f"[SCRAPER] Concorso {conc_num} ({found_date}) | Sestina: {sestina} | Jackpot: {jackpot_val}")
                 return {
                     "concorso": str(conc_num),
                     "data": found_date,
-                    "sestina": sorted(extracted_nums[:6]),
-                    "jolly": extracted_nums[6] if len(extracted_nums) > 6 else 90,
-                    "superstar": extracted_nums[7] if len(extracted_nums) > 7 else 90,
+                    "sestina": sestina,
+                    "jolly": jolly,
+                    "superstar": superstar,
                     "jackpot": jackpot_val
                 }
     except Exception as e:
-        print(f"[ERROR SCRAPER] Errore connessione/parsing: {e}")
+        print(f"[ERROR SCRAPER] {e}")
 
     print("[CRITICAL] Impossibile estrarre i dati online. Arresto preventivo.")
     sys.exit(1)
@@ -268,19 +287,17 @@ def main():
         except Exception: 
             history = []
 
-    # DOPPIO SCUDO ANTI-DUPLICATO:
-    # 1. Controllo su ID Concorso
-    # 2. Controllo su UGUAGLIANZA SESTINA (se la sestina estratta è identica all'ultima registrata, è un duplicato!)
     latest_sestina = history[0].get("sestina", []) if len(history) > 0 else []
     
+    # SCUDO VETTORIALE ANTI-DUPLICATO E ANTI-CACHE
     estrazione_gia_presente = (
         any(str(item.get("concorso")) == concorso for item in history) or
         (latest_sestina == sestina)
     )
 
     if estrazione_gia_presente:
-        print(f"[INFO] L'estrazione {sestina} (Concorso {concorso}) è già presente in archivio. Nessun nuovo dato da elaborare.")
-        return
+        print(f"[INFO] Concorso {concorso} o Sestina {sestina} già presente in archivio. Esecuzione terminata senza modifiche.")
+        sys.exit(0)
 
     # Inserimento nuovo concorso
     history.insert(0, {
@@ -295,9 +312,8 @@ def main():
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
-    print(f"[SUCCESS] Nuovo concorso {concorso} registrato con successo!")
+    print(f"[SUCCESS] Concorso {concorso} registrato con successo!")
 
-    # Machine Learning & Anti-Massa
     ml_probabilities = train_ml_predictive_model(history)
     predictions = generate_hybrid_predictions(ml_probabilities)
 
@@ -318,7 +334,7 @@ def main():
     generate_advanced_chart(sestina, somma, z_score, ml_probabilities)
 
     pred_text = ""
-    for idx, p in enumerate(predictions):
+    for p in predictions:
         pred_text += f"🎯 <code>{p['sestina']}</code> | Anti-Massa EV: <b>{p['ev_score']}</b>\n"
 
     caption = (
