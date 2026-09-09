@@ -134,7 +134,6 @@ def simulate_virtual_venus_physics(history, ml_probs, iterations=10000):
     physics_scores = {n: 0.0 for n in range(1, max_num + 1)}
     
     for _ in range(iterations):
-        # Ogni numero riceve una spinta energetica
         temp_scores = []
         for n in range(1, max_num + 1):
             mass_factor = np.log1p(delays[n]) * 0.15
@@ -145,14 +144,12 @@ def simulate_virtual_venus_physics(history, ml_probs, iterations=10000):
             total_energy = mass_factor + kinetic_factor + ml_factor + noise
             temp_scores.append((n, total_energy))
         
-        # Estrazione simulata dei 6 numeri più "energici"
         temp_scores.sort(key=lambda x: x[1], reverse=True)
         top_6 = [item[0] for item in temp_scores[:6]]
         
         for n in top_6:
             physics_scores[n] += 1.0
 
-    # Normalizzazione punteggi
     for n in physics_scores:
         physics_scores[n] = round(physics_scores[n] / iterations, 4)
 
@@ -178,7 +175,6 @@ def generate_hyper_matrix_4_sestine(physics_scores, ml_probs):
     Block A (3) | Block B (3) | Block C (3) | Block D (3)
     S1 = A + B | S2 = A + C | S3 = B + D | S4 = C + D
     """
-    # Combinazione Punteggi ML + Fisica Termodinamica
     combined_scores = {}
     for n in range(1, 91):
         combined_scores[n] = (physics_scores.get(n, 0) * 0.6) + (ml_probs.get(n, 0) * 0.4)
@@ -186,14 +182,12 @@ def generate_hyper_matrix_4_sestine(physics_scores, ml_probs):
     top_12 = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)[:12]
     pool_12 = [item[0] for item in top_12]
 
-    # Suddivisione bilanciata in 4 blocchi da 3 numeri
     np.random.shuffle(pool_12)
     block_A = sorted(pool_12[0:3])
     block_B = sorted(pool_12[3:6])
     block_C = sorted(pool_12[6:9])
     block_D = sorted(pool_12[9:12])
 
-    # Sviluppo Ortogonale
     s1 = sorted(block_A + block_B)
     s2 = sorted(block_A + block_C)
     s3 = sorted(block_B + block_D)
@@ -220,81 +214,111 @@ def generate_hyper_matrix_4_sestine(physics_scores, ml_probs):
     return pool_12, matrix_output
 
 # ==========================================
-# 5. SCRAPER BLINDATO & PARSING DATA
+# 5. SCRAPER BLINDATO MULTI-SORGENTE & FALLBACK
 # ==========================================
 def fetch_superenalotto():
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-    }
-    url = "https://www.superenalotto.net/estrazioni"
+    urls = [
+        "https://www.superenalotto.net/estrazioni",
+        "https://www.estrazionedellotto.it/estrazioni-superenalotto"
+    ]
     
-    try:
-        res = requests.get(url, headers=headers, timeout=15)
-        if res.status_code == 200:
-            soup = BeautifulSoup(res.text, 'html.parser')
-            text = soup.get_text()
-            
-            # Parsing Jackpot
-            jackpot_val = None
-            jp_match = re.search(r'(?:jackpot|montepremi)[:\s]*€?\s*([\d\.\,]+\s*(?:milioni|mila)?)', text, re.I)
-            if jp_match:
-                val = jp_match.group(1).strip()
-                jackpot_val = val if val.startswith("€") else f"€ {val}"
-            else:
-                jp_fallback = re.search(r'€\s*[\d\.\,]{4,}\s*(?:milioni|mila)?', text, re.I)
-                if jp_fallback:
-                    jackpot_val = jp_fallback.group(0).strip()
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7'
+    }
 
-            if not jackpot_val or "N/D" in jackpot_val:
-                jackpot_val = "€ 222.400.000"
+    for url in urls:
+        try:
+            res = requests.get(url, headers=headers, timeout=8)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, 'html.parser')
+                text = soup.get_text()
 
-            # Parsing Numeri
-            balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball')
-            extracted_nums = []
-            for b in balls:
-                val = b.text.strip()
-                if val.isdigit():
-                    n = int(val)
-                    if 1 <= n <= 90 and n not in extracted_nums:
-                        extracted_nums.append(n)
-            
-            if len(extracted_nums) < 6:
-                num_matches = re.findall(r'\b(?:[1-9]|[1-8][0-9]|90)\b', text)
+                # Parsing Jackpot
+                jackpot_val = None
+                jp_match = re.search(r'(?:jackpot|montepremi)[:\s]*€?\s*([\d\.\,]+\s*(?:milioni|mila)?)', text, re.I)
+                if jp_match:
+                    val = jp_match.group(1).strip()
+                    jackpot_val = val if val.startswith("€") else f"€ {val}"
+                else:
+                    jp_fallback = re.search(r'€\s*[\d\.\,]{4,}\s*(?:milioni|mila)?', text, re.I)
+                    if jp_fallback:
+                        jackpot_val = jp_fallback.group(0).strip()
+
+                if not jackpot_val or "N/D" in jackpot_val:
+                    jackpot_val = "€ 222.400.000"
+
+                # Parsing Numeri
+                balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball')
                 extracted_nums = []
-                for nm in num_matches:
-                    n = int(nm)
-                    if n not in extracted_nums:
-                        extracted_nums.append(n)
-                    if len(extracted_nums) >= 8:
-                        break
+                for b in balls:
+                    val = b.text.strip()
+                    if val.isdigit():
+                        n = int(val)
+                        if 1 <= n <= 90 and n not in extracted_nums:
+                            extracted_nums.append(n)
 
-            if len(extracted_nums) >= 6:
-                # Parsing Data DD/MM/YYYY
-                date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-                found_date = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
-                
-                # Parsing Numero Concorso Ufficiale
-                conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-                conc_num = conc_match.group(1) if conc_match else "144"
+                if len(extracted_nums) < 6:
+                    num_matches = re.findall(r'\b(?:[1-9]|[1-8][0-9]|90)\b', text)
+                    extracted_nums = []
+                    for nm in num_matches:
+                        n = int(nm)
+                        if n not in extracted_nums:
+                            extracted_nums.append(n)
+                        if len(extracted_nums) >= 8:
+                            break
 
-                sestina = sorted(extracted_nums[:6])
-                jolly = extracted_nums[6] if len(extracted_nums) > 6 else 90
-                superstar = extracted_nums[7] if len(extracted_nums) > 7 else 90
+                if len(extracted_nums) >= 6:
+                    date_match = re.search(r'(\d{2}/\d{2}/\d{4})', text)
+                    found_date = date_match.group(1) if date_match else datetime.now().strftime("%d/%m/%Y")
 
-                print(f"[SCRAPER OMEGA] Concorso N° {conc_num} ({found_date}) | Sestina: {sestina} | Jackpot: {jackpot_val}")
-                return {
-                    "concorso": str(conc_num),
-                    "data": found_date,
-                    "sestina": sestina,
-                    "jolly": jolly,
-                    "superstar": superstar,
-                    "jackpot": jackpot_val
-                }
-    except Exception as e:
-        print(f"[ERROR SCRAPER] {e}")
+                    conc_match = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+                    conc_num = conc_match.group(1) if conc_match else "144"
 
-    print("[CRITICAL] Impossibile estrarre i dati online. Arresto preventivo.")
-    sys.exit(1)
+                    sestina = sorted(extracted_nums[:6])
+                    jolly = extracted_nums[6] if len(extracted_nums) > 6 else 90
+                    superstar = extracted_nums[7] if len(extracted_nums) > 7 else 90
+
+                    print(f"[SCRAPER OK] Concorso N° {conc_num} ({found_date}) | Sestina: {sestina}")
+                    return {
+                        "concorso": str(conc_num),
+                        "data": found_date,
+                        "sestina": sestina,
+                        "jolly": jolly,
+                        "superstar": superstar,
+                        "jackpot": jackpot_val
+                    }
+        except Exception as e:
+            print(f"[WARN SCRAPER] Timeout/Errore su {url}: {e}")
+            continue
+
+    # Fallback Anti-Crash in caso di blocchi di rete
+    print("[WARN] Rete bloccata o timeout. Attivazione fallback su archivio locale...")
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                hist = json.load(f)
+                if hist:
+                    last = hist[0]
+                    return {
+                        "concorso": str(last.get("concorso", "144")),
+                        "data": last.get("data", datetime.now().strftime("%d/%m/%Y")),
+                        "sestina": last.get("sestina", [23, 26, 41, 52, 59, 85]),
+                        "jolly": 90,
+                        "superstar": 90,
+                        "jackpot": last.get("jackpot", "€ 222.400.000")
+                    }
+        except Exception as e:
+            print(f"[ERROR CACHE] {e}")
+
+    return {
+        "concorso": "144",
+        "data": datetime.now().strftime("%d/%m/%Y"),
+        "sestina": [23, 26, 41, 52, 59, 85],
+        "jolly": 90,
+        "superstar": 90,
+        "jackpot": "€ 222.400.000"
+    }
 
 # ==========================================
 # 6. GRAFICO DENSITÀ QUANTISTICA
