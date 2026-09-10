@@ -9,6 +9,8 @@ on:
 jobs:
   update-venus-db:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # <--- AGGIUNTO: Concede i permessi di scrittura per fare il git push
 
     steps:
       - name: Checkout Repository
