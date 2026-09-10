@@ -2,42 +2,47 @@ name: SuperEnalotto Venus Vortex Database Auto-Sync
 
 on:
   schedule:
-    # 18:35, 18:55, 19:35, 19:55 UTC
-    # - In Ora Legale (CEST): equivale a 20:35, 20:55, 21:35, 21:55
-    # - In Ora Solare (CET): equivale a 19:35, 19:55, 20:35, 20:55
+    # Esecuzione programmata: 20:35, 20:55, 21:35, 21:55 CEST nei giorni di estrazione
     - cron: '35,55 18,19 * * *'
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  workflow_dispatch: # Permette l'avvio manuale (il pulsante "Run workflow")
 
 jobs:
   update-venus-db:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permesso vitale per l'auto-commit della Dashboard e del Database
+
     steps:
-      - name: Checkout repository
+      # 1. Checkout del codice (Aggiornato a v4 - Risolve il Node deprecation warning)
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Inizializza Ambiente Python
+      # 2. Setup di Python (Aggiornato a v5 - Risolve il Node deprecation warning)
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
+          cache: 'pip' # Velocizza le run future memorizzando in cache le librerie
 
-      - name: Installa Dipendenze
+      # 3. Installazione delle Dipendenze Matematiche
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install requests beautifulsoup4 numpy scipy scikit-learn matplotlib
 
-      - name: Esegui Scraper e Notifica Telegram
+      # 4. Esecuzione del TITAN / GOD MODE V3
+      - name: Execute TITAN Engine
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scraper.py
 
-      - name: Commit e Push dei Database JSON
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "cron(db): aggiornamento automatico estrazione Venus Vortex [skip ci]"
-          file_pattern: "*.json"
-          commit_user_name: "Venus Vortex Auto-Sync Bot"
-          commit_user_email: "actions@github.com"
+      # 5. Auto-Commit (Salva il Database JSON e aggiorna la Dashboard HTML)
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add venus_history.json index.html vortex_chart.png
+          # Il comando commit non fallirà se non ci sono modifiche grazie all'operatore || true
+          git commit -m "⚙️ TITAN Auto-Sync: Aggiornamento Database e Dashboard [skip ci]" || true
+          git push
