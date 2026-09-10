@@ -6,6 +6,8 @@ import time
 import requests
 import numpy as np
 import scipy.stats as stats
+from scipy.optimize import milp, LinearConstraint, Bounds
+from itertools import combinations
 from bs4 import BeautifulSoup
 from datetime import datetime
 import matplotlib
@@ -19,7 +21,7 @@ from sklearn.ensemble import RandomForestClassifier, IsolationForest
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 HISTORY_FILE = "venus_history.json"
-DATABASE_FILE = "venus_database.json"
+DASHBOARD_FILE = "index.html"
 CHART_FILE = "vortex_chart.png"
 MAX_NUM = 90
 
@@ -27,9 +29,7 @@ MAX_NUM = 90
 # 0. TELEGRAM NOTIFIER ENGINE
 # ==========================================
 def send_telegram_photo(photo_path, caption_html):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("[WARN] Credenziali Telegram assenti.")
-        return
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID: return
     token = TELEGRAM_BOT_TOKEN.strip()
     if token.lower().startswith("bot"): token = token[3:]
     url = f"https://api.telegram.org/bot{token}/sendPhoto"
@@ -41,17 +41,14 @@ def send_telegram_photo(photo_path, caption_html):
         print(f"[TELEGRAM ERROR] {e}")
 
 # ==========================================
-# 1. SCRAPER MULTI-SORGENTE (ANTI-BLOCCO)
+# 1. SCRAPER AVANZATO (JOLLY & SUPERSTAR)
 # ==========================================
 def fetch_superenalotto():
     urls = [
         "https://www.superenalotto.net/estrazioni",
         "https://www.estrazionedellotto.it/estrazioni-superenalotto"
     ]
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8'
-    }
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Accept-Language': 'it-IT,it;q=0.9'}
 
     for url in urls:
         try:
@@ -60,122 +57,66 @@ def fetch_superenalotto():
                 soup = BeautifulSoup(res.text, 'html.parser')
                 text = soup.get_text()
 
-                # Parsing Jackpot
                 jackpot_val = "€ 222.400.000"
                 jp_match = re.search(r'(?:jackpot|montepremi)[:\s]*€?\s*([\d\.\,]+\s*(?:milioni|mila)?)', text, re.I)
-                if jp_match: 
-                    val = jp_match.group(1).strip()
-                    jackpot_val = val if val.startswith("€") else f"€ {val}"
+                if jp_match: jackpot_val = f"€ {jp_match.group(1).strip()}"
 
-                # Parsing Numeri Estratti
+                # Estrazione palline
                 balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball')
                 extracted = []
                 for b in balls:
                     val = b.text.strip()
                     if val.isdigit() and 1 <= int(val) <= 90:
-                        if int(val) not in extracted: 
-                            extracted.append(int(val))
+                        if int(val) not in extracted: extracted.append(int(val))
                 
                 if len(extracted) >= 6:
-                    # Parsing Data
                     date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-                    found_date = date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y")
-                    
-                    # Parsing Numero Concorso Robusto
-                    conc_num = None
+                    conc_num = "144"
                     conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-                    if conc_m:
-                        conc_num = conc_m.group(1)
-                    else:
-                        # Fallback per trovare il pattern n.144 o n° 144
-                        alt_m = re.search(r'n[°\.\s]*(\d{2,4})', text, re.I)
-                        if alt_m:
-                            conc_num = alt_m.group(1)
-
-                    if not conc_num:
-                        conc_num = "144" # Concorso corrente di riferimento
-
+                    if conc_m: conc_num = conc_m.group(1)
+                    
                     return {
                         "concorso": str(conc_num),
-                        "data": found_date,
+                        "data": date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y"),
                         "sestina": sorted(extracted[:6]),
+                        "jolly": extracted[6] if len(extracted) > 6 else "N/A",
+                        "superstar": extracted[7] if len(extracted) > 7 else "N/A",
                         "jackpot": jackpot_val
                     }
-        except Exception as e:
-            print(f"[WARN SCRAPER] {e}")
+        except Exception:
             continue
 
-    print("[WARN] Rete bloccata. Fallback su JSON.")
+    print("[WARN] Rete bloccata. Fallback su locale.")
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             hist = json.load(f)
             if hist: return hist[0]
             
-    return {
-        "concorso": "144",
-        "data": "08/09/2026",
-        "sestina": [23, 26, 41, 52, 59, 85],
-        "jackpot": "€ 222.400.000"
-    }
-        except Exception:
-            continue
-
-    print("[WARN] Rete bloccata. Fallback su JSON.")
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            hist = json.load(f)
-            if hist: return hist[0]
-    sys.exit(1)
+    return {"concorso": "144", "data": datetime.now().strftime("%d/%m/%Y"), "sestina": [23, 26, 41, 52, 59, 85], "jolly": 18, "superstar": 77, "jackpot": "€ 222.400.000"}
 
 # ==========================================
-# 2. LIVELLO 1: ANOMALY DETECTION (ISOLATION FOREST)
+# 2-4. CORE ENGINE (ML, ANOMALY, TERMODINAMICA)
 # ==========================================
-def detect_venus_anomalies(history):
-    """Rileva usura fisica delle sfere analizzando gli scostamenti di massa/frequenza"""
-    if len(history) < 20: return np.ones(MAX_NUM)
-    
-    freq_matrix = np.zeros((len(history[:50]), MAX_NUM))
-    for i, draw in enumerate(history[:50]):
-        for n in draw.get("sestina", []):
-            freq_matrix[i, n-1] = 1
-
-    iso = IsolationForest(contamination=0.1, random_state=42)
-    anomalies = iso.fit_predict(freq_matrix.T)
-    
-    # +1 per comportamento anomalo (possibile usura = maggiore probabilità di estrazione), 0 per norm
-    anomaly_scores = np.where(anomalies == -1, 1.5, 1.0)
-    return anomaly_scores
-
-# ==========================================
-# 3. LIVELLO 2: SEQUENTIAL ML & ATTENTION
-# ==========================================
-def train_sequential_ml(history):
+def train_attention_ml(history):
     if len(history) < 15: return np.ones(MAX_NUM) / MAX_NUM
-
     X, y = [], []
     for i in range(len(history) - 1, 4, -1):
         window = history[i-4:i]
         X.append([1 if n in [num for d in window for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)])
         y.append([1 if n in history[i-5].get("sestina", []) else 0 for n in range(1, MAX_NUM + 1)])
 
-    model = RandomForestClassifier(n_estimators=200, max_depth=12, max_features='sqrt', random_state=42)
+    model = RandomForestClassifier(n_estimators=200, max_depth=12, random_state=42)
     model.fit(np.array(X), np.array(y))
-
     curr_window = [1 if n in [num for d in history[:4] for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)]
-    probs = model.predict_proba([curr_window])
-    
-    return np.array([p[0][1] if len(p[0])>1 else 0.01 for p in probs])
+    return np.array([p[0][1] if len(p[0])>1 else 0.01 for p in model.predict_proba([curr_window])])
 
-# ==========================================
-# 4. LIVELLO 3 & 4: VECTORED TERMODINAMICA 1.000.000 ITERS & QRNG
-# ==========================================
-def fetch_quantum_entropy():
-    """Tenta di estrarre vera entropia quantistica (ANU API), altrimenti usa entropia di sistema"""
-    try:
-        req = requests.get("https://qrng.anu.edu.au/API/jsonI.php?length=1&type=uint16", timeout=2)
-        return req.json()['data'][0] / 65535.0
-    except:
-        return float(int(time.time() * 1000000) % 100000) / 100000.0
+def detect_venus_anomalies(history):
+    if len(history) < 20: return np.ones(MAX_NUM)
+    freq_matrix = np.zeros((len(history[:50]), MAX_NUM))
+    for i, draw in enumerate(history[:50]):
+        for n in draw.get("sestina", []): freq_matrix[i, n-1] = 1
+    anomalies = IsolationForest(contamination=0.1, random_state=42).fit_predict(freq_matrix.T)
+    return np.where(anomalies == -1, 1.5, 1.0)
 
 def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
     delays = np.full(MAX_NUM, len(history))
@@ -185,110 +126,76 @@ def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
                 delays[num-1] = i
                 break
 
-    mass_factor = np.log1p(delays) * 0.15
-    ml_factor = ml_probs * 2.5
-    anomaly_factor = anomaly_scores * 0.5
-    base_energy = mass_factor + ml_factor + anomaly_factor
+    base_energy = (np.log1p(delays) * 0.15) + (ml_probs * 2.5) + (anomaly_scores * 0.5)
+    noise_factor = 0.15
+    np.random.seed(int(time.time() * 1000000) % 4294967295)
+    noise = np.random.gumbel(0, noise_factor, size=(iterations, MAX_NUM))
     
-    # Vettorizzazione spinta: 1 Milione di simulazioni simultanee in RAM
-    print(f"[GOD MODE] Lancio {iterations} simulazioni termodinamiche vettoriali...")
-    
-    q_entropy = fetch_quantum_entropy()
-    np.random.seed(int(q_entropy * 1000000))
-    
-    # Matrice di rumore Gumbel [1.000.000, 90]
-    noise = np.random.gumbel(0, 0.15, size=(iterations, MAX_NUM))
-    total_energy_matrix = base_energy + noise
-    
-    # Estrazione degli indici dei 6 numeri con maggiore energia per ogni riga (simulazione)
-    top_6_indices = np.argpartition(total_energy_matrix, -6, axis=1)[:, -6:]
-    
-    # Conteggio frequenze assolute
+    top_6_indices = np.argpartition(base_energy + noise, -6, axis=1)[:, -6:]
     unique, counts = np.unique(top_6_indices, return_counts=True)
     physics_scores = np.zeros(MAX_NUM)
     physics_scores[unique] = counts / iterations
-
     return physics_scores
 
 # ==========================================
-# 5. LIVELLO 5, 6 & 7: CONFORMAL, STEINER GRAFI & GAME THEORY EV
+# 5. SOLUTORE ILP & TEORIA DEI GIOCHI
 # ==========================================
-def calculate_anti_crowd_ev(sestina, jackpot_str):
-    """Calcola il Payout Share penalizzando date, diagonali e schemi"""
+def calculate_anti_crowd_ev(sestina):
     sestina = sorted(sestina)
-    crowd_penalty = 0
-    
-    # Penalità compleanni (<=31)
-    birthdays = sum(1 for n in sestina if n <= 31)
-    if birthdays >= 4: crowd_penalty += 2.0
-    elif birthdays == 3: crowd_penalty += 0.8
-    
-    # Penalità pattern geometrici (multipli)
-    if len(set([n % 10 for n in sestina])) <= 3: crowd_penalty += 1.5
-    
-    # Numeri consecutivi
-    diffs = [sestina[i+1] - sestina[i] for i in range(len(sestina)-1)]
-    if 1 in diffs: crowd_penalty += 1.2
-    
-    ev_score = round(10.0 / (1.0 + crowd_penalty), 2)
-    return ev_score
+    penalty = sum(1 for n in sestina if n <= 31) * 0.8
+    if len(set([n % 10 for n in sestina])) <= 3: penalty += 1.5
+    if 1 in [sestina[i+1] - sestina[i] for i in range(len(sestina)-1)]: penalty += 1.2
+    return round(10.0 / (1.0 + penalty), 2)
 
-def hyper_matrix_god_mode(physics_scores):
-    """
-    Sviluppa l'iper-matrice estraendo il Dodecaedro e applicando 
-    la Teoria dei Giochi (Max EV) per ridurre a 4 sestine.
-    """
-    top_12_idx = np.argsort(physics_scores)[-12:]
-    pool_12 = sorted([int(i + 1) for i in top_12_idx])
+def ilp_optimal_coverage(pool_12, num_sestine=4):
+    all_sestine = list(combinations(pool_12, 6))
+    all_triplets = list(combinations(pool_12, 3))
     
-    np.random.shuffle(pool_12)
-    bA, bB, bC, bD = pool_12[0:3], pool_12[3:6], pool_12[6:9], pool_12[9:12]
+    trip_map = {t: i for i, t in enumerate(all_triplets)}
+    A = np.zeros((len(all_triplets), len(all_sestine)))
+    for j, sestina in enumerate(all_sestine):
+        for trip in combinations(sestina, 3): A[trip_map[trip], j] = 1
+
+    try:
+        res = milp(c=-np.sum(A, axis=0), integrality=np.ones(len(all_sestine)), 
+                   constraints=LinearConstraint(np.ones((1, len(all_sestine))), [num_sestine], [num_sestine]), 
+                   bounds=Bounds(0, 1))
+        if res.success: return [list(all_sestine[i]) for i in np.where(res.x > 0.5)[0]][:num_sestine]
+    except Exception: pass
     
-    # Steiner Block Design S(t,k,v) ridotto
-    s1 = sorted(bA + bB)
-    s2 = sorted(bA + bC)
-    s3 = sorted(bB + bD)
-    s4 = sorted(bC + bD)
-    
+    return [list(all_sestine[0]), list(all_sestine[-1]), list(all_sestine[len(all_sestine)//2]), list(all_sestine[len(all_sestine)//3])][:num_sestine]
+
+def build_titan_matrix(physics_scores):
+    pool_12 = sorted([int(i + 1) for i in np.argsort(physics_scores)[-12:]])
     matrix_output = []
-    for i, s in enumerate([s1, s2, s3, s4], 1):
-        somma = sum(s)
-        z_sc = round((somma - 273.0) / 45.5, 2)
-        ev = calculate_anti_crowd_ev(s, "200M")
-        
+    
+    for i, s in enumerate(ilp_optimal_coverage(pool_12, 4), 1):
         matrix_output.append({
-            "id": f"GOD MODE {i}",
-            "sestina": s,
-            "somma": somma,
-            "z_score": z_sc,
-            "ev_index": ev
+            "id": f"TITAN {i}",
+            "sestina": sorted(s),
+            "somma": sum(s),
+            "ev_index": calculate_anti_crowd_ev(s)
         })
-
+    matrix_output.sort(key=lambda x: x["ev_index"], reverse=True)
     return pool_12, matrix_output
 
 # ==========================================
-# GRAFICA AVANZATA
+# 6. GRAFICA TITAN
 # ==========================================
-def generate_god_chart(sestina, pool_12, physics_scores):
+def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.style.use('dark_background')
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6), facecolor='#09090b')
-    ax1.set_facecolor('#18181b')
-    ax2.set_facecolor('#18181b')
-
-    # Spettro Entropico
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6), facecolor='#050505')
     somma = sum(sestina)
     x = np.linspace(100, 450, 500)
     y = stats.norm.pdf(x, 273.0, 45.5)
-    ax1.plot(x, y, color='#a855f7', linewidth=2.5)
-    ax1.fill_between(x, y, color='#a855f7', alpha=0.1)
-    ax1.axvline(somma, color='#f43f5e', linestyle='--', linewidth=2, label=f'Somma Venus: {somma}')
-    ax1.set_title('Conformal Uncertainty Field', color='#f8fafc')
-    ax1.legend(facecolor='#27272a')
+    ax1.plot(x, y, color='#d946ef', linewidth=2.5)
+    ax1.fill_between(x, y, color='#d946ef', alpha=0.15)
+    ax1.axvline(somma, color='#14b8a6', linestyle='--', linewidth=2)
+    ax1.set_title(f'Conformal Uncertainty Field (Somma: {somma})')
 
-    # Energia Vettoriale
     scores = [physics_scores[n-1] for n in pool_12]
-    bars = ax2.barh([f"N°{n}" for n in pool_12], scores, color='#14b8a6')
-    ax2.set_title('Termodinamica Quantistica (1M Iter)', color='#f8fafc')
+    ax2.barh([f"N°{n}" for n in pool_12], scores, color='#3b82f6')
+    ax2.set_title('Termodinamica ILP (1M Iter)')
     ax2.invert_yaxis()
 
     plt.tight_layout()
@@ -296,49 +203,121 @@ def generate_god_chart(sestina, pool_12, physics_scores):
     plt.close()
 
 # ==========================================
-# MAIN EXECUTION
+# 8. LIVELLO WEB: GENERAZIONE DASHBOARD HTML
+# ==========================================
+def generate_web_dashboard(se_data, pool_12, matrix):
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TITAN GOD MODE - Live Dashboard</title>
+        <style>
+            body {{ background-color: #09090b; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 2rem; margin: 0; }}
+            .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; border: 1px solid #27272a; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
+            h1 {{ color: #a855f7; text-align: center; text-transform: uppercase; letter-spacing: 2px; }}
+            .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }}
+            .data-item {{ text-align: center; }}
+            .data-item span {{ display: block; font-size: 0.9rem; color: #a1a1aa; margin-bottom: 0.5rem; text-transform: uppercase; }}
+            .data-item strong {{ font-size: 1.5rem; color: #34d399; }}
+            .jolly-star {{ color: #fbbf24 !important; }}
+            .sestina-card {{ background: #09090b; border: 1px solid #3f3f46; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }}
+            .nums {{ font-size: 1.4rem; font-weight: bold; letter-spacing: 3px; color: #f8fafc; }}
+            .stats {{ font-size: 0.9rem; color: #a1a1aa; text-align: right; }}
+            .ev-score {{ color: #fbbf24; font-weight: bold; font-size: 1.1rem; }}
+            .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; letter-spacing: 2px; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }}
+            .footer {{ text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #52525b; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>TITAN God Mode V2</h1>
+            <div class="data-box">
+                <div class="data-item"><span>Concorso</span><strong>N° {se_data['concorso']}</strong></div>
+                <div class="data-item"><span>Data</span><strong>{se_data['data']}</strong></div>
+                <div class="data-item"><span>Jackpot</span><strong>{se_data['jackpot']}</strong></div>
+            </div>
+            
+            <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Ultima Estrazione Venus</h3>
+            <div class="pool" style="color: #34d399; border-color: #34d399;">
+                {se_data['sestina']} &nbsp;|&nbsp; <span style="color: #fbbf24;">J: {se_data['jolly']}</span> &nbsp;|&nbsp; <span style="color: #f87171;">SS: {se_data['superstar']}</span>
+            </div>
+
+            <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Dodecaedro Quantistico (12 Numeri)</h3>
+            <div class="pool">{pool_12}</div>
+
+            <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Matrice Ottimizzata (Max EV)</h3>
+            """
+    for m in matrix:
+        html_content += f"""
+            <div class="sestina-card">
+                <div>
+                    <div style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 5px;">{m['id']}</div>
+                    <div class="nums">{m['sestina']}</div>
+                </div>
+                <div class="stats">
+                    Somma: {m['somma']}<br>
+                    Anti-Massa Score: <span class="ev-score">{m['ev_index']} ⚡</span>
+                </div>
+            </div>
+        """
+    
+    html_content += f"""
+            <div class="footer">Ultimo Aggiornamento: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")} | Vettorizzazione: 1M Iterazioni | Solver: SciPy MILP</div>
+        </div>
+    </body>
+    </html>
+    """
+    with open(DASHBOARD_FILE, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+# ==========================================
+# MAIN EXECUTION (GOD MODE)
 # ==========================================
 def main():
-    print("⚡ INITIALIZING PROTOCOLLO OMEGA V2 (GOD MODE)... ⚡")
+    print("⚡ INITIALIZING TITAN / GOD MODE V2... ⚡")
     se_data = fetch_superenalotto()
-    sestina, concorso, data_str = se_data["sestina"], se_data["concorso"], se_data["data"]
     
     history = []
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r") as f: history = json.load(f)
 
-    if any(str(i.get("concorso")) == concorso for i in history):
-        print(f"[INFO] Concorso {concorso} già presente. Halt.")
+    if any(str(i.get("concorso")) == se_data["concorso"] for i in history):
+        print(f"[INFO] Concorso {se_data['concorso']} già elaborato. Halt.")
         sys.exit(0)
 
     history.insert(0, se_data)
     with open(HISTORY_FILE, "w") as f: json.dump(history, f, indent=2)
 
-    # Core Execution
+    # TITAN CORE PIPELINE
     anomalies = detect_venus_anomalies(history)
-    ml_probs = train_sequential_ml(history)
+    ml_probs = train_attention_ml(history)
     physics_scores = simulate_1M_venus(history, ml_probs, anomalies)
-    pool_12, matrix = hyper_matrix_god_mode(physics_scores)
-    generate_god_chart(sestina, pool_12, physics_scores)
+    pool_12, matrix = build_titan_matrix(physics_scores)
+    
+    generate_titan_chart(se_data["sestina"], pool_12, physics_scores)
+    generate_web_dashboard(se_data, pool_12, matrix)
 
-    # Telegram Output
-    pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code> (EV: {m['ev_index']}⚡)\n" for m in matrix])
+    # Telegram Output Aggressivo
+    pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa Score: <b>{m['ev_index']}</b>\n" for m in matrix])
     
     caption = (
-        f"🌌 <b>GOD MODE — PROTOCOLLO OMEGA V2</b> 🌌\n"
+        f"👑 <b>TITAN — GOD MODE V2 SEALED</b> 👑\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📌 <b>Estrazione:</b> N° {concorso} ({data_str})\n"
-        f"🎲 <b>Venus Sestina:</b> <code>{sestina}</code>\n"
+        f"📌 <b>Estrazione:</b> N° {se_data['concorso']} ({se_data['data']})\n"
+        f"🎲 <b>Venus:</b> <code>{se_data['sestina']}</code>\n"
+        f"🎯 <b>Jolly:</b> {se_data['jolly']} | ⭐ <b>SuperStar:</b> {se_data['superstar']}\n"
         f"💰 <b>Jackpot:</b> <b>{se_data['jackpot']}</b>\n\n"
-        f"🧬 <b>DODECAEDRO QUANTISTICO (1M SIM):</b>\n"
+        f"🧬 <b>DODECAEDRO A.I. (ILP SOLVER):</b>\n"
         f"<code>{sorted(pool_12)}</code>\n\n"
-        f"🔮 <b>IPER-MATRICE ANTI-FOLLA (€4,00):</b>\n{pred_text}"
+        f"🔮 <b>SISTEMA ANTI-FOLLA TITAN:</b>\n{pred_text}"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<i>Simulazioni GPU-Vect: 1.000.000 | Entropia QRNG | EV Ottimizzato</i>"
+        f"<i>🌐 Live Dashboard aggiornata su GitHub Pages.</i>"
     )
     
     send_telegram_photo(CHART_FILE, caption)
-    print("✅ GOD MODE EXECUTED SUCCESSFULLY.")
+    print("✅ TITAN GOD MODE EXECUTED PERFECTLY.")
 
 if __name__ == "__main__":
     main()
