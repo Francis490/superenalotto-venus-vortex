@@ -38,11 +38,10 @@ jobs:
         run: python scraper.py
 
       # 5. Auto-Commit (Salva il Database JSON e aggiorna la Dashboard HTML)
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add venus_history.json index.html vortex_chart.png
-          # Il comando commit non fallirà se non ci sono modifiche grazie all'operatore || true
-          git commit -m "⚙️ TITAN Auto-Sync: Aggiornamento Database e Dashboard [skip ci]" || true
-          git push
+     - name: Commit and Push Changes
+  run: |
+    git config --local user.email "action@github.com"
+    git config --local user.name "GitHub Action"
+    git add .
+    git diff-index --quiet HEAD || git commit -m "Auto-sync database e predizioni TITAN"
+    git push
