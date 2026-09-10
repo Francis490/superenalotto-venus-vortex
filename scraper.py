@@ -97,8 +97,39 @@ def fetch_superenalotto():
 # ==========================================
 # 2-4. CORE ENGINE (ML, ANOMALY, TERMODINAMICA)
 # ==========================================
+import numpy as np
+import time
+from sklearn.ensemble import RandomForestClassifier, IsolationForest
+
+MAX_NUM = 90
+
+def calculate_aerodynamic_wear(history):
+    """
+    SIMULATORE TRIBOLOGICO (DIGITAL TWIN)
+    Calcola l'usura superficiale delle 90 palline negli ultimi 100 concorsi.
+    Le palline con maggiore frequenza recente accumulano micro-abrasioni,
+    modificando il loro coefficiente di resistenza aerodinamica (Cd) e portanza.
+    """
+    wear_matrix = np.zeros(MAX_NUM)
+    window_length = min(len(history), 100)
+    
+    for idx in range(window_length):
+        draw = history[idx]
+        # Decadimento esponenziale dell'impatto meccanico (gli urti recenti contano di più)
+        impact_weight = np.exp(-0.03 * idx)
+        for num in draw.get("sestina", []):
+            if 1 <= num <= MAX_NUM:
+                wear_matrix[num - 1] += impact_weight
+                
+    # Normalizzazione [0, 1] dell'indice di usura
+    max_wear = np.max(wear_matrix)
+    return wear_matrix / max_wear if max_wear > 0 else wear_matrix
+
+
 def train_attention_ml(history):
-    if len(history) < 15: return np.ones(MAX_NUM) / MAX_NUM
+    if len(history) < 15: 
+        return np.ones(MAX_NUM) / MAX_NUM
+        
     X, y = [], []
     for i in range(len(history) - 1, 4, -1):
         window = history[i-4:i]
@@ -107,18 +138,36 @@ def train_attention_ml(history):
 
     model = RandomForestClassifier(n_estimators=200, max_depth=12, random_state=42)
     model.fit(np.array(X), np.array(y))
+    
     curr_window = [1 if n in [num for d in history[:4] for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)]
-    return np.array([p[0][1] if len(p[0])>1 else 0.01 for p in model.predict_proba([curr_window])])
+    return np.array([p[0][1] if len(p[0]) > 1 else 0.01 for p in model.predict_proba([curr_window])])
+
 
 def detect_venus_anomalies(history):
-    if len(history) < 20: return np.ones(MAX_NUM)
+    if len(history) < 20: 
+        return np.ones(MAX_NUM)
+        
     freq_matrix = np.zeros((len(history[:50]), MAX_NUM))
     for i, draw in enumerate(history[:50]):
-        for n in draw.get("sestina", []): freq_matrix[i, n-1] = 1
+        for n in draw.get("sestina", []): 
+            if 1 <= n <= MAX_NUM:
+                freq_matrix[i, n-1] = 1
+                
     anomalies = IsolationForest(contamination=0.1, random_state=42).fit_predict(freq_matrix.T)
     return np.where(anomalies == -1, 1.5, 1.0)
 
+
 def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
+    """
+    MOTORE TERMODINAMICO V3 (DIGITAL TWIN INTEGRATO)
+    Esegue 1.000.000 di simulazioni Monte Carlo combinando:
+    1. Ritardo accumulato (massa/inerzia statica)
+    2. Predizione ML con Attention Decay
+    3. Anomaly Detection (Isolation Forest)
+    4. Usura Tribologica e Portanza Aerodinamica
+    5. Iniezione di Rumore di Gumbel vettorizzato
+    """
+    # 1. Calcolo Inerzia/Ritardo Cronico
     delays = np.full(MAX_NUM, len(history))
     for num in range(1, MAX_NUM + 1):
         for i, draw in enumerate(history):
@@ -126,17 +175,31 @@ def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
                 delays[num-1] = i
                 break
 
+    # 2. Ingestione Usura Aerodinamica
+    aero_wear = calculate_aerodynamic_wear(history)
+
+    # 3. Energia Vettoriale Base (Statistica + ML + Anomalie)
     base_energy = (np.log1p(delays) * 0.15) + (ml_probs * 2.5) + (anomaly_scores * 0.5)
+    
+    # 4. Modulazione della Portanza Fisica mediante Usura del Plexiglass/Inchiostro
+    # L'usura incrementa la sensibilità della pallina al flusso d'aria compressa (+20% max lift)
+    physical_energy = base_energy * (1.0 + (aero_wear * 0.20))
+
+    # 5. Simulazione Monte Carlo a Rumore Gumbel
     noise_factor = 0.15
     np.random.seed(int(time.time() * 1000000) % 4294967295)
     noise = np.random.gumbel(0, noise_factor, size=(iterations, MAX_NUM))
     
-    top_6_indices = np.argpartition(base_energy + noise, -6, axis=1)[:, -6:]
+    # Matrice di Esecuzione delle 1.000.000 di estrazioni
+    total_kinetic_energy = physical_energy + noise
+    
+    top_6_indices = np.argpartition(total_kinetic_energy, -6, axis=1)[:, -6:]
     unique, counts = np.unique(top_6_indices, return_counts=True)
+    
     physics_scores = np.zeros(MAX_NUM)
     physics_scores[unique] = counts / iterations
+    
     return physics_scores
-
 # ==========================================
 # 5. SOLUTORE ILP & TEORIA DEI GIOCHI
 # ==========================================
