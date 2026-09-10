@@ -1,16 +1,18 @@
 [
   {
     "concorso": "N/A",
-    "data": "09/09/2026",
+    "data": "10/09/2026",
     "sestina": [
-      23,
-      26,
-      41,
-      52,
+      2,
+      17,
+      39,
       59,
-      85
+      63,
+      89
     ],
-    "jackpot": "\u20ac 222.400.000"
+    "jolly": "N/A",
+    "superstar": "N/A",
+    "jackpot": "\u20ac 10"
   },
   {
     "concorso": "144",
