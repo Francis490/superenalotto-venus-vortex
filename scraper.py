@@ -45,65 +45,93 @@ def send_telegram_photo(photo_path, caption_html):
         print(f"[TELEGRAM ERROR] {e}")
 
 # ==========================================
-# 1. SCRAPER AVANZATO CON ALLORIGINS PROXY
+# 1. TITAN SCRAPER SPATIAL DOM PARSER
 # ==========================================
-def fetch_superenalotto():
+def fetch_titan_superenalotto():
     timestamp = int(time.time())
     
-    urls_to_scrape = [
-        f"https://www.superenalotto.net/estrazioni?t={timestamp}",
-        f"https://www.estrazionedellotto.it/estrazioni-superenalotto?t={timestamp}"
+    # Pool di target ridondanti
+    urls = [
+        "https://www.superenalotto.com/estrazioni",
+        "https://www.superenalotto.net/estrazioni",
+        "https://www.estrazionedellotto.it/estrazioni-superenalotto"
     ]
 
-    for target_url in urls_to_scrape:
-        encoded_url = urllib.parse.quote(target_url)
-        proxy_url = f"https://api.allorigins.win/get?url={encoded_url}"
-        
+    for base_url in urls:
         try:
-            print(f"[INFO] Tentativo connessione tramite proxy AllOrigins a: {target_url}")
-            res = requests.get(proxy_url, timeout=15)
-            if res.status_code == 200:
-                data = res.json()
-                html_content = data.get("contents", "")
-                
-                soup = BeautifulSoup(html_content, 'html.parser')
-                text = soup.get_text()
+            proxy_url = f"https://api.allorigins.win/get?url={urllib.parse.quote(base_url + '?t=' + str(timestamp))}"
+            print(f"[INFO] Scansione target: {base_url} via AllOrigins...")
+            res = requests.get(proxy_url, timeout=20)
+            if res.status_code != 200: continue
+            
+            html = res.json().get("contents", "")
+            if not html: continue
+            
+            soup = BeautifulSoup(html, 'html.parser')
+            text_clean = re.sub(r'\s+', ' ', soup.get_text(separator=' '))
+            
+            result = {
+                "concorso": "N/A",
+                "data": datetime.now().strftime("%d/%m/%Y"),
+                "sestina": [],
+                "jolly": "N/A",
+                "superstar": "N/A",
+                "jackpot": "N/A"
+            }
 
-                # Ricerca Concorso
-                conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-                if not conc_m:
-                    conc_m = re.search(r'n°\s*(\d+)', text, re.I)
+            # A. ESTRAZIONE JACKPOT
+            jp_m = re.search(r'(?:Jackpot|Montepremi)[^\d]*([0-9]{1,3}(?:\.[0-9]{3})*(?:\,[0-9]{2})?)', text_clean, re.I)
+            if jp_m: result["jackpot"] = f"€ {jp_m.group(1).strip()}"
 
-                # Ricerca Numeri
-                numbers_found = [int(n) for n in re.findall(r'\b(?:90|[1-8]?[0-9])\b', text) if 1 <= int(n) <= 90]
-                extracted = []
-                for n in numbers_found:
-                    if n not in extracted:
-                        extracted.append(n)
+            # B. ESTRAZIONE CONCORSO E DATA
+            conc_m = re.search(r'(?:Concorso|Estrazione)\s*(?:N\.|Numero)?\s*(\d{1,4})\s*(?:del|-|/)?\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})', text_clean, re.I)
+            if conc_m:
+                result["concorso"] = conc_m.group(1)
+                result["data"] = conc_m.group(2)
 
-                if conc_m and len(extracted) >= 6:
-                    conc_num = conc_m.group(1)
-                    date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-                    date_str = date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y")
+            # C. ESTRAZIONE JOLLY E SUPERSTAR TRAMITE ADIACENZA TESTUALE
+            jolly_m = re.search(r'Jolly[^\d]*(\d{1,2})\b', text_clean, re.I)
+            if jolly_m and 1 <= int(jolly_m.group(1)) <= 90: result["jolly"] = int(jolly_m.group(1))
+            
+            ss_m = re.search(r'SuperStar[^\d]*(\d{1,2})\b', text_clean, re.I)
+            if ss_m and 1 <= int(ss_m.group(1)) <= 90: result["superstar"] = int(ss_m.group(1))
+
+            # D. ESTRAZIONE SESTINA (DOM NODE ISOLATION)
+            for container in soup.find_all(['ul', 'div', 'tr', 'p']):
+                classes = ' '.join(container.get('class', [])).lower()
+                # Cerca nodi con CSS class espliciti
+                if any(k in classes for k in ['ball', 'numer', 'vincent', 'estraz', 'lotto', 'palla', 'jolly', 'super']):
+                    nums = [int(n) for n in re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', container.get_text(separator=' '))]
+                    seen = set()
+                    nums_unique = [x for x in nums if not (x in seen or seen.add(x))]
                     
-                    sestina = sorted(extracted[:6])
-                    jolly = extracted[6] if len(extracted) > 6 else "N/A"
-                    superstar = extracted[7] if len(extracted) > 7 else "N/A"
+                    if 6 <= len(nums_unique) <= 8:
+                        result["sestina"] = sorted(nums_unique[:6])
+                        # Auto-assegnazione posizionale se i label di testo falliscono
+                        if len(nums_unique) >= 7 and result["jolly"] == "N/A": result["jolly"] = nums_unique[6]
+                        if len(nums_unique) == 8 and result["superstar"] == "N/A": result["superstar"] = nums_unique[7]
+                        break
 
-                    print(f"[SUCCESS] Estrazione letta via proxy: Concorso {conc_num}")
-                    return {
-                        "concorso": str(conc_num),
-                        "data": date_str,
-                        "sestina": sestina,
-                        "jolly": jolly,
-                        "superstar": superstar,
-                        "jackpot": "€ 222.400.000" # Placeholder default
-                    }
+            # E. FALLBACK EXTREME (Window Sliding Logic)
+            if not result["sestina"]:
+                all_nums = [int(n) for n in re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', text_clean)]
+                for i in range(len(all_nums) - 5):
+                    window = all_nums[i:i+6]
+                    if len(set(window)) == 6:
+                        result["sestina"] = sorted(window)
+                        if i + 6 < len(all_nums) and result["jolly"] == "N/A": result["jolly"] = all_nums[i+6]
+                        if i + 7 < len(all_nums) and result["superstar"] == "N/A": result["superstar"] = all_nums[i+7]
+                        break
+
+            if len(result["sestina"]) == 6:
+                print(f"[SUCCESS] Dati perfetti estratti da {base_url}")
+                return result
+                
         except Exception as e:
-            print(f"[WARN] Fallito {proxy_url}: {e}")
+            print(f"[WARN] Fallimento spaziale su {base_url}: {e}")
             continue
 
-    print("[WARN] Rete inaccessibile. Fallback su storico locale.")
+    print("[ERROR] Tutti i proxy falliti. Impossibile acquisire dati in tempo reale.")
     return None
 
 # ==========================================
@@ -241,7 +269,7 @@ def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.close()
 
 # ==========================================
-# 8. DASHBOARD HTML (DICT-SAFE)
+# 8. DASHBOARD HTML 
 # ==========================================
 def generate_web_dashboard(se_data, pool_12, matrix):
     html_content = f"""
@@ -300,26 +328,32 @@ def generate_web_dashboard(se_data, pool_12, matrix):
         f.write(html_content)
 
 # ==========================================
-# MAIN EXECUTION
+# MAIN EXECUTION & DB HEALING
 # ==========================================
 def main():
     print("⚡ INITIALIZING TITAN ENGINE... ⚡")
     
-    # 1. Carica e Sanifica lo Storico Esistente
     history = []
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, "r", encoding="utf-8") as f: 
                 raw_history = json.load(f)
-                # Filtra via i record corrotti creati dai run falliti precedenti
-                history = [h for h in raw_history if h.get("concorso") not in [None, "0", "N/A"] and len(h.get("sestina", [])) == 6]
+                
+            # PULIZIA DB: Elimina i record corrotti generati dai run falliti in precedenza
+            for h in raw_history:
+                if h.get("concorso") not in [None, "0", "N/A"] and len(h.get("sestina", [])) == 6 and h.get("jolly") != "N/A":
+                    history.append(h)
+                    
+            # Sovrascrive istantaneamente il DB guarendolo
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(history, f, indent=2)
+                
         except Exception:
             history = []
 
-    # 2. Tenta Scraping Online
-    se_data = fetch_superenalotto()
+    # Esegue il nuovo Scraper
+    se_data = fetch_titan_superenalotto()
     
-    # 3. Gestione Fallback Sicuro
     if not se_data:
         if len(history) > 0:
             print(f"[FALLBACK] Uso dati puliti del concorso {history[0].get('concorso', 'N/A')}")
@@ -328,7 +362,6 @@ def main():
             print("[ERROR] Nessun dato online e storico vuoto/corrotto. Impossibile procedere.")
             sys.exit(1)
     else:
-        # Se abbiamo dati freschi online, li salviamo in cima alla storia (se non duplicati)
         if not any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history):
             history.insert(0, se_data)
             with open(HISTORY_FILE, "w", encoding="utf-8") as f: 
@@ -343,8 +376,7 @@ def main():
     generate_titan_chart(se_data.get("sestina", []), pool_12, physics_scores)
     generate_web_dashboard(se_data, pool_12, matrix)
 
-    # Invio Telegram (Dict-Safe)
-    pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa Score: <b>{m['ev_index']}</b>\n" for m in matrix])
+    pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa: <b>{m['ev_index']}</b>\n" for m in matrix])
     caption = (
         f"👑 <b>TITAN — GOD MODE V2 SEALED</b> 👑\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
