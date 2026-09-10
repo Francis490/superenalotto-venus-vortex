@@ -41,14 +41,51 @@ def send_telegram_photo(photo_path, caption_html):
         print(f"[TELEGRAM ERROR] {e}")
 
 # ==========================================
-# 1. SCRAPER AVANZATO (JOLLY & SUPERSTAR)
+# 1. SCRAPER AVANZATO CON ANTI-CACHE & API SISAL
 # ==========================================
 def fetch_superenalotto():
+    timestamp = int(time.time())
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept-Language': 'it-IT,it;q=0.9',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    }
+
+    # Tentativo 1: API JSON Diretta Sisal
+    try:
+        sisal_api = f"https://www.sisal.it/api/site-lotteries/drawings/superenalotto/latest?_={timestamp}"
+        res = requests.get(sisal_api, headers=headers, timeout=8)
+        if res.status_code == 200:
+            data = res.json()
+            drawing = data.get("drawing", data)
+            conc_num = drawing.get("number") or drawing.get("concorso")
+            sestina = drawing.get("extractedNumbers") or drawing.get("sestina")
+            
+            if conc_num and sestina and len(sestina) >= 6:
+                jolly = drawing.get("jollyNumber", "N/A")
+                superstar = drawing.get("superStarNumber", "N/A")
+                date_str = drawing.get("date", datetime.now().strftime("%d/%m/%Y"))
+                jackpot_val = f"€ {drawing.get('jackpot', '222.400.000')}"
+                
+                print(f"[SUCCESS] Dati letti da API Sisal. Concorso {conc_num}")
+                return {
+                    "concorso": str(conc_num),
+                    "data": date_str,
+                    "sestina": sorted([int(x) for x in sestina[:6]]),
+                    "jolly": int(jolly) if str(jolly).isdigit() else "N/A",
+                    "superstar": int(superstar) if str(superstar).isdigit() else "N/A",
+                    "jackpot": jackpot_val
+                }
+    except Exception as e:
+        print(f"[WARN] API Sisal non raggiungibile ({e}). Passaggio a Web Scraping.")
+
+    # Tentativo 2: Scraping HTML con Cache-Busting
     urls = [
-        "https://www.superenalotto.net/estrazioni",
-        "https://www.estrazionedellotto.it/estrazioni-superenalotto"
+        f"https://www.superenalotto.net/estrazioni?t={timestamp}",
+        f"https://www.estrazionedellotto.it/estrazioni-superenalotto?t={timestamp}"
     ]
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Accept-Language': 'it-IT,it;q=0.9'}
 
     for url in urls:
         try:
@@ -68,63 +105,49 @@ def fetch_superenalotto():
                     val = b.text.strip()
                     if val.isdigit() and 1 <= int(val) <= 90:
                         if int(val) not in extracted: extracted.append(int(val))
-                
+
                 if len(extracted) >= 6:
                     date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-                    conc_num = "144"
                     conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-                    if conc_m: conc_num = conc_m.group(1)
                     
-                    return {
-                        "concorso": str(conc_num),
-                        "data": date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y"),
-                        "sestina": sorted(extracted[:6]),
-                        "jolly": extracted[6] if len(extracted) > 6 else "N/A",
-                        "superstar": extracted[7] if len(extracted) > 7 else "N/A",
-                        "jackpot": jackpot_val
-                    }
+                    if conc_m:
+                        conc_num = conc_m.group(1)
+                        print(f"[SUCCESS] Dati letti da Web Scraper ({url}). Concorso {conc_num}")
+                        return {
+                            "concorso": str(conc_num),
+                            "data": date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y"),
+                            "sestina": sorted(extracted[:6]),
+                            "jolly": extracted[6] if len(extracted) > 6 else "N/A",
+                            "superstar": extracted[7] if len(extracted) > 7 else "N/A",
+                            "jackpot": jackpot_val
+                        }
         except Exception:
             continue
 
-    print("[WARN] Rete bloccata. Fallback su locale.")
+    print("[WARN] Rete bloccata o sorgenti non aggiornate. Fallback su locale.")
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             hist = json.load(f)
             if hist: return hist[0]
-            
-    return {"concorso": "144", "data": datetime.now().strftime("%d/%m/%Y"), "sestina": [23, 26, 41, 52, 59, 85], "jolly": 18, "superstar": 77, "jackpot": "€ 222.400.000"}
+
+    return {"concorso": "0", "data": datetime.now().strftime("%d/%m/%Y"), "sestina": [], "jolly": "N/A", "superstar": "N/A", "jackpot": "N/A"}
 
 # ==========================================
 # 2-4. CORE ENGINE (ML, ANOMALY, TERMODINAMICA)
 # ==========================================
-import numpy as np
-import time
-from sklearn.ensemble import RandomForestClassifier, IsolationForest
-
-MAX_NUM = 90
-
 def calculate_aerodynamic_wear(history):
-    """
-    SIMULATORE TRIBOLOGICO (DIGITAL TWIN)
-    Calcola l'usura superficiale delle 90 palline negli ultimi 100 concorsi.
-    Le palline con maggiore frequenza recente accumulano micro-abrasioni,
-    modificando il loro coefficiente di resistenza aerodinamica (Cd) e portanza.
-    """
     wear_matrix = np.zeros(MAX_NUM)
     window_length = min(len(history), 100)
     
     for idx in range(window_length):
         draw = history[idx]
-        # Decadimento esponenziale dell'impatto meccanico (gli urti recenti contano di più)
         impact_weight = np.exp(-0.03 * idx)
         for num in draw.get("sestina", []):
             if 1 <= num <= MAX_NUM:
                 wear_matrix[num - 1] += impact_weight
                 
-    # Normalizzazione [0, 1] dell'indice di usura
     max_wear = np.max(wear_matrix)
     return wear_matrix / max_wear if max_wear > 0 else wear_matrix
-
 
 def train_attention_ml(history):
     if len(history) < 15: 
@@ -142,7 +165,6 @@ def train_attention_ml(history):
     curr_window = [1 if n in [num for d in history[:4] for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)]
     return np.array([p[0][1] if len(p[0]) > 1 else 0.01 for p in model.predict_proba([curr_window])])
 
-
 def detect_venus_anomalies(history):
     if len(history) < 20: 
         return np.ones(MAX_NUM)
@@ -156,18 +178,7 @@ def detect_venus_anomalies(history):
     anomalies = IsolationForest(contamination=0.1, random_state=42).fit_predict(freq_matrix.T)
     return np.where(anomalies == -1, 1.5, 1.0)
 
-
 def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
-    """
-    MOTORE TERMODINAMICO V3 (DIGITAL TWIN INTEGRATO)
-    Esegue 1.000.000 di simulazioni Monte Carlo combinando:
-    1. Ritardo accumulato (massa/inerzia statica)
-    2. Predizione ML con Attention Decay
-    3. Anomaly Detection (Isolation Forest)
-    4. Usura Tribologica e Portanza Aerodinamica
-    5. Iniezione di Rumore di Gumbel vettorizzato
-    """
-    # 1. Calcolo Inerzia/Ritardo Cronico
     delays = np.full(MAX_NUM, len(history))
     for num in range(1, MAX_NUM + 1):
         for i, draw in enumerate(history):
@@ -175,31 +186,22 @@ def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
                 delays[num-1] = i
                 break
 
-    # 2. Ingestione Usura Aerodinamica
     aero_wear = calculate_aerodynamic_wear(history)
-
-    # 3. Energia Vettoriale Base (Statistica + ML + Anomalie)
     base_energy = (np.log1p(delays) * 0.15) + (ml_probs * 2.5) + (anomaly_scores * 0.5)
-    
-    # 4. Modulazione della Portanza Fisica mediante Usura del Plexiglass/Inchiostro
-    # L'usura incrementa la sensibilità della pallina al flusso d'aria compressa (+20% max lift)
     physical_energy = base_energy * (1.0 + (aero_wear * 0.20))
 
-    # 5. Simulazione Monte Carlo a Rumore Gumbel
     noise_factor = 0.15
     np.random.seed(int(time.time() * 1000000) % 4294967295)
     noise = np.random.gumbel(0, noise_factor, size=(iterations, MAX_NUM))
     
-    # Matrice di Esecuzione delle 1.000.000 di estrazioni
     total_kinetic_energy = physical_energy + noise
-    
     top_6_indices = np.argpartition(total_kinetic_energy, -6, axis=1)[:, -6:]
     unique, counts = np.unique(top_6_indices, return_counts=True)
     
     physics_scores = np.zeros(MAX_NUM)
     physics_scores[unique] = counts / iterations
-    
     return physics_scores
+
 # ==========================================
 # 5. SOLUTORE ILP & TEORIA DEI GIOCHI
 # ==========================================
@@ -284,7 +286,6 @@ def generate_web_dashboard(se_data, pool_12, matrix):
             .data-item {{ text-align: center; }}
             .data-item span {{ display: block; font-size: 0.9rem; color: #a1a1aa; margin-bottom: 0.5rem; text-transform: uppercase; }}
             .data-item strong {{ font-size: 1.5rem; color: #34d399; }}
-            .jolly-star {{ color: #fbbf24 !important; }}
             .sestina-card {{ background: #09090b; border: 1px solid #3f3f46; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }}
             .nums {{ font-size: 1.4rem; font-weight: bold; letter-spacing: 3px; color: #f8fafc; }}
             .stats {{ font-size: 0.9rem; color: #a1a1aa; text-align: right; }}
@@ -311,7 +312,7 @@ def generate_web_dashboard(se_data, pool_12, matrix):
             <div class="pool">{pool_12}</div>
 
             <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Matrice Ottimizzata (Max EV)</h3>
-            """
+    """
     for m in matrix:
         html_content += f"""
             <div class="sestina-card">
@@ -342,11 +343,15 @@ def main():
     print("⚡ INITIALIZING TITAN / GOD MODE V2... ⚡")
     se_data = fetch_superenalotto()
     
+    if not se_data or se_data.get("concorso") == "0":
+        print("[ERROR] Impossibile recuperare i dati dell'estrazione. Abort execution.")
+        sys.exit(1)
+        
     history = []
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r") as f: history = json.load(f)
 
-    if any(str(i.get("concorso")) == se_data["concorso"] for i in history):
+    if any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history):
         print(f"[INFO] Concorso {se_data['concorso']} già elaborato. Halt.")
         sys.exit(0)
 
@@ -362,7 +367,7 @@ def main():
     generate_titan_chart(se_data["sestina"], pool_12, physics_scores)
     generate_web_dashboard(se_data, pool_12, matrix)
 
-    # Telegram Output Aggressivo
+    # Telegram Output
     pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa Score: <b>{m['ev_index']}</b>\n" for m in matrix])
     
     caption = (
