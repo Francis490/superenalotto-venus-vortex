@@ -29,108 +29,93 @@ MAX_NUM = 90
 # 0. TELEGRAM NOTIFIER ENGINE
 # ==========================================
 def send_telegram_photo(photo_path, caption_html):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID: return
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("[TELEGRAM WARN] Token o Chat ID mancanti nelle Secrets.")
+        return
     token = TELEGRAM_BOT_TOKEN.strip()
     if token.lower().startswith("bot"): token = token[3:]
     url = f"https://api.telegram.org/bot{token}/sendPhoto"
     try:
         with open(photo_path, 'rb') as photo:
             payload = {"chat_id": TELEGRAM_CHAT_ID.strip(), "caption": caption_html, "parse_mode": "HTML"}
-            requests.post(url, data=payload, files={"photo": photo}, timeout=25)
+            res = requests.post(url, data=payload, files={"photo": photo}, timeout=25)
+            print(f"[TELEGRAM LOG] Status: {res.status_code}, Response: {res.text}")
     except Exception as e:
         print(f"[TELEGRAM ERROR] {e}")
 
 # ==========================================
-# 1. SCRAPER AVANZATO CON ANTI-CACHE & API SISAL
+# 1. SCRAPER MULTI-MIRROR PER GITHUB ACTIONS
 # ==========================================
 def fetch_superenalotto():
     timestamp = int(time.time())
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept-Language': 'it-IT,it;q=0.9',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-    }
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+    })
 
-    # Tentativo 1: API JSON Diretta Sisal
-    try:
-        sisal_api = f"https://www.sisal.it/api/site-lotteries/drawings/superenalotto/latest?_={timestamp}"
-        res = requests.get(sisal_api, headers=headers, timeout=8)
-        if res.status_code == 200:
-            data = res.json()
-            drawing = data.get("drawing", data)
-            conc_num = drawing.get("number") or drawing.get("concorso")
-            sestina = drawing.get("extractedNumbers") or drawing.get("sestina")
-            
-            if conc_num and sestina and len(sestina) >= 6:
-                jolly = drawing.get("jollyNumber", "N/A")
-                superstar = drawing.get("superStarNumber", "N/A")
-                date_str = drawing.get("date", datetime.now().strftime("%d/%m/%Y"))
-                jackpot_val = f"€ {drawing.get('jackpot', '222.400.000')}"
-                
-                print(f"[SUCCESS] Dati letti da API Sisal. Concorso {conc_num}")
-                return {
-                    "concorso": str(conc_num),
-                    "data": date_str,
-                    "sestina": sorted([int(x) for x in sestina[:6]]),
-                    "jolly": int(jolly) if str(jolly).isdigit() else "N/A",
-                    "superstar": int(superstar) if str(superstar).isdigit() else "N/A",
-                    "jackpot": jackpot_val
-                }
-    except Exception as e:
-        print(f"[WARN] API Sisal non raggiungibile ({e}). Passaggio a Web Scraping.")
-
-    # Tentativo 2: Scraping HTML con Cache-Busting
-    urls = [
-        f"https://www.superenalotto.net/estrazioni?t={timestamp}",
-        f"https://www.estrazionedellotto.it/estrazioni-superenalotto?t={timestamp}"
+    # Lista sorgenti con fallback automatico
+    sources = [
+        {"url": f"https://www.superenalotto.com/estrazioni?t={timestamp}", "type": "html_com"},
+        {"url": f"https://www.estrazionedellotto.it/estrazioni-superenalotto?t={timestamp}", "type": "html_it"},
+        {"url": f"https://www.sisal.it/api/site-lotteries/drawings/superenalotto/latest?_={timestamp}", "type": "json_sisal"}
     ]
 
-    for url in urls:
+    for src in sources:
         try:
-            res = requests.get(url, headers=headers, timeout=10)
+            res = session.get(src["url"], timeout=10)
             if res.status_code == 200:
-                soup = BeautifulSoup(res.text, 'html.parser')
-                text = soup.get_text()
-
-                jackpot_val = "€ 222.400.000"
-                jp_match = re.search(r'(?:jackpot|montepremi)[:\s]*€?\s*([\d\.\,]+\s*(?:milioni|mila)?)', text, re.I)
-                if jp_match: jackpot_val = f"€ {jp_match.group(1).strip()}"
-
-                # Estrazione palline
-                balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball')
-                extracted = []
-                for b in balls:
-                    val = b.text.strip()
-                    if val.isdigit() and 1 <= int(val) <= 90:
-                        if int(val) not in extracted: extracted.append(int(val))
-
-                if len(extracted) >= 6:
-                    date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-                    conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+                if src["type"] == "json_sisal":
+                    data = res.json()
+                    drawing = data.get("drawing", data)
+                    conc_num = drawing.get("number") or drawing.get("concorso")
+                    sestina = drawing.get("extractedNumbers") or drawing.get("sestina")
+                    if conc_num and sestina and len(sestina) >= 6:
+                        print(f"[SUCCESS] Dati letti da API Sisal. Concorso {conc_num}")
+                        return {
+                            "concorso": str(conc_num),
+                            "data": drawing.get("date", datetime.now().strftime("%d/%m/%Y")),
+                            "sestina": sorted([int(x) for x in sestina[:6]]),
+                            "jolly": int(drawing.get("jollyNumber")) if str(drawing.get("jollyNumber")).isdigit() else "N/A",
+                            "superstar": int(drawing.get("superStarNumber")) if str(drawing.get("superStarNumber")).isdigit() else "N/A",
+                            "jackpot": f"€ {drawing.get('jackpot', '222.400.000')}"
+                        }
+                else:
+                    soup = BeautifulSoup(res.text, 'html.parser')
+                    text = soup.get_text()
                     
-                    if conc_m:
+                    conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+                    if not conc_m:
+                        conc_m = re.search(r'n°\s*(\d+)', text, re.I)
+
+                    balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball, .number')
+                    extracted = []
+                    for b in balls:
+                        val = b.text.strip()
+                        if val.isdigit() and 1 <= int(val) <= 90:
+                            if int(val) not in extracted: extracted.append(int(val))
+
+                    if conc_m and len(extracted) >= 6:
                         conc_num = conc_m.group(1)
-                        print(f"[SUCCESS] Dati letti da Web Scraper ({url}). Concorso {conc_num}")
+                        date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
+                        print(f"[SUCCESS] Dati letti da Scraper ({src['url']}). Concorso {conc_num}")
                         return {
                             "concorso": str(conc_num),
                             "data": date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y"),
                             "sestina": sorted(extracted[:6]),
                             "jolly": extracted[6] if len(extracted) > 6 else "N/A",
                             "superstar": extracted[7] if len(extracted) > 7 else "N/A",
-                            "jackpot": jackpot_val
+                            "jackpot": "€ 222.400.000"
                         }
-        except Exception:
+        except Exception as e:
+            print(f"[WARN] Impossibile raggiungere {src['url']}: {e}")
             continue
 
-    print("[WARN] Rete bloccata o sorgenti non aggiornate. Fallback su locale.")
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            hist = json.load(f)
-            if hist: return hist[0]
-
-    return {"concorso": "0", "data": datetime.now().strftime("%d/%m/%Y"), "sestina": [], "jolly": "N/A", "superstar": "N/A", "jackpot": "N/A"}
+    print("[ERROR] Impossibile recuperare dati aggiornati da nessuna sorgente.")
+    return None
 
 # ==========================================
 # 2-4. CORE ENGINE (ML, ANOMALY, TERMODINAMICA)
@@ -138,41 +123,41 @@ def fetch_superenalotto():
 def calculate_aerodynamic_wear(history):
     wear_matrix = np.zeros(MAX_NUM)
     window_length = min(len(history), 100)
-    
     for idx in range(window_length):
         draw = history[idx]
         impact_weight = np.exp(-0.03 * idx)
         for num in draw.get("sestina", []):
-            if 1 <= num <= MAX_NUM:
+            if isinstance(num, int) and 1 <= num <= MAX_NUM:
                 wear_matrix[num - 1] += impact_weight
-                
     max_wear = np.max(wear_matrix)
     return wear_matrix / max_wear if max_wear > 0 else wear_matrix
 
 def train_attention_ml(history):
-    if len(history) < 15: 
+    valid_history = [d for d in history if d.get("sestina") and len(d["sestina"]) == 6]
+    if len(valid_history) < 15: 
         return np.ones(MAX_NUM) / MAX_NUM
         
     X, y = [], []
-    for i in range(len(history) - 1, 4, -1):
-        window = history[i-4:i]
+    for i in range(len(valid_history) - 1, 4, -1):
+        window = valid_history[i-4:i]
         X.append([1 if n in [num for d in window for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)])
-        y.append([1 if n in history[i-5].get("sestina", []) else 0 for n in range(1, MAX_NUM + 1)])
+        y.append([1 if n in valid_history[i-5].get("sestina", []) else 0 for n in range(1, MAX_NUM + 1)])
 
     model = RandomForestClassifier(n_estimators=200, max_depth=12, random_state=42)
     model.fit(np.array(X), np.array(y))
     
-    curr_window = [1 if n in [num for d in history[:4] for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)]
+    curr_window = [1 if n in [num for d in valid_history[:4] for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)]
     return np.array([p[0][1] if len(p[0]) > 1 else 0.01 for p in model.predict_proba([curr_window])])
 
 def detect_venus_anomalies(history):
-    if len(history) < 20: 
+    valid_history = [d for d in history if d.get("sestina") and len(d["sestina"]) == 6]
+    if len(valid_history) < 20: 
         return np.ones(MAX_NUM)
         
-    freq_matrix = np.zeros((len(history[:50]), MAX_NUM))
-    for i, draw in enumerate(history[:50]):
+    freq_matrix = np.zeros((len(valid_history[:50]), MAX_NUM))
+    for i, draw in enumerate(valid_history[:50]):
         for n in draw.get("sestina", []): 
-            if 1 <= n <= MAX_NUM:
+            if isinstance(n, int) and 1 <= n <= MAX_NUM:
                 freq_matrix[i, n-1] = 1
                 
     anomalies = IsolationForest(contamination=0.1, random_state=42).fit_predict(freq_matrix.T)
@@ -233,7 +218,6 @@ def ilp_optimal_coverage(pool_12, num_sestine=4):
 def build_titan_matrix(physics_scores):
     pool_12 = sorted([int(i + 1) for i in np.argsort(physics_scores)[-12:]])
     matrix_output = []
-    
     for i, s in enumerate(ilp_optimal_coverage(pool_12, 4), 1):
         matrix_output.append({
             "id": f"TITAN {i}",
@@ -250,13 +234,13 @@ def build_titan_matrix(physics_scores):
 def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.style.use('dark_background')
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6), facecolor='#050505')
-    somma = sum(sestina)
+    somma = sum(sestina) if sestina else 273
     x = np.linspace(100, 450, 500)
     y = stats.norm.pdf(x, 273.0, 45.5)
     ax1.plot(x, y, color='#d946ef', linewidth=2.5)
     ax1.fill_between(x, y, color='#d946ef', alpha=0.15)
     ax1.axvline(somma, color='#14b8a6', linestyle='--', linewidth=2)
-    ax1.set_title(f'Conformal Uncertainty Field (Somma: {somma})')
+    ax1.set_title(f'Field Area (Somma: {somma})')
 
     scores = [physics_scores[n-1] for n in pool_12]
     ax2.barh([f"N°{n}" for n in pool_12], scores, color='#3b82f6')
@@ -268,7 +252,7 @@ def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.close()
 
 # ==========================================
-# 8. LIVELLO WEB: GENERAZIONE DASHBOARD HTML
+# 8. GENERAZIONE DASHBOARD HTML
 # ==========================================
 def generate_web_dashboard(se_data, pool_12, matrix):
     html_content = f"""
@@ -277,86 +261,81 @@ def generate_web_dashboard(se_data, pool_12, matrix):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TITAN GOD MODE - Live Dashboard</title>
+        <title>TITAN GOD MODE - Dashboard</title>
         <style>
-            body {{ background-color: #09090b; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 2rem; margin: 0; }}
-            .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; border: 1px solid #27272a; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
-            h1 {{ color: #a855f7; text-align: center; text-transform: uppercase; letter-spacing: 2px; }}
+            body {{ background-color: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; margin: 0; }}
+            .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; border: 1px solid #27272a; }}
+            h1 {{ color: #a855f7; text-align: center; text-transform: uppercase; }}
             .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }}
             .data-item {{ text-align: center; }}
-            .data-item span {{ display: block; font-size: 0.9rem; color: #a1a1aa; margin-bottom: 0.5rem; text-transform: uppercase; }}
             .data-item strong {{ font-size: 1.5rem; color: #34d399; }}
             .sestina-card {{ background: #09090b; border: 1px solid #3f3f46; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }}
-            .nums {{ font-size: 1.4rem; font-weight: bold; letter-spacing: 3px; color: #f8fafc; }}
-            .stats {{ font-size: 0.9rem; color: #a1a1aa; text-align: right; }}
-            .ev-score {{ color: #fbbf24; font-weight: bold; font-size: 1.1rem; }}
-            .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; letter-spacing: 2px; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }}
-            .footer {{ text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #52525b; }}
+            .nums {{ font-size: 1.4rem; font-weight: bold; color: #f8fafc; }}
+            .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }}
         </style>
     </head>
     <body>
         <div class="container">
             <h1>TITAN God Mode V2</h1>
             <div class="data-box">
-                <div class="data-item"><span>Concorso</span><strong>N° {se_data['concorso']}</strong></div>
-                <div class="data-item"><span>Data</span><strong>{se_data['data']}</strong></div>
-                <div class="data-item"><span>Jackpot</span><strong>{se_data['jackpot']}</strong></div>
+                <div class="data-item"><span>Concorso</span><br><strong>N° {se_data['concorso']}</strong></div>
+                <div class="data-item"><span>Data</span><br><strong>{se_data['data']}</strong></div>
+                <div class="data-item"><span>Jackpot</span><br><strong>{se_data['jackpot']}</strong></div>
             </div>
             
-            <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Ultima Estrazione Venus</h3>
-            <div class="pool" style="color: #34d399; border-color: #34d399;">
-                {se_data['sestina']} &nbsp;|&nbsp; <span style="color: #fbbf24;">J: {se_data['jolly']}</span> &nbsp;|&nbsp; <span style="color: #f87171;">SS: {se_data['superstar']}</span>
+            <h3 style="color: #a1a1aa;">Ultima Estrazione Venus</h3>
+            <div class="pool" style="color: #34d399;">
+                {se_data['sestina']} &nbsp;|&nbsp; Jolly: {se_data['jolly']} &nbsp;|&nbsp; SuperStar: {se_data['superstar']}
             </div>
 
-            <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Dodecaedro Quantistico (12 Numeri)</h3>
+            <h3 style="color: #a1a1aa;">Dodecaedro Quantistico (12 Numeri)</h3>
             <div class="pool">{pool_12}</div>
 
-            <h3 style="color: #a1a1aa; border-bottom: 1px solid #3f3f46; padding-bottom: 0.5rem;">Matrice Ottimizzata (Max EV)</h3>
+            <h3 style="color: #a1a1aa;">Matrice Ottimizzata (Max EV)</h3>
     """
     for m in matrix:
         html_content += f"""
             <div class="sestina-card">
                 <div>
-                    <div style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 5px;">{m['id']}</div>
+                    <div style="font-size: 0.8rem; color: #3b82f6;">{m['id']}</div>
                     <div class="nums">{m['sestina']}</div>
                 </div>
-                <div class="stats">
+                <div style="text-align: right; color: #a1a1aa;">
                     Somma: {m['somma']}<br>
-                    Anti-Massa Score: <span class="ev-score">{m['ev_index']} ⚡</span>
+                    EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong>
                 </div>
             </div>
         """
-    
-    html_content += f"""
-            <div class="footer">Ultimo Aggiornamento: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")} | Vettorizzazione: 1M Iterazioni | Solver: SciPy MILP</div>
-        </div>
-    </body>
-    </html>
-    """
+    html_content += f"</div></body></html>"
     with open(DASHBOARD_FILE, "w", encoding="utf-8") as f:
         f.write(html_content)
 
 # ==========================================
-# MAIN EXECUTION (GOD MODE)
+# MAIN EXECUTION
 # ==========================================
 def main():
-    print("⚡ INITIALIZING TITAN / GOD MODE V2... ⚡")
+    print("⚡ INITIALIZING TITAN ENGINE... ⚡")
     se_data = fetch_superenalotto()
     
-    if not se_data or se_data.get("concorso") == "0":
-        print("[ERROR] Impossibile recuperare i dati dell'estrazione. Abort execution.")
+    if not se_data:
+        print("[ERROR] Impossibile acquisire nuovi dati da nessuna sorgente. Abort.")
         sys.exit(1)
         
     history = []
     if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r") as f: history = json.load(f)
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f: 
+                history = json.load(f)
+        except Exception: 
+            history = []
 
-    if any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history):
-        print(f"[INFO] Concorso {se_data['concorso']} già elaborato. Halt.")
-        sys.exit(0)
-
-    history.insert(0, se_data)
-    with open(HISTORY_FILE, "w") as f: json.dump(history, f, indent=2)
+    # Controllo duplicati con skip sicuro
+    if any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history if i.get("concorso") not in [None, "0", "N/A"]):
+        print(f"[INFO] Concorso {se_data['concorso']} già presente nello storico.")
+    else:
+        history.insert(0, se_data)
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f: 
+            json.dump(history, f, indent=2)
 
     # TITAN CORE PIPELINE
     anomalies = detect_venus_anomalies(history)
@@ -367,9 +346,8 @@ def main():
     generate_titan_chart(se_data["sestina"], pool_12, physics_scores)
     generate_web_dashboard(se_data, pool_12, matrix)
 
-    # Telegram Output
+    # Invio Telegram
     pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa Score: <b>{m['ev_index']}</b>\n" for m in matrix])
-    
     caption = (
         f"👑 <b>TITAN — GOD MODE V2 SEALED</b> 👑\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -381,11 +359,12 @@ def main():
         f"<code>{sorted(pool_12)}</code>\n\n"
         f"🔮 <b>SISTEMA ANTI-FOLLA TITAN:</b>\n{pred_text}"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<i>🌐 Live Dashboard aggiornata su GitHub Pages.</i>"
+        f"<i>🌐 Dashboard aggiornata.</i>"
     )
     
+    print("[INFO] Invio notifica su Telegram...")
     send_telegram_photo(CHART_FILE, caption)
-    print("✅ TITAN GOD MODE EXECUTED PERFECTLY.")
+    print("✅ ESECUZIONE COMPLETATA CON SUCCESSO.")
 
 if __name__ == "__main__":
     main()
