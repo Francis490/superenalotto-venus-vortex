@@ -30,7 +30,7 @@ MAX_NUM = 90
 # ==========================================
 def send_telegram_photo(photo_path, caption_html):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("[TELEGRAM WARN] Token o Chat ID mancanti nelle Secrets.")
+        print("[TELEGRAM WARN] Token o Chat ID non trovati nelle Environment Variables.")
         return
     token = TELEGRAM_BOT_TOKEN.strip()
     if token.lower().startswith("bot"): token = token[3:]
@@ -39,82 +39,84 @@ def send_telegram_photo(photo_path, caption_html):
         with open(photo_path, 'rb') as photo:
             payload = {"chat_id": TELEGRAM_CHAT_ID.strip(), "caption": caption_html, "parse_mode": "HTML"}
             res = requests.post(url, data=payload, files={"photo": photo}, timeout=25)
-            print(f"[TELEGRAM LOG] Status: {res.status_code}, Response: {res.text}")
+            print(f"[TELEGRAM LOG] Status: {res.status_code}")
     except Exception as e:
         print(f"[TELEGRAM ERROR] {e}")
 
 # ==========================================
-# 1. SCRAPER MULTI-MIRROR PER GITHUB ACTIONS
+# 1. SCRAPER AVANZATO CON BYPASS PROXY (JINA AI)
 # ==========================================
 def fetch_superenalotto():
     timestamp = int(time.time())
-    session = requests.Session()
-    session.headers.update({
+    headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-    })
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    }
 
-    # Lista sorgenti con fallback automatico
+    # Proxy Jina AI + Sorgenti dirette
     sources = [
-        {"url": f"https://www.superenalotto.com/estrazioni?t={timestamp}", "type": "html_com"},
-        {"url": f"https://www.estrazionedellotto.it/estrazioni-superenalotto?t={timestamp}", "type": "html_it"},
-        {"url": f"https://www.sisal.it/api/site-lotteries/drawings/superenalotto/latest?_={timestamp}", "type": "json_sisal"}
+        # Bypass Cloudflare via Jina AI Proxy
+        f"https://r.jina.ai/https://www.superenalotto.net/estrazioni?t={timestamp}",
+        f"https://r.jina.ai/https://www.estrazionedellotto.it/estrazioni-superenalotto?t={timestamp}",
+        # Diretti
+        f"https://www.superenalotto.com/estrazioni?t={timestamp}"
     ]
 
-    for src in sources:
+    for url in sources:
         try:
-            res = session.get(src["url"], timeout=10)
+            print(f"[INFO] Tentativo connessione: {url}")
+            res = requests.get(url, headers=headers, timeout=15)
             if res.status_code == 200:
-                if src["type"] == "json_sisal":
-                    data = res.json()
-                    drawing = data.get("drawing", data)
-                    conc_num = drawing.get("number") or drawing.get("concorso")
-                    sestina = drawing.get("extractedNumbers") or drawing.get("sestina")
-                    if conc_num and sestina and len(sestina) >= 6:
-                        print(f"[SUCCESS] Dati letti da API Sisal. Concorso {conc_num}")
-                        return {
-                            "concorso": str(conc_num),
-                            "data": drawing.get("date", datetime.now().strftime("%d/%m/%Y")),
-                            "sestina": sorted([int(x) for x in sestina[:6]]),
-                            "jolly": int(drawing.get("jollyNumber")) if str(drawing.get("jollyNumber")).isdigit() else "N/A",
-                            "superstar": int(drawing.get("superStarNumber")) if str(drawing.get("superStarNumber")).isdigit() else "N/A",
-                            "jackpot": f"€ {drawing.get('jackpot', '222.400.000')}"
-                        }
-                else:
-                    soup = BeautifulSoup(res.text, 'html.parser')
-                    text = soup.get_text()
+                text = res.text
+
+                # Cerca numero concorso
+                conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
+                if not conc_m:
+                    conc_m = re.search(r'n°\s*(\d+)', text, re.I)
+
+                # Cerca sequenza numeri estrazione
+                # Estrazione numeri tramite pattern regex flessibile
+                numbers_found = [int(n) for n in re.findall(r'\b(?:90|[1-8]?[0-9])\b', text) if 1 <= int(n) <= 90]
+                
+                # Deduplica mantenendo l'ordine
+                extracted = []
+                for n in numbers_found:
+                    if n not in extracted:
+                        extracted.append(n)
+
+                if conc_m and len(extracted) >= 6:
+                    conc_num = conc_m.group(1)
+                    date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
+                    date_str = date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y")
                     
-                    conc_m = re.search(r'(?:concorso|estrazione)\s*(?:n[°\.]?|numero)?\s*(\d+)', text, re.I)
-                    if not conc_m:
-                        conc_m = re.search(r'n°\s*(\d+)', text, re.I)
+                    sestina = sorted(extracted[:6])
+                    jolly = extracted[6] if len(extracted) > 6 else "N/A"
+                    superstar = extracted[7] if len(extracted) > 7 else "N/A"
 
-                    balls = soup.select('.ball, .numero, ul.balls li, span.ball, div.ball, td.ball, .number')
-                    extracted = []
-                    for b in balls:
-                        val = b.text.strip()
-                        if val.isdigit() and 1 <= int(val) <= 90:
-                            if int(val) not in extracted: extracted.append(int(val))
-
-                    if conc_m and len(extracted) >= 6:
-                        conc_num = conc_m.group(1)
-                        date_m = re.search(r'(\d{2}/\d{2}/\d{4})', text)
-                        print(f"[SUCCESS] Dati letti da Scraper ({src['url']}). Concorso {conc_num}")
-                        return {
-                            "concorso": str(conc_num),
-                            "data": date_m.group(1) if date_m else datetime.now().strftime("%d/%m/%Y"),
-                            "sestina": sorted(extracted[:6]),
-                            "jolly": extracted[6] if len(extracted) > 6 else "N/A",
-                            "superstar": extracted[7] if len(extracted) > 7 else "N/A",
-                            "jackpot": "€ 222.400.000"
-                        }
+                    print(f"[SUCCESS] Estrazione letta con successo: Concorso {conc_num} del {date_str}")
+                    return {
+                        "concorso": str(conc_num),
+                        "data": date_str,
+                        "sestina": sestina,
+                        "jolly": jolly,
+                        "superstar": superstar,
+                        "jackpot": "€ 222.400.000"
+                    }
         except Exception as e:
-            print(f"[WARN] Impossibile raggiungere {src['url']}: {e}")
+            print(f"[WARN] Fallito {url}: {e}")
             continue
 
-    print("[ERROR] Impossibile recuperare dati aggiornati da nessuna sorgente.")
+    print("[WARN] Impostazione fallback dati da storico locale.")
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                hist = json.load(f)
+                if hist:
+                    print(f"[FALLBACK] Uso ultimo concorso registrato: {hist[0].get('concorso')}")
+                    return hist[0]
+        except Exception:
+            pass
+
     return None
 
 # ==========================================
@@ -252,7 +254,7 @@ def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.close()
 
 # ==========================================
-# 8. GENERAZIONE DASHBOARD HTML
+# 8. DASHBOARD HTML
 # ==========================================
 def generate_web_dashboard(se_data, pool_12, matrix):
     html_content = f"""
@@ -306,7 +308,7 @@ def generate_web_dashboard(se_data, pool_12, matrix):
                 </div>
             </div>
         """
-    html_content += f"</div></body></html>"
+    html_content += "</div></body></html>"
     with open(DASHBOARD_FILE, "w", encoding="utf-8") as f:
         f.write(html_content)
 
@@ -318,7 +320,7 @@ def main():
     se_data = fetch_superenalotto()
     
     if not se_data:
-        print("[ERROR] Impossibile acquisire nuovi dati da nessuna sorgente. Abort.")
+        print("[ERROR] Nessun dato recuperato. Arresto sicuro.")
         sys.exit(1)
         
     history = []
@@ -329,10 +331,8 @@ def main():
         except Exception: 
             history = []
 
-    # Controllo duplicati con skip sicuro
-    if any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history if i.get("concorso") not in [None, "0", "N/A"]):
-        print(f"[INFO] Concorso {se_data['concorso']} già presente nello storico.")
-    else:
+    # Salvataggio storico se concorso nuovo
+    if not any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history if i.get("concorso") not in [None, "0", "N/A"]):
         history.insert(0, se_data)
         with open(HISTORY_FILE, "w", encoding="utf-8") as f: 
             json.dump(history, f, indent=2)
@@ -359,7 +359,7 @@ def main():
         f"<code>{sorted(pool_12)}</code>\n\n"
         f"🔮 <b>SISTEMA ANTI-FOLLA TITAN:</b>\n{pred_text}"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<i>🌐 Dashboard aggiornata.</i>"
+        f"<i>🌐 Dashboard aggiornata su GitHub Pages.</i>"
     )
     
     print("[INFO] Invio notifica su Telegram...")
