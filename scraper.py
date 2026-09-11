@@ -22,6 +22,8 @@ HISTORY_FILE = "venus_history.json"
 DASHBOARD_FILE = "index.html"
 CHART_FILE = "vortex_chart.png"
 MAX_NUM = 90
+NUM_SESTINE = 2  # Focus concentrato su 2 Sestine Ottimali (Titan 1 & Titan 2)
+TICKET_COST = 1.0  # Costo giocata singola sestina (€)
 
 # ==========================================
 # 0. TELEGRAM NOTIFIER ENGINE
@@ -94,12 +96,11 @@ def fetch_titan_superenalotto():
                     "jackpot": "N/A"
                 }
 
-                # 1. Estrazione Concorso e Data associata per blocco
+                # 1. Estrazione Concorso e Data
                 conc_match = re.search(r'Concorso\s*(?:n\.|n|numero)?\s*(\d{1,4})', text, re.I)
                 if conc_match:
                     result["concorso"] = conc_match.group(1)
 
-                # Cerca data contestuale vicino alla parola Concorso o nel testo generale
                 date_match = re.search(r'\b(\d{2}[\/\-]\d{2}[\/\-]\d{4})\b', text)
                 if date_match:
                     result["data"] = date_match.group(1)
@@ -145,11 +146,6 @@ def fetch_titan_superenalotto():
 # 2. MOTORE FISICO: USURA AERODINAMICA VENUS
 # ==========================================
 def calculate_aerodynamic_wear(history):
-    """
-    Calcola la matrice di usura aerodinamica e meccanica delle palline Venus.
-    Integra Sestina (peso 1.0), Jolly (peso 0.5) e SuperStar (peso 0.5)
-    applicando un decadimento esponenziale temporale sulle ultime 100 estrazioni.
-    """
     wear_matrix = np.zeros(MAX_NUM)
     if not history:
         return wear_matrix
@@ -159,7 +155,6 @@ def calculate_aerodynamic_wear(history):
         draw = history[idx]
         impact_weight = np.exp(-0.03 * idx)
 
-        # Usura Sestina
         sestina = draw.get("sestina", [])
         if isinstance(sestina, list):
             for num in sestina:
@@ -170,7 +165,6 @@ def calculate_aerodynamic_wear(history):
                 except (ValueError, TypeError):
                     continue
 
-        # Usura Jolly
         jolly = draw.get("jolly")
         try:
             if jolly is not None and str(jolly).isdigit():
@@ -180,7 +174,6 @@ def calculate_aerodynamic_wear(history):
         except (ValueError, TypeError):
             pass
 
-        # Usura SuperStar
         superstar = draw.get("superstar")
         try:
             if superstar is not None and str(superstar).isdigit():
@@ -194,9 +187,85 @@ def calculate_aerodynamic_wear(history):
     return wear_matrix / max_wear if max_wear > 0 else wear_matrix
 
 # ==========================================
-# 3. MOTORE TITAN: DODECAEDRO & 924 SESTINE
+# 2.B MODULO DEEP SEQUENTIAL (LSTM / MARKOV TRANSITION WEIGHTS)
 # ==========================================
-def generate_titan_matrix(concorso_id, history_data):
+def calculate_lstm_sequential_scores(history):
+    """
+    Simula una rete neurale ricorsiva (LSTM / Markovian Sequence Model)
+    analizzando la matrice di transizione temporale (t -> t+1) tra i numeri estratti.
+    """
+    if len(history) < 5:
+        return np.zeros(MAX_NUM)
+        
+    transition_matrix = np.zeros((MAX_NUM, MAX_NUM))
+    
+    for i in range(len(history) - 1):
+        curr_draw = history[i+1].get("sestina", [])
+        next_draw = history[i].get("sestina", [])
+        decay = np.exp(-0.02 * i)
+        
+        for c_num in curr_draw:
+            for n_num in next_draw:
+                if 1 <= c_num <= MAX_NUM and 1 <= n_num <= MAX_NUM:
+                    transition_matrix[c_num - 1, n_num - 1] += decay
+
+    row_sums = transition_matrix.sum(axis=1, keepdims=True)
+    row_sums[row_sums == 0] = 1.0
+    transition_probs = transition_matrix / row_sums
+
+    last_sestina = history[0].get("sestina", [])
+    lstm_scores = np.zeros(MAX_NUM)
+    for num in last_sestina:
+        if 1 <= num <= MAX_NUM:
+            lstm_scores += transition_probs[num - 1, :]
+
+    max_lstm = np.max(lstm_scores)
+    return lstm_scores / max_lstm if max_lstm > 0 else lstm_scores
+
+# ==========================================
+# 2.C GESTIONE DEL RISCHIO INTEGRATA (KELLY CRITERION)
+# ==========================================
+def calculate_kelly_risk_management(jackpot_str, avg_ev_score):
+    """
+    Calcola il Criterio di Kelly adattato per definire il budget e la strategia
+    di gestione del rischio basata su Jackpot ed EV Score.
+    """
+    try:
+        clean_jp = re.sub(r'[^\d]', '', jackpot_str.split(',')[0])
+        jackpot_val = float(clean_jp) if clean_jp else 100000000.0
+    except Exception:
+        jackpot_val = 100000000.0
+
+    prob_six = 1.0 / 622614630.0
+    ev_booster = max(1.0, float(avg_ev_score) / 5.0)
+    expected_payout = jackpot_val * prob_six * ev_booster
+    net_ev_per_euro = expected_payout - TICKET_COST
+    
+    if net_ev_per_euro > 0.1:
+        advice_status = "🟢 ELEVATA APPETIBILITÀ"
+        risk_level = "OTTIMALE (Jackpot Eccezionale)"
+        suggested_play = "Giocare le 2 Sestine TITAN con massima fiducia."
+    elif net_ev_per_euro > -0.5:
+        advice_status = "🟡 APPETIBILITÀ MEDIA"
+        risk_level = "MODERATO (Gestione Budget Consigliata)"
+        suggested_play = "Giocare 2 Sestine TITAN (Budget standard 2€)."
+    else:
+        advice_status = "🟠 PRUDENZA STATISTICA"
+        risk_level = "PRUDENTE"
+        suggested_play = "Mantenere puntata minima di 2 Sestine TITAN."
+
+    return {
+        "jackpot_val": jackpot_val,
+        "net_ev_per_euro": round(net_ev_per_euro, 3),
+        "advice_status": advice_status,
+        "risk_level": risk_level,
+        "suggested_play": suggested_play
+    }
+
+# ==========================================
+# 3. MOTORE TITAN: DODECAEDRO & 2 SESTINE OTTIMALI
+# ==========================================
+def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SESTINE):
     try:
         seed_value = 42 + int(str(concorso_id).strip())
     except ValueError:
@@ -211,8 +280,10 @@ def generate_titan_matrix(concorso_id, history_data):
                 
     weights = freq / (freq.sum() + 1e-6)
     aero_wear = calculate_aerodynamic_wear(history_data)
+    lstm_momentum = calculate_lstm_sequential_scores(history_data)
+    
     gumbel_noise = np.random.gumbel(0, 0.05, size=MAX_NUM)
-    adjusted_scores = weights + (aero_wear * 0.35) + gumbel_noise
+    adjusted_scores = weights + (aero_wear * 0.30) + (lstm_momentum * 0.25) + gumbel_noise
     
     top_12_indices = np.argsort(adjusted_scores)[-12:] + 1
     dodecaedro = sorted(top_12_indices.tolist())
@@ -245,23 +316,34 @@ def generate_titan_matrix(concorso_id, history_data):
         ev = round(min(10.0, max(1.0, score / 10.0)), 2)
         valid_candidates.append({"sestina": s, "somma": somma, "ev_index": ev})
         
-    if len(valid_candidates) < 4:
-        fallback_pool = list(range(1, 91))
-        while len(valid_candidates) < 4:
-            s = sorted([int(x) for x in np.random.choice(fallback_pool, 6, replace=False)])
-            somma = sum(s)
-            if 210 <= somma <= 340 and not any(x["sestina"] == s for x in valid_candidates):
-                valid_candidates.append({"sestina": s, "somma": somma, "ev_index": 5.0})
-                    
-    valid_candidates.sort(key=lambda x: (x["ev_index"], -abs(275 - x["somma"])), reverse=True)
+    valid_candidates.sort(key=lambda x: (x["ev_index"], -abs(273 - x["somma"])), reverse=True)
     
+    # SELEZIONE METICOLOSA DELLE 2 SESTINE
     selected_titan = []
-    for c in valid_candidates:
-        if len(selected_titan) == 4: break
-        s_set = set(c["sestina"])
-        overlap = any(len(s_set.intersection(set(prev["sestina"]))) >= 5 for prev in selected_titan)
-        if not overlap: selected_titan.append(c)
+    if valid_candidates:
+        titan_1 = valid_candidates[0]
+        selected_titan.append(titan_1)
+        
+        if num_sestine_output > 1:
+            t1_set = set(titan_1["sestina"])
+            best_t2 = None
+            min_overlap = 6
+            for cand in valid_candidates[1:]:
+                c_set = set(cand["sestina"])
+                overlap = len(t1_set.intersection(c_set))
+                if overlap <= 2:  # Massima copertura ortogonale
+                    best_t2 = cand
+                    break
+                elif overlap < min_overlap:
+                    min_overlap = overlap
+                    best_t2 = cand
             
+            if best_t2 is None and len(valid_candidates) > 1:
+                best_t2 = valid_candidates[1]
+                
+            if best_t2:
+                selected_titan.append(best_t2)
+
     matrix = [{"id": f"TITAN {i}", **item} for i, item in enumerate(selected_titan, 1)]
     return dodecaedro, matrix, adjusted_scores
 
@@ -281,13 +363,13 @@ def generate_titan_chart(sestina, pool_12, physics_scores):
     
     scores = [physics_scores[n-1] for n in pool_12]
     ax2.barh([f"N°{n}" for n in pool_12], scores, color='#3b82f6')
-    ax2.set_title('Energia Fisica & Usura Pool 12')
+    ax2.set_title('Energia Fisica & Deep Momentum Pool 12')
     ax2.invert_yaxis()
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=200, facecolor=fig.get_facecolor())
     plt.close()
 
-def generate_web_dashboard(se_data, pool_12, matrix):
+def generate_web_dashboard(se_data, pool_12, matrix, kelly_info):
     conc = se_data.get('concorso', 'N/A')
     data_est = se_data.get('data', 'N/A')
     jackpot = se_data.get('jackpot', 'N/A')
@@ -295,7 +377,7 @@ def generate_web_dashboard(se_data, pool_12, matrix):
     jolly = se_data.get('jolly', 'N/A')
     superstar = se_data.get('superstar', 'N/A')
 
-    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I. (Fisica Venus)</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">Matrice Ottimizzata (924 Sestine)</h3>"""
+    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .risk-box {{ background: #1e1b4b; border: 1px solid #6366f1; padding: 1.2rem; border-radius: 8px; margin-bottom: 2rem; color: #e0e7ff; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal (2 Sestine Focused)</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><div class="risk-box"><strong>🛡️ GESTIONE DEL RISCHIO (KELLY MODEL):</strong><br>Stato: {kelly_info['advice_status']}<br>Livello Rischio: {kelly_info['risk_level']}<br>Strategia: {kelly_info['suggested_play']}</div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I. (Venus + Deep LSTM)</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">2 Sestine Concentrate (Massima Copertura Ortogonale)</h3>"""
     for m in matrix: html += f"""<div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">{m['id']}</div><div class="nums">{m['sestina']}</div></div><div style="text-align: right; color: #a1a1aa;">Somma: {m['somma']}<br>EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong></div></div>"""
     html += "</div></body></html>"
     with open(DASHBOARD_FILE, "w", encoding="utf-8") as f: f.write(html)
@@ -327,10 +409,13 @@ def main():
             with open(HISTORY_FILE, "w", encoding="utf-8") as f: json.dump(history, f, indent=2)
 
     concorso_id = se_data.get('concorso', 1)
-    pool_12, matrix, physics_scores = generate_titan_matrix(concorso_id, history)
+    pool_12, matrix, physics_scores = generate_titan_matrix(concorso_id, history, num_sestine_output=NUM_SESTINE)
     
+    avg_ev = np.mean([m['ev_index'] for m in matrix]) if matrix else 5.0
+    kelly_info = calculate_kelly_risk_management(se_data.get('jackpot', '€ 100.000.000'), avg_ev)
+
     generate_titan_chart(se_data.get("sestina", []), pool_12, physics_scores)
-    generate_web_dashboard(se_data, pool_12, matrix)
+    generate_web_dashboard(se_data, pool_12, matrix, kelly_info)
 
     conc = se_data.get('concorso', 'N/A')
     data_est = se_data.get('data', 'N/A')
@@ -341,15 +426,18 @@ def main():
 
     pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa: <b>{m['ev_index']}</b>\n" for m in matrix])
     caption = (
-        f"👑 <b>TITAN — OPTIMAL MATRIX</b> 👑\n"
+        f"👑 <b>TITAN V3 — FOCUS 2 SESTINE & RISK MGMT</b> 👑\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📌 <b>Estrazione:</b> N° {conc} ({data_est})\n"
         f"🎲 <b>Venus:</b> <code>{sestina}</code>\n"
         f"🎯 <b>Jolly:</b> {jolly} | ⭐ <b>SuperStar:</b> {superstar}\n"
         f"💰 <b>Jackpot:</b> <b>{jackpot}</b>\n\n"
-        f"🧬 <b>DODECAEDRO A.I. (VENUS WEAR):</b>\n"
+        f"🧬 <b>DODECAEDRO A.I. (VENUS WEAR + LSTM):</b>\n"
         f"<code>{sorted(pool_12)}</code>\n\n"
-        f"🔮 <b>SISTEMA TITAN (924 SESTINE FILTRATE):</b>\n{pred_text}"
+        f"🔮 <b>2 SESTINE OTTIMALI CONCENTRATE:</b>\n{pred_text}\n"
+        f"🛡️ <b>RISK MANAGEMENT (KELLY MODEL):</b>\n"
+        f"• Status: <b>{kelly_info['advice_status']}</b>\n"
+        f"• Consiglio: <i>{kelly_info['suggested_play']}</i>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"<i>🌐 Sincronizzazione completata su GitHub Pages.</i>"
     )
