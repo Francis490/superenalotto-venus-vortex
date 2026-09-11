@@ -40,7 +40,7 @@ def send_telegram_photo(photo_path, caption_html):
         pass
 
 # ==========================================
-# 1. MOTORE DI ACQUISIZIONE ZENIT (PRECISION)
+# 1. MOTORE DI ACQUISIZIONE ZENIT (PRECISION V2)
 # ==========================================
 def validate_zenit_data(data):
     if not data or not isinstance(data, dict): return False
@@ -94,12 +94,12 @@ def fetch_titan_superenalotto():
                     "jackpot": "N/A"
                 }
 
-                # 1. Estrazione Concorso
+                # 1. Estrazione Concorso e Data associata per blocco
                 conc_match = re.search(r'Concorso\s*(?:n\.|n|numero)?\s*(\d{1,4})', text, re.I)
                 if conc_match:
                     result["concorso"] = conc_match.group(1)
 
-                # 2. Estrazione Data (Rigorosa: cerca prima formato numerico, poi testuale)
+                # Cerca data contestuale vicino alla parola Concorso o nel testo generale
                 date_match = re.search(r'\b(\d{2}[\/\-]\d{2}[\/\-]\d{4})\b', text)
                 if date_match:
                     result["data"] = date_match.group(1)
@@ -109,12 +109,12 @@ def fetch_titan_superenalotto():
                         d, m_str, y = date_text_match.groups()
                         result["data"] = f"{int(d):02d}/{months[m_str.lower()]}/{y}"
 
-                # 3. Jackpot
+                # 2. Jackpot
                 jp_match = re.search(r'(?:Jackpot|Montepremi)[^\d]{1,15}([0-9]{1,3}(?:\.[0-9]{3})*(?:\,[0-9]{2})?)', text, re.I)
                 if jp_match and jp_match.group(1) not in ["10", "0"]:
                     result["jackpot"] = f"€ {jp_match.group(1).strip()}"
 
-                # 4. Sestina
+                # 3. Sestina
                 for block in text.split("Concorso"):
                     nums = [int(n) for n in re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', block)]
                     if len(nums) >= 6:
@@ -123,35 +123,15 @@ def fetch_titan_superenalotto():
                             result["sestina"] = sorted(valid_nums[:6])
                             break
 
-                # 5. Jolly
-                for el in soup.find_all(['span', 'div', 'td', 'p', 'b', 'strong'], string=re.compile(r'jolly', re.I)):
-                    container_text = el.parent.get_text() if el.parent else el.get_text()
-                    nums = [int(n) for n in re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', container_text)]
-                    for n in nums:
-                        if 1 <= n <= 90 and n not in result["sestina"]:
-                            result["jolly"] = n
-                            break
-                    if result["jolly"] != "N/A": break
+                # 4. Jolly
+                jolly_match = re.search(r'jolly[^\d]{1,15}(\d{1,2})\b', text, re.I)
+                if jolly_match and 1 <= int(jolly_match.group(1)) <= 90:
+                    result["jolly"] = int(jolly_match.group(1))
 
-                if result["jolly"] == "N/A":
-                    jolly_match = re.search(r'jolly[^\d]{1,15}(\d{1,2})\b', text, re.I)
-                    if jolly_match and 1 <= int(jolly_match.group(1)) <= 90:
-                        result["jolly"] = int(jolly_match.group(1))
-
-                # 6. SuperStar
-                for el in soup.find_all(['span', 'div', 'td', 'p', 'b', 'strong'], string=re.compile(r'superstar|super\s*star', re.I)):
-                    container_text = el.parent.get_text() if el.parent else el.get_text()
-                    nums = [int(n) for n in re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', container_text)]
-                    for n in nums:
-                        if 1 <= n <= 90 and n not in result["sestina"] and n != result["jolly"]:
-                            result["superstar"] = n
-                            break
-                    if result["superstar"] != "N/A": break
-
-                if result["superstar"] == "N/A":
-                    ss_match = re.search(r'superstar[^\d]{1,15}(\d{1,2})\b', text, re.I)
-                    if ss_match and 1 <= int(ss_match.group(1)) <= 90:
-                        result["superstar"] = int(ss_match.group(1))
+                # 5. SuperStar
+                ss_match = re.search(r'superstar[^\d]{1,15}(\d{1,2})\b', text, re.I)
+                if ss_match and 1 <= int(ss_match.group(1)) <= 90:
+                    result["superstar"] = int(ss_match.group(1))
 
                 if validate_zenit_data(result):
                     return result
@@ -292,7 +272,6 @@ def main():
         try:
             with open(HISTORY_FILE, "r", encoding="utf-8") as f: raw_history = json.load(f)
             history = [h for h in raw_history if validate_zenit_data(h)]
-            with open(HISTORY_FILE, "w", encoding="utf-8") as f: json.dump(history, f, indent=2)
         except Exception:
             history = []
 
@@ -302,7 +281,7 @@ def main():
         if len(history) > 0:
             se_data = history[0]
         else:
-            print("Errore critico: Impossibile recuperare dati e nessun storico valido presente.")
+            print("Errore critico: Impossibile recuperare dati.")
             sys.exit(1)
             
     if validate_zenit_data(se_data):
@@ -311,7 +290,6 @@ def main():
             with open(HISTORY_FILE, "w", encoding="utf-8") as f: json.dump(history, f, indent=2)
 
     concorso_id = se_data.get('concorso', 1)
-
     pool_12, matrix, physics_scores = generate_titan_matrix(concorso_id, history)
     
     generate_titan_chart(se_data.get("sestina", []), pool_12, physics_scores)
