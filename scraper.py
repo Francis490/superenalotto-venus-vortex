@@ -135,7 +135,7 @@ def fetch_titan_superenalotto():
 
                 if validate_zenit_data(result):
                     return result
-                    
+                        
             except Exception:
                 continue
 
@@ -145,14 +145,51 @@ def fetch_titan_superenalotto():
 # 2. MOTORE FISICO: USURA AERODINAMICA VENUS
 # ==========================================
 def calculate_aerodynamic_wear(history):
+    """
+    Calcola la matrice di usura aerodinamica e meccanica delle palline Venus.
+    Integra Sestina (peso 1.0), Jolly (peso 0.5) e SuperStar (peso 0.5)
+    applicando un decadimento esponenziale temporale sulle ultime 100 estrazioni.
+    """
     wear_matrix = np.zeros(MAX_NUM)
+    if not history:
+        return wear_matrix
+
     window_length = min(len(history), 100)
     for idx in range(window_length):
         draw = history[idx]
         impact_weight = np.exp(-0.03 * idx)
-        for num in draw.get("sestina", []):
-            if isinstance(num, int) and 1 <= num <= MAX_NUM: 
-                wear_matrix[num - 1] += impact_weight
+
+        # Usura Sestina
+        sestina = draw.get("sestina", [])
+        if isinstance(sestina, list):
+            for num in sestina:
+                try:
+                    val = int(num)
+                    if 1 <= val <= MAX_NUM:
+                        wear_matrix[val - 1] += 1.0 * impact_weight
+                except (ValueError, TypeError):
+                    continue
+
+        # Usura Jolly
+        jolly = draw.get("jolly")
+        try:
+            if jolly is not None and str(jolly).isdigit():
+                val_j = int(jolly)
+                if 1 <= val_j <= MAX_NUM:
+                    wear_matrix[val_j - 1] += 0.5 * impact_weight
+        except (ValueError, TypeError):
+            pass
+
+        # Usura SuperStar
+        superstar = draw.get("superstar")
+        try:
+            if superstar is not None and str(superstar).isdigit():
+                val_s = int(superstar)
+                if 1 <= val_s <= MAX_NUM:
+                    wear_matrix[val_s - 1] += 0.5 * impact_weight
+        except (ValueError, TypeError):
+            pass
+
     max_wear = np.max(wear_matrix)
     return wear_matrix / max_wear if max_wear > 0 else wear_matrix
 
