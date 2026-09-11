@@ -221,11 +221,28 @@ def ilp_optimal_coverage(pool_12, num_sestine=4):
     return [list(all_sestine[0]), list(all_sestine[-1]), list(all_sestine[len(all_sestine)//2]), list(all_sestine[len(all_sestine)//3])][:num_sestine]
 
 def build_titan_matrix(physics_scores):
-    pool_12 = sorted([int(i + 1) for i in np.argsort(physics_scores)[-12:]])
-    matrix = [{"id": f"TITAN {i}", "sestina": sorted(s), "somma": sum(s), "ev_index": calculate_anti_crowd_ev(s)} 
-              for i, s in enumerate(ilp_optimal_coverage(pool_12, 4), 1)]
-    return pool_12, sorted(matrix, key=lambda x: x["ev_index"], reverse=True)
+    # Seleziona un pool più ampio per avere flessibilità
+    pool_18 = sorted([int(i + 1) for i in np.argsort(physics_scores)[-18:]])
+    valid_sestine = []
+    
+    # Filtro Gaussiano rigido: somma tra 210 e 340
+    for sestina in combinations(pool_18, 6):
+        if 210 <= sum(sestina) <= 340:
+            valid_sestine.append(sestina)
+            if len(valid_sestine) >= 4:
+                break
+                
+    # Fallback di sicurezza se il pool è troppo estremo
+    if len(valid_sestine) < 4:
+        fallback_pool = list(range(1, 91))
+        while len(valid_sestine) < 4:
+            s = sorted(np.random.choice(fallback_pool, 6, replace=False))
+            if 210 <= sum(s) <= 340: 
+                valid_sestine.append(list(s))
 
+    matrix = [{"id": f"TITAN {i}", "sestina": sorted(s), "somma": sum(s), "ev_index": calculate_anti_crowd_ev(s)} 
+              for i, s in enumerate(valid_sestine[:4], 1)]
+    return pool_18[:12], sorted(matrix, key=lambda x: x["ev_index"], reverse=True)
 # ==========================================
 # 6. GRAFICA E HTML
 # ==========================================
