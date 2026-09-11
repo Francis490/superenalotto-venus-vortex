@@ -2,19 +2,16 @@ import os
 import re
 import json
 import sys
-import time
 import urllib.parse
 import requests
 import numpy as np
 import scipy.stats as stats
-from scipy.optimize import milp, LinearConstraint, Bounds
 from itertools import combinations
 from bs4 import BeautifulSoup
 from datetime import datetime
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier, IsolationForest
 
 # ==========================================
 # CONFIGURAZIONE E VARIABILI GLOBALI
@@ -124,146 +121,134 @@ def fetch_titan_superenalotto():
     return None
 
 # ==========================================
-# 2-4. CORE ENGINE & TERMODINAMICA
+# 2. MOTORE FISICO: USURA AERODINAMICA VENUS
 # ==========================================
 def calculate_aerodynamic_wear(history):
     wear_matrix = np.zeros(MAX_NUM)
     window_length = min(len(history), 100)
     for idx in range(window_length):
         draw = history[idx]
-        impact_weight = np.exp(-0.03 * idx)
+        impact_weight = np.exp(-0.03 * idx) # Decadimento esponenziale dell'impatto fisico
         for num in draw.get("sestina", []):
-            if isinstance(num, int) and 1 <= num <= MAX_NUM: wear_matrix[num - 1] += impact_weight
+            if isinstance(num, int) and 1 <= num <= MAX_NUM: 
+                wear_matrix[num - 1] += impact_weight
     max_wear = np.max(wear_matrix)
     return wear_matrix / max_wear if max_wear > 0 else wear_matrix
 
-def train_attention_ml(history):
-    valid_history = [d for d in history if validate_zenit_data(d)]
-    if len(valid_history) < 15: return np.ones(MAX_NUM) / MAX_NUM
-        
-    X, y = [], []
-    for i in range(len(valid_history) - 1, 4, -1):
-        window = valid_history[i-4:i]
-        X.append([1 if n in [num for d in window for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)])
-        y.append([1 if n in valid_history[i-5].get("sestina", []) else 0 for n in range(1, MAX_NUM + 1)])
-
-    model = RandomForestClassifier(n_estimators=200, max_depth=12, random_state=42)
-    model.fit(np.array(X), np.array(y))
-    curr_window = [1 if n in [num for d in valid_history[:4] for num in d.get("sestina", [])] else 0 for n in range(1, MAX_NUM + 1)]
-    return np.array([p[0][1] if len(p[0]) > 1 else 0.01 for p in model.predict_proba([curr_window])])
-
-def detect_venus_anomalies(history):
-    valid_history = [d for d in history if validate_zenit_data(d)]
-    if len(valid_history) < 20: return np.ones(MAX_NUM)
-    freq_matrix = np.zeros((len(valid_history[:50]), MAX_NUM))
-    for i, draw in enumerate(valid_history[:50]):
-        for n in draw.get("sestina", []): 
-            if isinstance(n, int) and 1 <= n <= MAX_NUM: freq_matrix[i, n-1] = 1
-    anomalies = IsolationForest(contamination=0.1, random_state=42).fit_predict(freq_matrix.T)
-    return np.where(anomalies == -1, 1.5, 1.0)
-
-def simulate_1M_venus(history, ml_probs, anomaly_scores, iterations=1000000):
-    delays = np.full(MAX_NUM, len(history))
-    for num in range(1, MAX_NUM + 1):
-        for i, draw in enumerate(history):
-            if num in draw.get("sestina", []):
-                delays[num-1] = i
-                break
-
-    aero_wear = calculate_aerodynamic_wear(history)
-    base_energy = (np.log1p(delays) * 0.15) + (ml_probs * 2.5) + (anomaly_scores * 0.5)
-    physical_energy = base_energy * (1.0 + (aero_wear * 0.20))
-    np.random.seed(int(time.time() * 1000000) % 4294967295)
-    noise = np.random.gumbel(0, 0.15, size=(iterations, MAX_NUM))
-    
-    total_kinetic_energy = physical_energy + noise
-    top_6_indices = np.argpartition(total_kinetic_energy, -6, axis=1)[:, -6:]
-    unique, counts = np.unique(top_6_indices, return_counts=True)
-    
-    physics_scores = np.zeros(MAX_NUM)
-    physics_scores[unique] = counts / iterations
-    return physics_scores
-
 # ==========================================
-# 5. VALIDATORE STRUTTURALE RIGIDO & SOLUTORE
+# 3. MOTORE TITAN: DODECAEDRO & 924 SESTINE
 # ==========================================
-def calculate_anti_crowd_ev(sestina):
-    sestina = sorted(sestina)
-    penalty = sum(1 for n in sestina if n <= 31) * 0.8
-    if len(set([n % 10 for n in sestina])) <= 3: penalty += 1.5
-    if 1 in [sestina[i+1] - sestina[i] for i in range(len(sestina)-1)]: penalty += 1.2
-    return round(10.0 / (1.0 + penalty), 2)
-
-def is_structurally_valid(sestina):
-    s = sorted(sestina)
-    somma = sum(s)
+def generate_titan_matrix(concorso_id, history_data):
+    """
+    Genera il Dodecaedro A.I. (12 numeri) integrando frequenze storiche e 
+    usura aerodinamica delle palline Venus, valutando tutte le 924 combinazioni.
+    """
+    # FIX DETERMINISTICO: Seme agganciato unicamente al numero di concorso
+    try:
+        seed_value = 42 + int(str(concorso_id).strip())
+    except ValueError:
+        seed_value = 42
+    np.random.seed(seed_value)
     
-    # 1. Filtro Gaussiano sulla somma
-    if not (210 <= somma <= 340):
-        return False
+    # 1. Calcolo frequenze dallo storico
+    freq = np.zeros(MAX_NUM)
+    for draw in history_data:
+        for num in draw.get("sestina", []):
+            if isinstance(num, int) and 1 <= num <= MAX_NUM:
+                freq[num - 1] += 1
+                
+    weights = freq / (freq.sum() + 1e-6)
+    
+    # 2. Integrazione usura aerodinamica Venus
+    aero_wear = calculate_aerodynamic_wear(history_data)
+    
+    # 3. Generazione rumore Gumbel deterministico per perturbare i pesi fisici
+    gumbel_noise = np.random.gumbel(0, 0.05, size=MAX_NUM)
+    adjusted_scores = weights + (aero_wear * 0.35) + gumbel_noise
+    
+    # 4. Selezione dei 12 numeri del Dodecaedro A.I.
+    top_12_indices = np.argsort(adjusted_scores)[-12:] + 1
+    dodecaedro = sorted(top_12_indices.tolist())
+    
+    # 5. Generazione e filtraggio rigoroso delle 924 combinazioni C(12,6)
+    all_sestine = list(combinations(dodecaedro, 6))
+    
+    valid_candidates = []
+    for s in all_sestine:
+        s = sorted(list(s))
+        somma = sum(s)
         
-    # 2. Bilanciamento Pari / Dispari (tra 2 e 4 pari)
-    pari = sum(1 for n in s if n % 2 == 0)
-    if pari < 2 or pari > 4:
-        return False
-        
-    # 3. Bilanciamento Alti / Bassi (tra 2 e 4 numeri <= 45)
-    bassi = sum(1 for n in s if n <= 45)
-    if bassi < 2 or bassi > 4:
-        return False
-        
-    # 4. Esclusione di 3 o più numeri consecutivi
-    for i in range(len(s) - 2):
-        if s[i+2] == s[i+1] + 1 == s[i] + 2:
-            return False
+        # Filtro Gaussiano sulla Somma (210 - 340)
+        if not (210 <= somma <= 340):
+            continue
             
-    return True
-
-def build_titan_matrix(physics_scores):
-    top_18_indices = np.argsort(physics_scores)[-18:]
-    pool_18 = [int(i + 1) for i in top_18_indices]
-    
-    valid_sestine = []
-    
-    for sestina in combinations(pool_18, 6):
-        if is_structurally_valid(sestina):
-            s_sum = sum(sestina)
-            ev = calculate_anti_crowd_ev(sestina)
-            valid_sestine.append({
-                "sestina": sorted(sestina),
-                "somma": s_sum,
-                "ev_index": ev
-            })
-                
-    if len(valid_sestine) < 4:
+        # Filtro Pari / Dispari (tra 2 e 4 pari per bilanciamento)
+        pari = sum(1 for n in s if n % 2 == 0)
+        if not (2 <= pari <= 4):
+            continue
+            
+        # Filtro Bassi / Alti (tra 2 e 4 numeri <= 45)
+        bassi = sum(1 for n in s if n <= 45)
+        if not (2 <= bassi <= 4):
+            continue
+            
+        # Esclusione di 3 o più numeri consecutivi
+        consec_flag = False
+        for i in range(len(s) - 2):
+            if s[i+2] == s[i+1] + 1 == s[i] + 2:
+                consec_flag = True
+                break
+        if consec_flag:
+            continue
+            
+        # Calcolo Anti-Massa / EV (Value Index)
+        score = 100.0
+        b_dates = sum(1 for n in s if n <= 31)
+        if b_dates > 4:
+            score -= (b_dates - 4) * 15.0
+        elif 1 <= b_dates <= 3:
+            score += 5.0
+            
+        ev = round(min(10.0, max(1.0, score / 10.0)), 2)
+        
+        valid_candidates.append({
+            "sestina": s,
+            "somma": somma,
+            "ev_index": ev
+        })
+        
+    # Fallback di sicurezza nel caso i filtri siano troppo restrittivi
+    if len(valid_candidates) < 4:
         fallback_pool = list(range(1, 91))
-        while len(valid_sestine) < 4:
+        while len(valid_candidates) < 4:
             s = sorted([int(x) for x in np.random.choice(fallback_pool, 6, replace=False)])
-            if is_structurally_valid(s):
-                if not any(x["sestina"] == s for x in valid_sestine):
-                    valid_sestine.append({
+            somma = sum(s)
+            if 210 <= somma <= 340:
+                if not any(x["sestina"] == s for x in valid_candidates):
+                    valid_candidates.append({
                         "sestina": s,
-                        "somma": sum(s),
-                        "ev_index": calculate_anti_crowd_ev(s)
+                        "somma": somma,
+                        "ev_index": 5.0
                     })
-                
-    valid_sestine.sort(key=lambda x: x["ev_index"], reverse=True)
-    top_4 = valid_sestine[:4]
+                    
+    # Ordinamento deterministico per EV e vicinanza al baricentro della somma (275)
+    valid_candidates.sort(key=lambda x: (x["ev_index"], -abs(275 - x["somma"])), reverse=True)
     
-    dodecaedro = sorted(list(set([num for item in top_4 for num in item["sestina"]])))
-    
-    if len(dodecaedro) < 12:
-        extra = [n for n in reversed(pool_18) if n not in dodecaedro]
-        dodecaedro = sorted((dodecaedro + extra)[:12])
-    else:
-        dodecaedro = dodecaedro[:12]
-
-    matrix = [{"id": f"TITAN {i}", **item} for i, item in enumerate(top_4, 1)]
-    
-    return dodecaedro, matrix
+    # Selezione delle 4 TITAN garantendo massima diversità e copertura del Dodecaedro
+    selected_titan = []
+    for c in valid_candidates:
+        if len(selected_titan) == 4:
+            break
+        s_set = set(c["sestina"])
+        overlap = any(len(s_set.intersection(set(prev["sestina"]))) >= 5 for prev in selected_titan)
+        if not overlap:
+            selected_titan.append(c)
+            
+    matrix = [{"id": f"TITAN {i}", **item} for i, item in enumerate(selected_titan, 1)]
+    return dodecaedro, matrix, adjusted_scores
 
 # ==========================================
-# 6. GRAFICA E DASHBOARD
+# 4. GRAFICA E DASHBOARD
 # ==========================================
 def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.style.use('dark_background')
@@ -278,7 +263,7 @@ def generate_titan_chart(sestina, pool_12, physics_scores):
     
     scores = [physics_scores[n-1] for n in pool_12]
     ax2.barh([f"N°{n}" for n in pool_12], scores, color='#3b82f6')
-    ax2.set_title('Termodinamica Pool 12')
+    ax2.set_title('Energia Fisica & Usura Pool 12')
     ax2.invert_yaxis()
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=200, facecolor=fig.get_facecolor())
@@ -292,7 +277,7 @@ def generate_web_dashboard(se_data, pool_12, matrix):
     jolly = se_data.get('jolly', 'N/A')
     superstar = se_data.get('superstar', 'N/A')
 
-    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I.</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">Matrice Ottimizzata</h3>"""
+    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I. (Fisica Venus)</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">Matrice Ottimizzata (924 Sestine)</h3>"""
     for m in matrix: html += f"""<div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">{m['id']}</div><div class="nums">{m['sestina']}</div></div><div style="text-align: right; color: #a1a1aa;">Somma: {m['somma']}<br>EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong></div></div>"""
     html += "</div></body></html>"
     with open(DASHBOARD_FILE, "w", encoding="utf-8") as f: f.write(html)
@@ -325,11 +310,10 @@ def main():
             history.insert(0, se_data)
             with open(HISTORY_FILE, "w", encoding="utf-8") as f: json.dump(history, f, indent=2)
 
-    # PIPELINE ESTRATTIVA CON FILTRI GAUSSIANI
-    anomalies = detect_venus_anomalies(history)
-    ml_probs = train_attention_ml(history)
-    physics_scores = simulate_1M_venus(history, ml_probs, anomalies)
-    pool_12, matrix = build_titan_matrix(physics_scores)
+    concorso_id = se_data.get('concorso', 1)
+
+    # PIPELINE ESTRATTIVA FISICO-COMBINATORIA
+    pool_12, matrix, physics_scores = generate_titan_matrix(concorso_id, history)
     
     generate_titan_chart(se_data.get("sestina", []), pool_12, physics_scores)
     generate_web_dashboard(se_data, pool_12, matrix)
@@ -350,9 +334,9 @@ def main():
         f"🎲 <b>Venus:</b> <code>{sestina}</code>\n"
         f"🎯 <b>Jolly:</b> {jolly} | ⭐ <b>SuperStar:</b> {superstar}\n"
         f"💰 <b>Jackpot:</b> <b>{jackpot}</b>\n\n"
-        f"🧬 <b>DODECAEDRO A.I. (BILANCIATO):</b>\n"
+        f"🧬 <b>DODECAEDRO A.I. (VENUS WEAR):</b>\n"
         f"<code>{sorted(pool_12)}</code>\n\n"
-        f"🔮 <b>SISTEMA TITAN (SOMME 210-340):</b>\n{pred_text}"
+        f"🔮 <b>SISTEMA TITAN (924 SESTINE FILTRATE):</b>\n{pred_text}"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"<i>🌐 Sincronizzazione completata su GitHub Pages.</i>"
     )
