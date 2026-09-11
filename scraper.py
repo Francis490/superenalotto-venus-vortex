@@ -292,7 +292,14 @@ def generate_titan_chart(sestina, pool_12, physics_scores):
     plt.close()
 
 def generate_web_dashboard(se_data, pool_12, matrix):
-    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {se_data['concorso']}</strong></div><div class="data-item">Data<br><strong>{se_data['data']}</strong></div><div class="data-item">Jackpot<br><strong>{se_data['jackpot']}</strong></div></div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{se_data['sestina']} | Jolly: {se_data['jolly']} | SuperStar: {se_data['superstar']}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I.</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">Matrice Ottimizzata</h3>"""
+    conc = se_data.get('concorso', 'N/A')
+    data_est = se_data.get('data', 'N/A')
+    jackpot = se_data.get('jackpot', 'N/A')
+    sestina = se_data.get('sestina', [])
+    jolly = se_data.get('jolly', 'N/A')
+    superstar = se_data.get('superstar', 'N/A')
+
+    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I.</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">Matrice Ottimizzata</h3>"""
     for m in matrix: html += f"""<div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">{m['id']}</div><div class="nums">{m['sestina']}</div></div><div style="text-align: right; color: #a1a1aa;">Somma: {m['somma']}<br>EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong></div></div>"""
     html += "</div></body></html>"
     with open(DASHBOARD_FILE, "w", encoding="utf-8") as f: f.write(html)
@@ -313,16 +320,15 @@ def main():
 
     se_data = fetch_titan_superenalotto()
     
-    # Se lo scraping fallisce, usa l'ultimo dato in storico senza uscire dallo script
     if not se_data:
         if len(history) > 0:
             se_data = history[0]
         else:
-            print("Errore: Impossibile recuperare dati e nessun storico presente.")
+            print("Errore critico: Impossibile recuperare dati e nessun storico valido.")
             sys.exit(1)
             
     if validate_zenit_data(se_data):
-        if not any(str(i.get("concorso")) == str(se_data["concorso"]) for i in history):
+        if not any(str(i.get("concorso")) == str(se_data.get("concorso")) for i in history):
             history.insert(0, se_data)
             with open(HISTORY_FILE, "w", encoding="utf-8") as f: json.dump(history, f, indent=2)
 
@@ -332,18 +338,25 @@ def main():
     physics_scores = simulate_1M_venus(history, ml_probs, anomalies)
     pool_12, matrix = build_titan_matrix(physics_scores)
     
-    generate_titan_chart(se_data["sestina"], pool_12, physics_scores)
+    generate_titan_chart(se_data.get("sestina", []), pool_12, physics_scores)
     generate_web_dashboard(se_data, pool_12, matrix)
 
     # TELEGRAM NOTIFY
+    conc = se_data.get('concorso', 'N/A')
+    data_est = se_data.get('data', 'N/A')
+    sestina = se_data.get('sestina', [])
+    jolly = se_data.get('jolly', 'N/A')
+    superstar = se_data.get('superstar', 'N/A')
+    jackpot = se_data.get('jackpot', 'N/A')
+
     pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa: <b>{m['ev_index']}</b>\n" for m in matrix])
     caption = (
         f"👑 <b>TITAN — OPTIMAL MATRIX</b> 👑\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📌 <b>Estrazione:</b> N° {se_data['concorso']} ({se_data['data']})\n"
-        f"🎲 <b>Venus:</b> <code>{se_data['sestina']}</code>\n"
-        f"🎯 <b>Jolly:</b> {se_data['jolly']} | ⭐ <b>SuperStar:</b> {se_data['superstar']}\n"
-        f"💰 <b>Jackpot:</b> <b>{se_data['jackpot']}</b>\n\n"
+        f"📌 <b>Estrazione:</b> N° {conc} ({data_est})\n"
+        f"🎲 <b>Venus:</b> <code>{sestina}</code>\n"
+        f"🎯 <b>Jolly:</b> {jolly} | ⭐ <b>SuperStar:</b> {superstar}\n"
+        f"💰 <b>Jackpot:</b> <b>{jackpot}</b>\n\n"
         f"🧬 <b>DODECAEDRO A.I. (BILANCIATO):</b>\n"
         f"<code>{sorted(pool_12)}</code>\n\n"
         f"🔮 <b>SISTEMA TITAN (SOMME 210-340):</b>\n{pred_text}"
@@ -351,5 +364,6 @@ def main():
         f"<i>🌐 Sincronizzazione completata su GitHub Pages.</i>"
     )
     send_telegram_photo(CHART_FILE, caption)
+
 if __name__ == "__main__":
     main()
