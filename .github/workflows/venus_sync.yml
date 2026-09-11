@@ -2,9 +2,9 @@ name: SuperEnalotto Venus Vortex Database Auto-Sync
 
 on:
   schedule:
-    # Controlli automatici ogni 20 min dalle 20:35 alle 23:55 CEST (18:35 - 21:55 UTC)
-    - cron: '35,55 18,19,20,21 * * *'
-  workflow_dispatch:
+    # 21:00 UTC = 23:00 italiane (CEST)
+    - cron: '0 21 * * *'
+  workflow_dispatch: # Mantiene la possibilità di lanciarlo manualmente quando vuoi
 
 jobs:
   update-venus-db:
