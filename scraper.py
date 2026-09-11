@@ -46,7 +46,7 @@ def send_telegram_photo(photo_path, caption_html):
 # 1. MOTORE DI ACQUISIZIONE ZENIT
 # ==========================================
 def validate_zenit_data(data):
-    if not data: return False
+    if not data or not isinstance(data, dict): return False
     if "N/A" in [data.get('concorso'), data.get('jolly'), data.get('superstar'), data.get('jackpot')]: return False
     if not isinstance(data.get('sestina'), list) or len(data.get('sestina')) != 6: return False
     if str(data.get('jackpot', '')).strip() in ["€ 10", "€ 0", "€", ""]: return False
@@ -195,7 +195,6 @@ def calculate_anti_crowd_ev(sestina):
     return round(10.0 / (1.0 + penalty), 2)
 
 def is_structurally_valid(sestina):
-    """Filtro matematico e statistico multilivello."""
     s = sorted(sestina)
     somma = sum(s)
     
@@ -221,13 +220,11 @@ def is_structurally_valid(sestina):
     return True
 
 def build_titan_matrix(physics_scores):
-    # 1. Selezioniamo i 18 numeri con il punteggio fisico/ML più alto
     top_18_indices = np.argsort(physics_scores)[-18:]
     pool_18 = [int(i + 1) for i in top_18_indices]
     
     valid_sestine = []
     
-    # 2. Raccogliamo TUTTE le combinazioni valide nel pool (18.564 combinazioni analizzate)
     for sestina in combinations(pool_18, 6):
         if is_structurally_valid(sestina):
             s_sum = sum(sestina)
@@ -238,11 +235,10 @@ def build_titan_matrix(physics_scores):
                 "ev_index": ev
             })
                 
-    # 3. Fallback di sicurezza senza duplicati se il pool genera meno di 4 sestine valide
     if len(valid_sestine) < 4:
         fallback_pool = list(range(1, 91))
         while len(valid_sestine) < 4:
-            s = sorted(np.random.choice(fallback_pool, 6, replace=False))
+            s = sorted([int(x) for x in np.random.choice(fallback_pool, 6, replace=False)])
             if is_structurally_valid(s):
                 if not any(x["sestina"] == s for x in valid_sestine):
                     valid_sestine.append({
@@ -251,14 +247,11 @@ def build_titan_matrix(physics_scores):
                         "ev_index": calculate_anti_crowd_ev(s)
                     })
                 
-    # 4. Ordiniamo TUTTE le valide per EV decrescente e prendiamo le top 4 in assoluto
     valid_sestine.sort(key=lambda x: x["ev_index"], reverse=True)
     top_4 = valid_sestine[:4]
     
-    # 5. Dodecaedro effettivo: ricaviamo i 12 numeri unici realmente usati nelle 4 sestine vincenti
     dodecaedro = sorted(list(set([num for item in top_4 for num in item["sestina"]])))
     
-    # Se le 4 sestine usano meno di 12 numeri unici, completiamo a 12 usando i migliori dal pool_18
     if len(dodecaedro) < 12:
         extra = [n for n in reversed(pool_18) if n not in dodecaedro]
         dodecaedro = sorted((dodecaedro + extra)[:12])
@@ -324,7 +317,7 @@ def main():
         if len(history) > 0:
             se_data = history[0]
         else:
-            print("Errore critico: Impossibile recuperare dati e nessun storico valido.")
+            print("Errore critico: Impossibile recuperare dati e nessun storico valido presente.")
             sys.exit(1)
             
     if validate_zenit_data(se_data):
