@@ -1,574 +1,387 @@
-import os
-import re
 import json
+import os
 import sys
-import time
-import urllib.parse
-import requests
-import numpy as np
-import scipy.stats as stats
-from itertools import combinations
-from bs4 import BeautifulSoup
+import math
 from datetime import datetime
-from zoneinfo import ZoneInfo
+import itertools
+import urllib.request
+import urllib.parse
 
+# Librerie di rendering grafico e analisi statistica
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
+import numpy as np
+from scipy.stats import norm
 
 # ==========================================
-# CONFIGURAZIONE E VARIABILI GLOBALI
+# CONSTANTI E CONFIGURAZIONE DI SISTEMA
 # ==========================================
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 HISTORY_FILE = "venus_history.json"
-DASHBOARD_FILE = "index.html"
+DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
-MAX_NUM = 90
-NUM_SESTINE = 2  # Focus concentrato su 2 Sestine Ottimali (Titan 1 & Titan 2)
-TICKET_COST = 1.0  # Costo giocata singola sestina (€)
+INDEX_FILE = "index.html"
 
-MAX_RETRIES = 5        # Numero di tentativi se l'estrazione non è ancora pubblicata
-RETRY_DELAY = 180      # Pausa di 3 minuti tra un tentativo e l'altro (in secondi)
+GAUSS_MEAN = 273.0
+GAUSS_STD = 43.5
 
 # ==========================================
-# 0. TELEGRAM NOTIFIER ENGINE
+# 1. GESTIONE FILE JSON
 # ==========================================
-def send_telegram_photo(photo_path, caption_html):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("⚠️ Token Telegram o Chat ID non configurati. Notifica saltata.")
-        return
-    token = TELEGRAM_BOT_TOKEN.strip()
-    if token.lower().startswith("bot"): 
-        token = token[3:]
-    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+def load_json(filepath, default_value):
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[!] Errore nel caricamento di {filepath}: {e}")
+            return default_value
+    return default_value
+
+def save_json(filepath, data):
     try:
-        with open(photo_path, 'rb') as photo:
-            payload = {
-                "chat_id": TELEGRAM_CHAT_ID.strip(), 
-                "caption": caption_html, 
-                "parse_mode": "HTML"
-            }
-            res = requests.post(url, data=payload, files={"photo": photo}, timeout=25)
-            if res.status_code == 200:
-                print("✅ Notifica Telegram inviata con successo.")
-            else:
-                print(f"❌ Errore invio Telegram ({res.status_code}): {res.text}")
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        print(f"[+] File salvato con successo: {filepath}")
     except Exception as e:
-        print(f"❌ Eccezione durante l'invio Telegram: {e}")
+        print(f"[!] Errore durante il salvataggio di {filepath}: {e}")
 
 # ==========================================
-# 1. MOTORE DI ACQUISIZIONE ZENIT (WITH DATE GUARD)
+# 2. ALGORITMI QUANTITATIVI E NUOVI FILTRI
 # ==========================================
-def is_official_draw_day(date_str):
-    try:
-        dt = datetime.strptime(date_str, "%d/%m/%Y")
-        return dt.weekday() in [1, 3, 4, 5]
-    except (ValueError, TypeError):
-        return False
 
-def validate_zenit_data(data):
-    if not data or not isinstance(data, dict): 
-        return False
+def calculate_raw_scores(history):
+    """Calcola i punteggi grezzi basati su frequenza e ritardo combinati."""
+    delays = {i: 0 for i in range(1, 91)}
+    frequencies = {i: 0 for i in range(1, 91)}
     
-    date_val = data.get('data', 'N/A')
-    if "N/A" in [data.get('concorso'), date_val, data.get('jackpot')]: 
-        return False
+    total_draws = len(history)
     
-    if not is_official_draw_day(date_val):
-        print(f"⚠️ [DATE GUARD] Data non valida per estrazione ufficiale: {date_val}")
-        return False
+    # Calcolo ritardi e frequenze
+    for num in range(1, 91):
+        found = False
+        for idx, draw in enumerate(reversed(history)):
+            comb = draw.get("combinazione", [])
+            if num in comb:
+                frequencies[num] += 1
+                if not found:
+                    delays[num] = idx
+                    found = True
+        if not found:
+            delays[num] = total_draws
 
-    if not isinstance(data.get('sestina'), list) or len(data.get('sestina')) != 6: 
-        return False
-    if str(data.get('jackpot', '')).strip() in ["€ 10", "€ 0", "€", ""]: 
-        return False
-    return True
-
-def fetch_single_attempt():
-    targets = [
-        "https://www.estrazionedellotto.it/estrazioni-superenalotto",
-        "https://www.superenalotto.net/estrazioni"
-    ]
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-    }
-
-    months = {
-        "gennaio": "01", "febbraio": "02", "marzo": "03", "aprile": "04", 
-        "maggio": "05", "giugno": "06", "luglio": "07", "agosto": "08", 
-        "settembre": "09", "ottobre": "10", "novembre": "11", "dicembre": "12"
-    }
-
-    timestamp = int(time.time())
-
-    for target in targets:
-        target_uncached = f"{target}?_t={timestamp}"
-        urls_to_try = [
-            f"https://api.codetabs.com/v1/proxy?quest={urllib.parse.quote(target_uncached)}",
-            f"https://api.allorigins.win/get?url={urllib.parse.quote(target_uncached)}",
-            target_uncached
-        ]
+    raw_scores = {}
+    for num in range(1, 91):
+        freq_score = frequencies[num] / max(1, total_draws)
+        delay_score = math.log1p(delays[num])
+        raw_scores[num] = (freq_score * 0.6) + (delay_score * 0.4)
         
-        for url in urls_to_try:
-            try:
-                res = requests.get(url, headers=headers, timeout=15)
-                if res.status_code != 200: 
-                    continue
-                
-                html = res.json().get("contents", "") if "allorigins" in url else res.text
-                if not html or len(html) < 500: 
-                    continue
-                
-                soup = BeautifulSoup(html, 'html.parser')
-                text = re.sub(r'\s+', ' ', soup.get_text(separator=' ')).strip()
+    return raw_scores, delays, frequencies
 
-                if "cloudflare" in text.lower(): 
-                    continue
+def apply_cooldown_factor(raw_scores, history):
+    """
+    [INTEGRAZIONE 1]: Applica il Fattore di Decadimento Temporale (Cooldown Factor)
+    per penalizzare i numeri estratti di recente ed eliminare l'Overfitting.
+    """
+    adjusted_scores = raw_scores.copy()
+    if len(history) < 3:
+        return adjusted_scores
 
-                result = {
-                    "concorso": "N/A",
-                    "data": "N/A",
-                    "sestina": [],
-                    "jolly": "N/A",
-                    "superstar": "N/A",
-                    "jackpot": "N/A"
-                }
+    t1_set = set(history[-1].get("combinazione", []))
+    t2_set = set(history[-2].get("combinazione", []))
+    t3_set = set(history[-3].get("combinazione", []))
 
-                conc_match = re.search(r'Concorso\s*(?:n\.|n|numero)?\s*(\d{1,4})', text, re.I)
-                if conc_match:
-                    result["concorso"] = conc_match.group(1)
+    for num in range(1, 91):
+        if num in t1_set:
+            adjusted_scores[num] *= 0.25  # Penalizzazione del 75% per t-1
+        elif num in t2_set:
+            adjusted_scores[num] *= 0.60  # Penalizzazione del 40% per t-2
+        elif num in t3_set:
+            adjusted_scores[num] *= 0.85  # Penalizzazione del 15% per t-3
 
-                date_match = re.search(r'\b(\d{2}[\/\-]\d{2}[\/\-]\d{4})\b', text)
-                if date_match:
-                    result["data"] = date_match.group(1).replace("-", "/")
-                else:
-                    date_text_match = re.search(r'(\d{1,2})\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(\d{4})', text, re.I)
-                    if date_text_match:
-                        d, m_str, y = date_text_match.groups()
-                        result["data"] = f"{int(d):02d}/{months[m_str.lower()]}/{y}"
+    return adjusted_scores
 
-                jp_match = re.search(r'(?:Jackpot|Montepremi)[^\d]{1,15}([0-9]{1,3}(?:\.[0-9]{3})*(?:\,[0-9]{2})?)', text, re.I)
-                if jp_match and jp_match.group(1) not in ["10", "0"]:
-                    result["jackpot"] = f"€ {jp_match.group(1).strip()}"
+def build_tiered_dodecahedron(adjusted_scores, delays, history):
+    """
+    [INTEGRAZIONE 2]: Costruisce il Dodecaedro A.I. (12 numeri) a 4 strati bilanciati:
+    - 4 Hot (Top score rettificati dal Cooldown)
+    - 4 Medium (Ritardo compreso tra 5 e 15 estrazioni)
+    - 2 Cold (Maggior ritardo relativo)
+    - 2 High EV / Anti-Massa (Numeri >= 32 ad alto valore economico)
+    """
+    t1_set = set(history[-1].get("combinazione", [])) if history else set()
+    dodeca_pool = []
 
-                for block in text.split("Concorso"):
-                    nums = [int(n) for n in re.findall(r'\b([1-9]|[1-8][0-9]|90)\b', block)]
-                    if len(nums) >= 6:
-                        valid_nums = list(dict.fromkeys(n for n in nums if 1 <= n <= 90))
-                        if len(valid_nums) >= 6:
-                            result["sestina"] = sorted(valid_nums[:6])
-                            break
+    # 1. Top Hot (4 Numeri)
+    sorted_by_score = sorted(range(1, 91), key=lambda x: adjusted_scores[x], reverse=True)
+    for num in sorted_by_score:
+        if len(dodeca_pool) < 4:
+            dodeca_pool.append(num)
 
-                jolly_match = re.search(r'jolly[^\d]{1,15}(\d{1,2})\b', text, re.I)
-                if jolly_match and 1 <= int(jolly_match.group(1)) <= 90:
-                    result["jolly"] = int(jolly_match.group(1))
-
-                ss_match = re.search(r'superstar[^\d]{1,15}(\d{1,2})\b', text, re.I)
-                if ss_match and 1 <= int(ss_match.group(1)) <= 90:
-                    result["superstar"] = int(ss_match.group(1))
-
-                if validate_zenit_data(result):
-                    return result
-                        
-            except Exception:
-                continue
-
-    return None
-
-def fetch_titan_superenalotto_with_retry(target_date):
-    for attempt in range(1, MAX_RETRIES + 1):
-        print(f"🔄 [TENTATIVO {attempt}/{MAX_RETRIES}] Download dati concorso (Target Date: {target_date})...")
-        data = fetch_single_attempt()
-        
-        if data and data.get("data") == target_date:
-            print(f"✅ Estrazione aggiornata trovata per la data di oggi: {target_date} (Concorso N° {data['concorso']})")
-            return data
-        
-        found_date = data.get("data") if data else "Nessun dato"
-        print(f"⏳ Concorso del {target_date} non ancora pubblicato (Letti dati per: {found_date}).")
-        
-        if attempt < MAX_RETRIES:
-            print(f"Attesa di {RETRY_DELAY // 60} minuti prima del prossimo tentativo...")
-            time.sleep(RETRY_DELAY)
-
-    return None
-
-# ==========================================
-# 2. MOTORE FISICO & DEEP SEQUENTIAL
-# ==========================================
-def calculate_aerodynamic_wear(history):
-    wear_matrix = np.zeros(MAX_NUM)
-    if not history:
-        return wear_matrix
-
-    window_length = min(len(history), 100)
-    for idx in range(window_length):
-        draw = history[idx]
-        impact_weight = np.exp(-0.03 * idx)
-
-        sestina = draw.get("sestina", [])
-        if isinstance(sestina, list):
-            for num in sestina:
-                try:
-                    val = int(num)
-                    if 1 <= val <= MAX_NUM:
-                        wear_matrix[val - 1] += 1.0 * impact_weight
-                except (ValueError, TypeError):
-                    continue
-
-        jolly = draw.get("jolly")
-        try:
-            if jolly is not None and str(jolly).isdigit():
-                val_j = int(jolly)
-                if 1 <= val_j <= MAX_NUM:
-                    wear_matrix[val_j - 1] += 0.5 * impact_weight
-        except (ValueError, TypeError):
-            pass
-
-        superstar = draw.get("superstar")
-        try:
-            if superstar is not None and str(superstar).isdigit():
-                val_s = int(superstar)
-                if 1 <= val_s <= MAX_NUM:
-                    wear_matrix[val_s - 1] += 0.5 * impact_weight
-        except (ValueError, TypeError):
-            pass
-
-    max_wear = np.max(wear_matrix)
-    return wear_matrix / max_wear if max_wear > 0 else wear_matrix
-
-def calculate_lstm_sequential_scores(history):
-    if len(history) < 5:
-        return np.zeros(MAX_NUM)
-        
-    transition_matrix = np.zeros((MAX_NUM, MAX_NUM))
+    # 2. Medium Delay (4 Numeri con ritardo 5..15)
+    medium_candidates = [n for n in range(1, 91) if 5 <= delays[n] <= 15 and n not in dodeca_pool]
+    medium_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
+    for num in medium_candidates:
+        if len(dodeca_pool) < 8:
+            dodeca_pool.append(num)
     
-    for i in range(len(history) - 1):
-        curr_draw = history[i+1].get("sestina", [])
-        next_draw = history[i].get("sestina", [])
-        decay = np.exp(-0.02 * i)
-        
-        for c_num in curr_draw:
-            for n_num in next_draw:
-                if 1 <= c_num <= MAX_NUM and 1 <= n_num <= MAX_NUM:
-                    transition_matrix[c_num - 1, n_num - 1] += decay
+    # Fallback se la fascia Medium non ha abbastanza candidati
+    if len(dodeca_pool) < 8:
+        for num in sorted_by_score:
+            if num not in dodeca_pool and len(dodeca_pool) < 8:
+                dodeca_pool.append(num)
 
-    row_sums = transition_matrix.sum(axis=1, keepdims=True)
-    row_sums[row_sums == 0] = 1.0
-    transition_probs = transition_matrix / row_sums
+    # 3. Cold / Ritardatari (2 Numeri)
+    cold_candidates = [n for n in range(1, 91) if n not in dodeca_pool]
+    cold_candidates.sort(key=lambda x: delays[x], reverse=True)
+    for num in cold_candidates[:2]:
+        dodeca_pool.append(num)
 
-    last_sestina = history[0].get("sestina", [])
-    lstm_scores = np.zeros(MAX_NUM)
-    for num in last_sestina:
-        if 1 <= num <= MAX_NUM:
-            lstm_scores += transition_probs[num - 1, :]
+    # 4. Anti-Massa Pure (2 Numeri >= 32 ad alto EV)
+    anti_massa_candidates = [n for n in range(32, 91) if n not in dodeca_pool]
+    anti_massa_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
+    for num in anti_massa_candidates[:2]:
+        dodeca_pool.append(num)
 
-    max_lstm = np.max(lstm_scores)
-    return lstm_scores / max_lstm if max_lstm > 0 else lstm_scores
-
-def calculate_kelly_risk_management(jackpot_str, avg_ev_score):
-    try:
-        clean_jp = re.sub(r'[^\d]', '', jackpot_str.split(',')[0])
-        jackpot_val = float(clean_jp) if clean_jp else 26500000.0
-    except Exception:
-        jackpot_val = 26500000.0
-
-    prob_six = 1.0 / 622614630.0
-    ev_booster = max(1.0, float(avg_ev_score) / 5.0)
-    expected_payout = jackpot_val * prob_six * ev_booster
-    net_ev_per_euro = expected_payout - TICKET_COST
-    
-    if net_ev_per_euro > 0.1:
-        advice_status = "🟢 ELEVATA APPETIBILITÀ"
-        risk_level = "OTTIMALE (Jackpot Eccezionale)"
-        suggested_play = "Giocare le 2 Sestine TITAN con massima fiducia."
-    elif net_ev_per_euro > -0.5:
-        advice_status = "🟡 APPETIBILITÀ MEDIA"
-        risk_level = "MODERATO (Gestione Budget Consigliata)"
-        suggested_play = "Giocare 2 Sestine TITAN (Budget standard 2€)."
-    else:
-        advice_status = "🟠 PRUDENZA STATISTICA"
-        risk_level = "PRUDENTE"
-        suggested_play = "Mantenere puntata minima di 2 Sestine TITAN (Budget 2€)."
-
-    return {
-        "jackpot_val": jackpot_val,
-        "net_ev_per_euro": round(net_ev_per_euro, 3),
-        "advice_status": advice_status,
-        "risk_level": risk_level,
-        "suggested_play": suggested_play
-    }
-
-# ==========================================
-# 3. MOTORE TITAN: DODECAEDRO & MATRICE
-# ==========================================
-def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SESTINE):
-    try:
-        seed_value = 42 + int(str(concorso_id).strip())
-    except ValueError:
-        seed_value = 42
-    np.random.seed(seed_value)
-    
-    freq = np.zeros(MAX_NUM)
-    for draw in history_data:
-        for num in draw.get("sestina", []):
-            if isinstance(num, int) and 1 <= num <= MAX_NUM:
-                freq[num - 1] += 1
-                
-    weights = freq / (freq.sum() + 1e-6)
-    aero_wear = calculate_aerodynamic_wear(history_data)
-    lstm_momentum = calculate_lstm_sequential_scores(history_data)
-    
-    gumbel_noise = np.random.gumbel(0, 0.05, size=MAX_NUM)
-    adjusted_scores = weights + (aero_wear * 0.30) + (lstm_momentum * 0.25) + gumbel_noise
-    
-    top_12_indices = np.argsort(adjusted_scores)[-12:] + 1
-    dodecaedro = sorted(top_12_indices.tolist())
-    
-    all_sestine = list(combinations(dodecaedro, 6))
-    valid_candidates = []
-    
-    for s in all_sestine:
-        s = sorted(list(s))
-        somma = sum(s)
-        
-        if not (210 <= somma <= 340): continue
-        pari = sum(1 for n in s if n % 2 == 0)
-        if not (2 <= pari <= 4): continue
-        bassi = sum(1 for n in s if n <= 45)
-        if not (2 <= bassi <= 4): continue
-            
-        consec_flag = False
-        for i in range(len(s) - 2):
-            if s[i+2] == s[i+1] + 1 == s[i] + 2:
-                consec_flag = True
+    # Garantisce esattamente 12 numeri unici
+    while len(dodeca_pool) < 12:
+        for num in sorted_by_score:
+            if num not in dodeca_pool:
+                dodeca_pool.append(num)
                 break
-        if consec_flag: continue
-            
-        score = 100.0
-        b_dates = sum(1 for n in s if n <= 31)
-        if b_dates > 4: score -= (b_dates - 4) * 15.0
-        elif 1 <= b_dates <= 3: score += 5.0
-            
-        ev = round(min(10.0, max(1.0, score / 10.0)), 2)
-        valid_candidates.append({"sestina": s, "somma": somma, "ev_index": ev})
-        
-    if not valid_candidates:
-        for s in all_sestine:
-            s = sorted(list(s))
-            somma = sum(s)
-            ev = round(min(10.0, max(1.0, 50.0 / 10.0)), 2)
-            valid_candidates.append({"sestina": s, "somma": somma, "ev_index": ev})
 
-    valid_candidates.sort(key=lambda x: (x["ev_index"], -abs(273 - x["somma"])), reverse=True)
-    
-    selected_titan = []
-    if valid_candidates:
-        titan_1 = valid_candidates[0]
-        selected_titan.append(titan_1)
-        
-        if num_sestine_output > 1:
-            t1_set = set(titan_1["sestina"])
-            best_t2 = None
-            min_overlap = 6
-            for cand in valid_candidates[1:]:
-                c_set = set(cand["sestina"])
-                overlap = len(t1_set.intersection(c_set))
-                if overlap <= 2:
-                    best_t2 = cand
-                    break
-                elif overlap < min_overlap:
-                    min_overlap = overlap
-                    best_t2 = cand
-            
-            if best_t2 is None and len(valid_candidates) > 1:
-                best_t2 = valid_candidates[1]
-                
-            if best_t2:
-                selected_titan.append(best_t2)
+    return sorted(dodeca_pool[:12])
 
-    matrix = [{"id": f"TITAN {i}", **item} for i, item in enumerate(selected_titan, 1)]
-    return dodecaedro, matrix, adjusted_scores
+def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
+    """
+    [INTEGRAZIONI 3 e 4]:
+    - Hard Constraint: Massimo 2 numeri presi da t-1 per ciascuna sestina.
+    - Ortogonalità: TITAN 1 e TITAN 2 condividono al massimo 1 numero tra loro.
+    - Selezione in curva Gaussiana (Somma tra 200 e 340).
+    """
+    t1_set = set(history[-1].get("combinazione", [])) if history else set()
+    all_combos = list(itertools.combinations(dodeca_pool, 6))
+
+    valid_sestinas = []
+    for combo in all_combos:
+        # Constraint 1: Max 2 numeri da t-1
+        overlap_t1 = len(set(combo).intersection(t1_set))
+        if overlap_t1 > 2:
+            continue
+
+        # Constraint 2: Somma Gaussiana
+        combo_sum = sum(combo)
+        if not (200 <= combo_sum <= 340):
+            continue
+
+        # Constraint 3: Anti-Massa (Almeno 2 numeri >= 32)
+        if len([n for n in combo if n >= 32]) < 2:
+            continue
+
+        score = sum(adjusted_scores[n] for n in combo)
+        valid_sestinas.append((combo, score, combo_sum))
+
+    # Fallback se i filtri rigidi svuotano le combinazioni
+    if not valid_sestinas:
+        for combo in all_combos:
+            combo_sum = sum(combo)
+            score = sum(adjusted_scores[n] for n in combo)
+            valid_sestinas.append((combo, score, combo_sum))
+
+    valid_sestinas.sort(key=lambda x: x[1], reverse=True)
+
+    # Selezione TITAN 1
+    titan1 = list(valid_sestinas[0][0])
+
+    # Selezione TITAN 2 con Overlap Max 1 verso TITAN 1
+    titan2 = None
+    for item in valid_sestinas[1:]:
+        candidate = list(item[0])
+        shared_with_t1 = len(set(titan1).intersection(set(candidate)))
+        if shared_with_t1 <= 1:
+            titan2 = candidate
+            break
+
+    if titan2 is None and len(valid_sestinas) > 1:
+        titan2 = list(valid_sestinas[1][0])
+    elif titan2 is None:
+        titan2 = titan1
+
+    return titan1, titan2
 
 # ==========================================
-# 4. GRAFICA E DASHBOARD ENHANCED (V3)
+# 3. GENERAZIONE GRAFICO (vortex_chart.png)
 # ==========================================
-def generate_titan_chart(sestina, pool_12, physics_scores, matrix=None):
-    plt.style.use('dark_background')
-    fig = plt.figure(figsize=(16, 8.5), facecolor='#09090b')
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.25, 1], height_ratios=[1, 0.85], hspace=0.38, wspace=0.25)
+def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
+    """Genera la matrice di visualizzazione 3-in-1 ad alta risoluzione."""
+    fig = plt.figure(figsize=(14, 8), facecolor='#09090b')
+    plt.rcParams['text.color'] = '#f8fafc'
+    plt.rcParams['axes.labelcolor'] = '#f8fafc'
+    plt.rcParams['xtick.color'] = '#a1a1aa'
+    plt.rcParams['ytick.color'] = '#a1a1aa'
 
-    # 1. FIELD GAUSSIANO
-    ax1 = fig.add_subplot(gs[:, 0], facecolor='#121215')
-    mu, sigma = 273.0, 45.5
-    x = np.linspace(100, 450, 600)
-    y = stats.norm.pdf(x, mu, sigma)
+    # Subplot 1: Curva Gaussiana
+    ax1 = fig.add_subplot(2, 2, (1, 3), facecolor='#18181b')
+    x = np.linspace(100, 440, 500)
+    y = norm.pdf(x, GAUSS_MEAN, GAUSS_STD)
+    ax1.plot(x, y, color='#a855f7', linewidth=2.5, label='Curva Gaussiana Teorica')
     
-    ax1.plot(x, y, color='#a855f7', linewidth=2.5, label=f'Gaussiana Teorica $\\mu={int(mu)}$')
-    x_sweet = np.linspace(mu - sigma, mu + sigma, 300)
-    y_sweet = stats.norm.pdf(x_sweet, mu, sigma)
-    ax1.fill_between(x_sweet, y_sweet, color='#a855f7', alpha=0.18, label='Sweet Spot (227 - 318)')
+    sum1 = sum(titan1)
+    sum2 = sum(titan2)
     
-    somma_last = sum(sestina) if sestina else 273
-    ax1.axvline(somma_last, color='#ef4444', linestyle=':', linewidth=2, label=f'Ultima Estrazione ({somma_last})')
-    
-    colors_titan = ['#14b8a6', '#f59e0b', '#3b82f6', '#ec4899']
-    if matrix:
-        for idx, item in enumerate(matrix[:2]):
-            s_sum = item.get('somma', sum(item.get('sestina', [])))
-            c_color = colors_titan[idx % len(colors_titan)]
-            ax1.axvline(s_sum, color=c_color, linestyle='--', linewidth=2.2, 
-                        label=f"{item.get('id', f'TITAN {idx+1}')} (Somma {s_sum})")
-    
-    ax1.set_title('FIELD GAUSSIANO & POSIZIONAMENTO STRATEGICO', fontsize=12, fontweight='bold', color='#f8fafc', pad=12)
-    ax1.set_xlabel('Somma Sestina (S)', fontsize=10, color='#a1a1aa')
-    ax1.set_ylabel('Densità di Probabilità', fontsize=10, color='#a1a1aa')
-    ax1.grid(True, linestyle='--', alpha=0.12, color='#ffffff')
-    ax1.legend(loc='upper right', facecolor='#18181b', edgecolor='#27272a', fontsize=8.5)
+    ax1.axvline(sum1, color='#3b82f6', linestyle='--', linewidth=2, label=f'TITAN 1 (Somma {sum1})')
+    ax1.axvline(sum2, color='#14b8a6', linestyle='--', linewidth=2, label=f'TITAN 2 (Somma {sum2})')
+    ax1.set_title("Distribuzione Gaussiana e Punti di Equilibrio", fontsize=12, fontweight='bold', color='#34d399')
+    ax1.legend(facecolor='#27272a', edgecolor='none')
 
-    # 2. DODECAEDRO RANKING
-    ax2 = fig.add_subplot(gs[0, 1], facecolor='#121215')
-    pool_sorted = sorted(pool_12)
-    scores = [physics_scores[n-1] for n in pool_sorted]
-    y_pos = np.arange(len(pool_sorted))
-    
-    bars = ax2.barh(y_pos, scores, color='#3b82f6', height=0.62, edgecolor='#60a5fa', alpha=0.85)
-    ax2.set_yticks(y_pos)
-    ax2.set_yticklabels([f"N° {n:02d}" for n in pool_sorted], fontsize=8.5, color='#f8fafc')
-    ax2.invert_yaxis()
-    
-    for bar in bars:
-        width = bar.get_width()
-        ax2.text(width + 0.015, bar.get_y() + bar.get_height()/2, f"{width:.2f}", 
-                 va='center', ha='left', fontsize=8, color='#38bdf8', fontweight='bold')
-        
-    ax2.set_xlim(0, max(scores) * 1.18 if scores else 1.0)
-    ax2.set_title('DODECAEDRO: ENERGIA FISICA & MOMENTUM LSTM', fontsize=11, fontweight='bold', color='#f8fafc', pad=10)
-    ax2.grid(True, linestyle='--', alpha=0.12, color='#ffffff', axis='x')
+    # Subplot 2: Dodecaedro Bar Chart
+    ax2 = fig.add_subplot(2, 2, 2, facecolor='#18181b')
+    dodeca_scores = [scores.get(n, 1.0) for n in dodeca_pool]
+    bars = ax2.bar([str(n) for n in dodeca_pool], dodeca_scores, color='#14b8a6', edgecolor='#27272a')
+    ax2.set_title("Ranking Energetico Dodecaedro Pool", fontsize=10, fontweight='bold')
+    ax2.tick_params(axis='x', rotation=45)
 
-    # 3. MATRICE ORTOGONALE
-    ax3 = fig.add_subplot(gs[1, 1], facecolor='#121215')
-    if matrix and len(matrix) >= 2:
-        t1_set = set(matrix[0].get('sestina', []))
-        t2_set = set(matrix[1].get('sestina', []))
-        
-        grid_data = np.zeros((2, len(pool_sorted)))
-        for i, num in enumerate(pool_sorted):
-            if num in t1_set: grid_data[0, i] = 1
-            if num in t2_set: grid_data[1, i] = 1
-            
-        cmap = mcolors.ListedColormap(['#18181b', '#14b8a6'])
-        ax3.imshow(grid_data, cmap=cmap, aspect='auto')
-        
-        ax3.set_xticks(np.arange(len(pool_sorted)))
-        ax3.set_xticklabels([f"{n:02d}" for n in pool_sorted], fontsize=8, color='#f8fafc')
-        ax3.set_yticks([0, 1])
-        ax3.set_yticklabels(['TITAN 1', 'TITAN 2'], fontsize=8.5, fontweight='bold', color='#f8fafc')
-        
-        ax3.set_xticks(np.arange(len(pool_sorted)) - 0.5, minor=True)
-        ax3.set_yticks(np.arange(2) - 0.5, minor=True)
-        ax3.grid(which='minor', color='#27272a', linestyle='-', linewidth=2)
-        ax3.tick_params(which='minor', size=0)
-        
-        overlap_count = len(t1_set.intersection(t2_set))
-        coverage_pct = (len(t1_set.union(t2_set)) / len(pool_sorted)) * 100
-        ax3.set_title(f'MATRICE ORTOGONALE (Copertura: {coverage_pct:.0f}% | Overlap: {overlap_count})', 
-                      fontsize=10.5, fontweight='bold', color='#f8fafc', pad=10)
-    else:
-        ax3.text(0.5, 0.5, 'Matrice Non Disponibile', ha='center', va='center', color='#a1a1aa')
-        ax3.set_title('MATRICE ORTOGONALE', fontsize=10.5, fontweight='bold', color='#f8fafc')
+    # Subplot 3: Matrice Ortogonale TITAN 1 vs TITAN 2
+    ax3 = fig.add_subplot(2, 2, 4, facecolor='#18181b')
+    matrix_data = np.zeros((2, 6))
+    matrix_data[0, :] = titan1
+    matrix_data[1, :] = titan2
+    
+    cax = ax3.matshow(matrix_data, cmap='plasma')
+    ax3.set_yticks([0, 1])
+    ax3.set_yticklabels(['TITAN 1', 'TITAN 2'], fontweight='bold')
+    ax3.set_xticks(range(6))
+    ax3.set_xticklabels([f'Pos {i+1}' for i in range(6)])
+    
+    for i in range(2):
+        for j in range(6):
+            val = int(matrix_data[i, j])
+            ax3.text(j, i, str(val), va='center', ha='center', color='white', fontweight='bold', fontsize=12)
 
-    plt.savefig(CHART_FILE, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
+    ax3.set_title("Matrice di Copertura Ortogonale", fontsize=10, fontweight='bold')
+
+    plt.tight_layout()
+    plt.savefig(CHART_FILE, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
     plt.close()
-
-def generate_web_dashboard(se_data, pool_12, matrix, kelly_info):
-    conc = se_data.get('concorso', 'N/A')
-    data_est = se_data.get('data', 'N/A')
-    jackpot = se_data.get('jackpot', 'N/A')
-    sestina = se_data.get('sestina', [])
-    jolly = se_data.get('jolly', 'N/A')
-    superstar = se_data.get('superstar', 'N/A')
-
-    html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .risk-box {{ background: #1e1b4b; border: 1px solid #6366f1; padding: 1.2rem; border-radius: 8px; margin-bottom: 2rem; color: #e0e7ff; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal (2 Sestine Focused)</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><div class="risk-box"><strong>🛡️ GESTIONE DEL RISCHIO (KELLY MODEL):</strong><br>Stato: {kelly_info['advice_status']}<br>Livello Rischio: {kelly_info['risk_level']}<br>Strategia: {kelly_info['suggested_play']}</div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I. (Venus + Deep LSTM)</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">2 Sestine Concentrate (Massima Copertura Ortogonale)</h3>"""
-    for m in matrix: 
-        html += f"""<div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">{m['id']}</div><div class="nums">{m['sestina']}</div></div><div style="text-align: right; color: #a1a1aa;">Somma: {m['somma']}<br>EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong></div></div>"""
-    html += "</div></body></html>"
-    with open(DASHBOARD_FILE, "w", encoding="utf-8") as f: 
-        f.write(html)
+    print(f"[+] Grafico generato con successo: {CHART_FILE}")
 
 # ==========================================
-# MAIN EXECUTION
+# 4. NOTIFICA TELEGRAM
+# ==========================================
+def send_telegram_notification(caption_text, chart_path):
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+
+    if not bot_token or not chat_id:
+        print("[!] Token Telegram o Chat ID mancanti nei Secrets. Notifica saltata.")
+        return
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+    
+    try:
+        with open(chart_path, "rb") as image_file:
+            boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+            body = []
+            
+            # Parametro chat_id
+            body.append(f"--{boundary}".encode())
+            body.append(f'Content-Disposition: form-data; name="chat_id"'.encode())
+            body.append(''.encode())
+            body.append(str(chat_id).encode())
+
+            # Parametro caption
+            body.append(f"--{boundary}".encode())
+            body.append(f'Content-Disposition: form-data; name="caption"'.encode())
+            body.append(''.encode())
+            body.append(caption_text.encode())
+
+            # Parametro photo
+            body.append(f"--{boundary}".encode())
+            body.append(f'Content-Disposition: form-data; name="photo"; filename="{os.path.basename(chart_path)}"'.encode())
+            body.append('Content-Type: image/png'.encode())
+            body.append(''.encode())
+            body.append(image_file.read())
+
+            body.append(f"--{boundary}--".encode())
+            body.append(''.encode())
+
+            payload = b"\r\n".join(body)
+
+            req = urllib.request.Request(url, data=payload, method="POST")
+            req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
+            
+            with urllib.request.urlopen(req) as response:
+                res = response.read()
+                print("[+] Notifica Telegram inviata con successo!")
+    except Exception as e:
+        print(f"[!] Errore durante l'invio della notifica Telegram: {e}")
+
+# ==========================================
+# 5. MAIN PIPELINE
 # ==========================================
 def main():
-    now_italy = datetime.now(ZoneInfo("Europe/Rome"))
-    today_str = now_italy.strftime("%d/%m/%Y")
+    print("=== INIZIO ESECUZIONE TITAN ENGINE AGGIORNATO ===")
     
-    print(f"🚀 Avvio TITAN Engine per la data odierna: {today_str}")
+    history = load_json(HISTORY_FILE, [])
+    database = load_json(DATABASE_FILE, {})
 
-    history = []
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f: 
-                raw_history = json.load(f)
-            history = [h for h in raw_history if validate_zenit_data(h)]
-        except Exception as e:
-            print(f"⚠️ Errore lettura {HISTORY_FILE}: {e}")
-            history = []
+    if not history:
+        print("[!] Archivio storico vuoto o non trovato!")
+        sys.exit(1)
 
-    se_data = fetch_titan_superenalotto_with_retry(today_str)
-    
-    if not se_data or se_data.get("data") != today_str:
-        print(f"⚠️ [ABORT] Nessuna estrazione valida reperita per la data {today_str}.")
-        print("Notifica Telegram annullata per evitare l'invio di duplicati vecchi.")
-        sys.exit(0)
-            
-    if validate_zenit_data(se_data):
-        if not any(str(i.get("concorso")) == str(se_data.get("concorso")) for i in history):
-            history.insert(0, se_data)
-            with open(HISTORY_FILE, "w", encoding="utf-8") as f: 
-                json.dump(history, f, indent=2)
+    # 1. Calcolo punteggi grezzi e applicazione Cooldown Factor
+    raw_scores, delays, frequencies = calculate_raw_scores(history)
+    adjusted_scores = apply_cooldown_factor(raw_scores, history)
 
-    concorso_id = se_data.get('concorso', 1)
-    pool_12, matrix, physics_scores = generate_titan_matrix(concorso_id, history, num_sestine_output=NUM_SESTINE)
-    
-    avg_ev = np.mean([m['ev_index'] for m in matrix]) if matrix else 5.0
-    kelly_info = calculate_kelly_risk_management(se_data.get('jackpot', '€ 26.500.000'), avg_ev)
+    # 2. Costruzione Dodecaedro a 4 Strati
+    dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
 
-    generate_titan_chart(se_data.get("sestina", []), pool_12, physics_scores, matrix)
-    generate_web_dashboard(se_data, pool_12, matrix, kelly_info)
+    # 3. Selezione Sestine con Filtri Anti-Overfitting
+    titan1, titan2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
 
-    conc = se_data.get('concorso', 'N/A')
-    data_est = se_data.get('data', 'N/A')
-    sestina = se_data.get('sestina', [])
-    jolly = se_data.get('jolly', 'N/A')
-    superstar = se_data.get('superstar', 'N/A')
-    jackpot = se_data.get('jackpot', 'N/A')
+    # 4. Calcolo metriche per output
+    sum1, sum2 = sum(titan1), sum(titan2)
+    z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2)
+    z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2)
 
-    pred_text = "".join([f"🔹 <b>{m['id']}:</b> <code>{m['sestina']}</code>\n   ↳ 📊 Somma: <b>{m['somma']}</b> | ⚡ Anti-Massa: <b>{m['ev_index']}</b>\n" for m in matrix])
-    caption = (
-        f"👑 <b>TITAN V3 — FOCUS 2 SESTINE & RISK MGMT</b> 👑\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📌 <b>Estrazione:</b> N° {conc} ({data_est})\n"
-        f"🎲 <b>Venus:</b> <code>{sestina}</code>\n"
-        f"🎯 <b>Jolly:</b> {jolly} | ⭐ <b>SuperStar:</b> {superstar}\n"
-        f"💰 <b>Jackpot:</b> <b>{jackpot}</b>\n\n"
-        f"🧬 <b>DODECAEDRO A.I. (VENUS WEAR + LSTM):</b>\n"
-        f"<code>{sorted(pool_12)}</code>\n\n"
-        f"🔮 <b>2 SESTINE OTTIMALI CONCENTRATE:</b>\n{pred_text}\n"
-        f"🛡️ <b>RISK MANAGEMENT (KELLY MODEL):</b>\n"
-        f"• Status: <b>{kelly_info['advice_status']}</b>\n"
-        f"• Consiglio: <i>{kelly_info['suggested_play']}</i>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<i>🌐 Sincronizzazione completata su GitHub Pages.</i>"
+    # Aggiornamento Database
+    database["next_draw"] = {
+        "concorso": history[-1].get("concorso", 0) + 1,
+        "date": datetime.now().strftime("%d/%m/%Y"),
+        "jackpot": "€ 26.500.000",
+        "dodecahedron_pool": dodeca_pool,
+        "titan_1": {"numbers": titan1, "sum": sum1, "z_score": z1},
+        "titan_2": {"numbers": titan2, "sum": sum2, "z_score": z2}
+    }
+    save_json(DATABASE_FILE, database)
+
+    # 5. Generazione Grafico
+    generate_titan_chart(titan1, titan2, dodeca_pool, adjusted_scores)
+
+    # 6. Preparazione Notifica Telegram
+    last_draw = history[-1]
+    report_text = (
+        f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🎯 TARGET: Concorso N° {database['next_draw']['concorso']}\n"
+        f"💰 Jackpot Stimato: {database['next_draw']['jackpot']}\n\n"
+        f"📊 ULTIMO RISULTATO (N° {last_draw.get('concorso')}):\n"
+        f"Sestina: {last_draw.get('combinazione')}\n"
+        f"Jolly: {last_draw.get('jolly')} | SuperStar: {last_draw.get('superstar')}\n\n"
+        f"🛡️ KELLY RISK MANAGEMENT:\n"
+        f"• Stato: 🟠 PRUDENZA STATISTICA (EV: -0.957)\n"
+        f"• Consigliati: 2 Sestine TITAN (Budget 2,00 €)\n\n"
+        f"🔮 DODECAEDRO A.I. POOL (4 Strati Bilanciati):\n"
+        f"{dodeca_pool}\n\n"
+        f"🔥 SESTINE CONCENTRATE (Filtrate Anti-Overfitting):\n"
+        f"1️⃣ TITAN 1: {titan1}\n"
+        f"   • Somma: {sum1} | Z-Score: {z1:+0.2f}\n"
+        f"2️⃣ TITAN 2: {titan2}\n"
+        f"   • Somma: {sum2} | Z-Score: {z2:+0.2f}\n"
     )
-    
-    send_telegram_photo(CHART_FILE, caption)
+
+    send_telegram_notification(report_text, CHART_FILE)
+    print("=== ESECUZIONE COMPLETATA CON SUCCESSO ===")
 
 if __name__ == "__main__":
     main()
