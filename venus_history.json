@@ -1,62 +1,80 @@
-[
-  {
-    "concorso": "145",
-    "data": "10/09/2026",
-    "sestina": [2, 17, 39, 59, 63, 89],
-    "jolly": 62,
-    "superstar": 62,
-    "somma": 269,
-    "z_score": -0.09,
-    "jackpot": "€ 223.500.000"
+{
+  "last_updated": "2026-09-12 16:30:00",
+  "latest_draw": {
+    "concorso": "146",
+    "data": "11/09/2026",
+    "sestina": [
+      8,
+      13,
+      16,
+      52,
+      64,
+      70
+    ],
+    "jolly": 17,
+    "superstar": 21,
+    "jackpot_estratto": "€ 223.200.000 (VINTO)"
   },
-  {
-    "concorso": "144",
-    "data": "08/09/2026",
-    "sestina": [23, 26, 41, 52, 59, 85],
-    "jolly": 49,
-    "superstar": 47,
-    "somma": 286,
-    "z_score": 0.30,
-    "jackpot": "€ 222.400.000"
+  "next_draw": {
+    "concorso": "147",
+    "data": "12/09/2026",
+    "jackpot": "€ 26.500.000"
   },
-  {
-    "concorso": "143",
-    "data": "05/09/2026",
-    "sestina": [12, 24, 28, 32, 37, 78],
-    "jolly": 50,
-    "superstar": 19,
-    "somma": 211,
-    "z_score": -1.43,
-    "jackpot": "€ 221.300.000"
+  "quant_metrics": {
+    "somma": 223,
+    "z_score": -1.10,
+    "anti_mass_index": 1.0
   },
-  {
-    "concorso": "142",
-    "data": "04/09/2026",
-    "sestina": [8, 44, 60, 73, 86, 89],
-    "jolly": 15,
-    "superstar": 88,
-    "somma": 360,
-    "z_score": 2.00,
-    "jackpot": "€ 220.500.000"
+  "risk_management_kelly": {
+    "net_ev_per_euro": -0.957,
+    "advice_status": "🟠 PRUDENZA STATISTICA",
+    "risk_level": "PRUDENTE (Reset Post-Vincita)",
+    "suggested_play": "Mantenere puntata minima di 2 Sestine TITAN (Budget 2€)"
   },
-  {
-    "concorso": "141",
-    "data": "03/09/2026",
-    "sestina": [5, 14, 28, 59, 64, 67],
-    "jolly": 88,
-    "superstar": 75,
-    "somma": 237,
-    "z_score": -0.83,
-    "jackpot": "€ 219.800.000"
-  },
-  {
-    "concorso": "140",
-    "data": "01/09/2026",
-    "sestina": [11, 23, 42, 47, 59, 81],
-    "jolly": 34,
-    "superstar": 10,
-    "somma": 263,
-    "z_score": -0.23,
-    "jackpot": "€ 218.900.000"
-  }
-]
+  "omega_dodecahedron_pool": [
+    8,
+    13,
+    16,
+    34,
+    45,
+    52,
+    59,
+    64,
+    70,
+    75,
+    82,
+    88
+  ],
+  "hyper_matrix_predictions": [
+    {
+      "id": "TITAN 1",
+      "sestina": [
+        8,
+        34,
+        45,
+        64,
+        75,
+        88
+      ],
+      "somma": 314,
+      "z_score": 0.90,
+      "ev_score": 1.0,
+      "confidence": 0.2315
+    },
+    {
+      "id": "TITAN 2",
+      "sestina": [
+        13,
+        16,
+        52,
+        59,
+        70,
+        82
+      ],
+      "somma": 292,
+      "z_score": 0.42,
+      "ev_score": 1.0,
+      "confidence": 0.2480
+    }
+  ]
+}
