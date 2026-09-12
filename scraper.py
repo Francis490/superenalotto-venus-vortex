@@ -15,7 +15,7 @@ import numpy as np
 from scipy.stats import norm
 
 # ==========================================
-# CONSTANTI E CONFIGURAZIONE DI SISTEMA
+# COSTANTI E CONFIGURAZIONE DI SISTEMA
 # ==========================================
 HISTORY_FILE = "venus_history.json"
 DATABASE_FILE = "venus_database.json"
@@ -26,7 +26,7 @@ GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
 # ==========================================
-# 1. GESTIONE FILE JSON
+# 1. GESTIONE FILE JSON & NORMALIZZAZIONE
 # ==========================================
 def load_json(filepath, default_value):
     if os.path.exists(filepath):
@@ -46,8 +46,48 @@ def save_json(filepath, data):
     except Exception as e:
         print(f"[!] Errore durante il salvataggio di {filepath}: {e}")
 
+def normalize_history(raw_data):
+    """
+    Normalizza qualsiasi struttura di venus_history.json (Lista o Dizionario, 
+    chiavi 'sestina' o 'combinazione') in una lista di dizionari uniforme e sicura.
+    """
+    items = []
+    if isinstance(raw_data, dict):
+        if "history" in raw_data and isinstance(raw_data["history"], list):
+            items = raw_data["history"]
+        elif "draws" in raw_data and isinstance(raw_data["draws"], list):
+            items = raw_data["draws"]
+        else:
+            items = list(raw_data.values())
+    elif isinstance(raw_data, list):
+        items = raw_data
+
+    normalized = []
+    for item in items:
+        if isinstance(item, dict):
+            comb = item.get("sestina") or item.get("combinazione") or item.get("numbers") or []
+            if isinstance(comb, str):
+                try:
+                    comb = json.loads(comb)
+                except Exception:
+                    comb = []
+            
+            clean_comb = []
+            for n in comb:
+                try:
+                    clean_comb.append(int(n))
+                except (ValueError, TypeError):
+                    pass
+
+            new_item = dict(item)
+            new_item["combinazione"] = clean_comb
+            new_item["sestina"] = clean_comb
+            normalized.append(new_item)
+
+    return normalized
+
 # ==========================================
-# 2. ALGORITMI QUANTITATIVI E NUOVI FILTRI
+# 2. ALGORITMI QUANTITATIVI E FILTRI
 # ==========================================
 
 def calculate_raw_scores(history):
@@ -57,7 +97,6 @@ def calculate_raw_scores(history):
     
     total_draws = len(history)
     
-    # Calcolo ritardi e frequenze
     for num in range(1, 91):
         found = False
         for idx, draw in enumerate(reversed(history)):
@@ -79,10 +118,7 @@ def calculate_raw_scores(history):
     return raw_scores, delays, frequencies
 
 def apply_cooldown_factor(raw_scores, history):
-    """
-    [INTEGRAZIONE 1]: Applica il Fattore di Decadimento Temporale (Cooldown Factor)
-    per penalizzare i numeri estratti di recente ed eliminare l'Overfitting.
-    """
+    """Penalizza i numeri estratti di recente (Cooldown Factor Anti-Overfitting)."""
     adjusted_scores = raw_scores.copy()
     if len(history) < 3:
         return adjusted_scores
@@ -93,23 +129,16 @@ def apply_cooldown_factor(raw_scores, history):
 
     for num in range(1, 91):
         if num in t1_set:
-            adjusted_scores[num] *= 0.25  # Penalizzazione del 75% per t-1
+            adjusted_scores[num] *= 0.25  # Penalizzazione -75% per t-1
         elif num in t2_set:
-            adjusted_scores[num] *= 0.60  # Penalizzazione del 40% per t-2
+            adjusted_scores[num] *= 0.60  # Penalizzazione -40% per t-2
         elif num in t3_set:
-            adjusted_scores[num] *= 0.85  # Penalizzazione del 15% per t-3
+            adjusted_scores[num] *= 0.85  # Penalizzazione -15% per t-3
 
     return adjusted_scores
 
 def build_tiered_dodecahedron(adjusted_scores, delays, history):
-    """
-    [INTEGRAZIONE 2]: Costruisce il Dodecaedro A.I. (12 numeri) a 4 strati bilanciati:
-    - 4 Hot (Top score rettificati dal Cooldown)
-    - 4 Medium (Ritardo compreso tra 5 e 15 estrazioni)
-    - 2 Cold (Maggior ritardo relativo)
-    - 2 High EV / Anti-Massa (Numeri >= 32 ad alto valore economico)
-    """
-    t1_set = set(history[-1].get("combinazione", [])) if history else set()
+    """Costruisce il Dodecaedro A.I. (12 numeri) a 4 strati bilanciati."""
     dodeca_pool = []
 
     # 1. Top Hot (4 Numeri)
@@ -118,14 +147,13 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
         if len(dodeca_pool) < 4:
             dodeca_pool.append(num)
 
-    # 2. Medium Delay (4 Numeri con ritardo 5..15)
+    # 2. Medium Delay (4 Numeri con ritardo tra 5 e 15)
     medium_candidates = [n for n in range(1, 91) if 5 <= delays[n] <= 15 and n not in dodeca_pool]
     medium_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
     for num in medium_candidates:
         if len(dodeca_pool) < 8:
             dodeca_pool.append(num)
     
-    # Fallback se la fascia Medium non ha abbastanza candidati
     if len(dodeca_pool) < 8:
         for num in sorted_by_score:
             if num not in dodeca_pool and len(dodeca_pool) < 8:
@@ -137,13 +165,12 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
     for num in cold_candidates[:2]:
         dodeca_pool.append(num)
 
-    # 4. Anti-Massa Pure (2 Numeri >= 32 ad alto EV)
+    # 4. Anti-Massa Pure (2 Numeri >= 32)
     anti_massa_candidates = [n for n in range(32, 91) if n not in dodeca_pool]
     anti_massa_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
     for num in anti_massa_candidates[:2]:
         dodeca_pool.append(num)
 
-    # Garantisce esattamente 12 numeri unici
     while len(dodeca_pool) < 12:
         for num in sorted_by_score:
             if num not in dodeca_pool:
@@ -153,12 +180,7 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
     return sorted(dodeca_pool[:12])
 
 def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
-    """
-    [INTEGRAZIONI 3 e 4]:
-    - Hard Constraint: Massimo 2 numeri presi da t-1 per ciascuna sestina.
-    - Ortogonalità: TITAN 1 e TITAN 2 condividono al massimo 1 numero tra loro.
-    - Selezione in curva Gaussiana (Somma tra 200 e 340).
-    """
+    """Seleziona TITAN 1 e TITAN 2 con vincoli Anti-Overfitting ed Ortogonalità."""
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
     all_combos = list(itertools.combinations(dodeca_pool, 6))
 
@@ -181,7 +203,6 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
         score = sum(adjusted_scores[n] for n in combo)
         valid_sestinas.append((combo, score, combo_sum))
 
-    # Fallback se i filtri rigidi svuotano le combinazioni
     if not valid_sestinas:
         for combo in all_combos:
             combo_sum = sum(combo)
@@ -190,10 +211,8 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
 
     valid_sestinas.sort(key=lambda x: x[1], reverse=True)
 
-    # Selezione TITAN 1
     titan1 = list(valid_sestinas[0][0])
 
-    # Selezione TITAN 2 con Overlap Max 1 verso TITAN 1
     titan2 = None
     for item in valid_sestinas[1:]:
         candidate = list(item[0])
@@ -210,17 +229,15 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
     return titan1, titan2
 
 # ==========================================
-# 3. GENERAZIONE GRAFICO (vortex_chart.png)
+# 3. GENERAZIONE GRAFICO
 # ==========================================
 def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
-    """Genera la matrice di visualizzazione 3-in-1 ad alta risoluzione."""
     fig = plt.figure(figsize=(14, 8), facecolor='#09090b')
     plt.rcParams['text.color'] = '#f8fafc'
     plt.rcParams['axes.labelcolor'] = '#f8fafc'
     plt.rcParams['xtick.color'] = '#a1a1aa'
     plt.rcParams['ytick.color'] = '#a1a1aa'
 
-    # Subplot 1: Curva Gaussiana
     ax1 = fig.add_subplot(2, 2, (1, 3), facecolor='#18181b')
     x = np.linspace(100, 440, 500)
     y = norm.pdf(x, GAUSS_MEAN, GAUSS_STD)
@@ -234,14 +251,12 @@ def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
     ax1.set_title("Distribuzione Gaussiana e Punti di Equilibrio", fontsize=12, fontweight='bold', color='#34d399')
     ax1.legend(facecolor='#27272a', edgecolor='none')
 
-    # Subplot 2: Dodecaedro Bar Chart
     ax2 = fig.add_subplot(2, 2, 2, facecolor='#18181b')
     dodeca_scores = [scores.get(n, 1.0) for n in dodeca_pool]
     bars = ax2.bar([str(n) for n in dodeca_pool], dodeca_scores, color='#14b8a6', edgecolor='#27272a')
     ax2.set_title("Ranking Energetico Dodecaedro Pool", fontsize=10, fontweight='bold')
     ax2.tick_params(axis='x', rotation=45)
 
-    # Subplot 3: Matrice Ortogonale TITAN 1 vs TITAN 2
     ax3 = fig.add_subplot(2, 2, 4, facecolor='#18181b')
     matrix_data = np.zeros((2, 6))
     matrix_data[0, :] = titan1
@@ -283,19 +298,16 @@ def send_telegram_notification(caption_text, chart_path):
             boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
             body = []
             
-            # Parametro chat_id
             body.append(f"--{boundary}".encode())
             body.append(f'Content-Disposition: form-data; name="chat_id"'.encode())
             body.append(''.encode())
             body.append(str(chat_id).encode())
 
-            # Parametro caption
             body.append(f"--{boundary}".encode())
             body.append(f'Content-Disposition: form-data; name="caption"'.encode())
             body.append(''.encode())
             body.append(caption_text.encode())
 
-            # Parametro photo
             body.append(f"--{boundary}".encode())
             body.append(f'Content-Disposition: form-data; name="photo"; filename="{os.path.basename(chart_path)}"'.encode())
             body.append('Content-Type: image/png'.encode())
@@ -322,11 +334,12 @@ def send_telegram_notification(caption_text, chart_path):
 def main():
     print("=== INIZIO ESECUZIONE TITAN ENGINE AGGIORNATO ===")
     
-    history = load_json(HISTORY_FILE, [])
+    raw_history = load_json(HISTORY_FILE, [])
+    history = normalize_history(raw_history)
     database = load_json(DATABASE_FILE, {})
 
     if not history:
-        print("[!] Archivio storico vuoto o non trovato!")
+        print("[!] Archivio storico vuoto o non convertibile!")
         sys.exit(1)
 
     # 1. Calcolo punteggi grezzi e applicazione Cooldown Factor
@@ -344,9 +357,15 @@ def main():
     z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2)
     z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2)
 
+    last_concorso_raw = history[-1].get("concorso", 146)
+    try:
+        next_concorso = int(last_concorso_raw) + 1
+    except (ValueError, TypeError):
+        next_concorso = 147
+
     # Aggiornamento Database
     database["next_draw"] = {
-        "concorso": history[-1].get("concorso", 0) + 1,
+        "concorso": next_concorso,
         "date": datetime.now().strftime("%d/%m/%Y"),
         "jackpot": "€ 26.500.000",
         "dodecahedron_pool": dodeca_pool,
@@ -360,13 +379,15 @@ def main():
 
     # 6. Preparazione Notifica Telegram
     last_draw = history[-1]
+    last_comb = last_draw.get("combinazione") or last_draw.get("sestina", [])
+    
     report_text = (
         f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"🎯 TARGET: Concorso N° {database['next_draw']['concorso']}\n"
         f"💰 Jackpot Stimato: {database['next_draw']['jackpot']}\n\n"
         f"📊 ULTIMO RISULTATO (N° {last_draw.get('concorso')}):\n"
-        f"Sestina: {last_draw.get('combinazione')}\n"
+        f"Sestina: {last_comb}\n"
         f"Jolly: {last_draw.get('jolly')} | SuperStar: {last_draw.get('superstar')}\n\n"
         f"🛡️ KELLY RISK MANAGEMENT:\n"
         f"• Stato: 🟠 PRUDENZA STATISTICA (EV: -0.957)\n"
