@@ -17,7 +17,7 @@
   },
   "quant_metrics": {
     "somma": 223,
-    "z_score": -1.10,
+    "z_score": -1.1,
     "anti_mass_index": 1.0
   },
   "omega_dodecahedron_pool": [
@@ -46,7 +46,7 @@
         88
       ],
       "somma": 314,
-      "z_score": 0.90,
+      "z_score": 0.9,
       "ev_score": 1.0,
       "confidence": 0.2315
     },
@@ -63,7 +63,7 @@
       "somma": 292,
       "z_score": 0.42,
       "ev_score": 1.0,
-      "confidence": 0.2480
+      "confidence": 0.248
     },
     {
       "id": "Sestina OMEGA 3",
@@ -78,7 +78,7 @@
       "somma": 286,
       "z_score": 0.29,
       "ev_score": 1.0,
-      "confidence": 0.2110
+      "confidence": 0.211
     },
     {
       "id": "Sestina OMEGA 4",
@@ -95,5 +95,48 @@
       "ev_score": 0.88,
       "confidence": 0.1945
     }
-  ]
+  ],
+  "next_draw": {
+    "concorso": 147,
+    "date": "12/09/2026",
+    "jackpot": "€ 26.500.000",
+    "dodecahedron_pool": [
+      1,
+      2,
+      3,
+      4,
+      8,
+      13,
+      16,
+      32,
+      33,
+      52,
+      64,
+      70
+    ],
+    "titan_1": {
+      "numbers": [
+        8,
+        13,
+        16,
+        52,
+        64,
+        70
+      ],
+      "sum": 223,
+      "z_score": -1.15
+    },
+    "titan_2": {
+      "numbers": [
+        1,
+        8,
+        13,
+        52,
+        64,
+        70
+      ],
+      "sum": 208,
+      "z_score": -1.49
+    }
+  }
 }
