@@ -2,15 +2,20 @@ name: SuperEnalotto Venus Vortex Database Auto-Sync
 
 on:
   schedule:
-    # 21:00 UTC = 23:00 italiane (CEST)
-    - cron: '0 21 * * *'
-  workflow_dispatch: # Mantiene la possibilità di lanciarlo manualmente quando vuoi
+    # 21:00 UTC = 23:00 Italiane (CEST)
+    # Esegue SOLO nei giorni di estrazione: Martedì (2), Giovedì (4), Venerdì (5), Sabato (6)
+    - cron: '0 21 * * 2,4,5,6'
+  workflow_dispatch: # Permette il lancio manuale da interfaccia GitHub
 
 jobs:
   update-venus-db:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # <--- AGGIUNTO: Concede i permessi di scrittura per fare il git push
+      contents: write # Concede i permessi necessari per il git push automatizzato
+
+    env:
+      # Forza l'orario italiano per datetime.now() dentro Python
+      TZ: "Europe/Rome"
 
     steps:
       - name: Checkout Repository
@@ -20,6 +25,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+          cache: 'pip' # Velocizza la build riutilizzando i pacchetti già scaricati
 
       - name: Install Dependencies
         run: |
@@ -28,8 +34,10 @@ jobs:
 
       - name: Execute TITAN Engine
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python scraper.py
 
@@ -40,7 +48,7 @@ jobs:
           git add -A
           if ! git diff-index --quiet HEAD; then
             git commit -m "Auto-sync database e predizioni TITAN [skip ci]"
-            git push
+            git push origin HEAD:${{ github.ref_name }}
           else
             echo "Nessuna modifica rilevata nel database. Commit saltato."
           fi
