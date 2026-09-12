@@ -284,8 +284,8 @@ def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
 # 4. NOTIFICA TELEGRAM
 # ==========================================
 def send_telegram_notification(caption_text, chart_path):
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 
     if not bot_token or not chat_id:
         print("[!] Token Telegram o Chat ID mancanti nei Secrets. Notifica saltata.")
