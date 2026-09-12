@@ -49,7 +49,7 @@ def save_json(filepath, data):
 def normalize_history(raw_data):
     """
     Normalizza qualsiasi struttura di venus_history.json (Lista o Dizionario, 
-    chiavi 'sestina' o 'combinazione') in una lista di dizionari uniforme e sicura.
+    chiavi 'sestina', 'combinazione' o 'numbers') in una lista uniforme.
     """
     items = []
     if isinstance(raw_data, dict):
@@ -180,7 +180,7 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
     return sorted(dodeca_pool[:12])
 
 def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
-    """Seleziona TITAN 1 e TITAN 2 con vincoli Anti-Overfitting ed Ortogonalità."""
+    """Seleziona TITAN 1 e TITAN 2 con vincoli Anti-Overfitting ed Ortogonalità Rigida (Max 2 numeri in comune)."""
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
     all_combos = list(itertools.combinations(dodeca_pool, 6))
 
@@ -213,14 +213,16 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
 
     titan1 = list(valid_sestinas[0][0])
 
+    # TITAN 2: Cerca rigorosamente una combinazione con massimo 2 numeri in comune con TITAN 1
     titan2 = None
     for item in valid_sestinas[1:]:
         candidate = list(item[0])
         shared_with_t1 = len(set(titan1).intersection(set(candidate)))
-        if shared_with_t1 <= 1:
+        if shared_with_t1 <= 2:
             titan2 = candidate
             break
 
+    # Fallback sicuro se lo stretto vincolo non trova riscontri immediati
     if titan2 is None and len(valid_sestinas) > 1:
         titan2 = list(valid_sestinas[1][0])
     elif titan2 is None:
@@ -349,7 +351,7 @@ def main():
     # 2. Costruzione Dodecaedro a 4 Strati
     dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
 
-    # 3. Selezione Sestine con Filtri Anti-Overfitting
+    # 3. Selezione Sestine con Filtri Anti-Overfitting e Ortogonalità
     titan1, titan2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
 
     # 4. Calcolo metriche per output
@@ -357,9 +359,12 @@ def main():
     z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2)
     z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2)
 
-    last_concorso_raw = history[-1].get("concorso", 146)
+    # Estrazione sicura del numero concorso precedente (supporta 'concorso', 'draw', 'id')
+    last_draw = history[-1] if history else {}
+    last_concorso = last_draw.get("concorso") or last_draw.get("draw") or last_draw.get("id") or 146
+    
     try:
-        next_concorso = int(last_concorso_raw) + 1
+        next_concorso = int(last_concorso) + 1
     except (ValueError, TypeError):
         next_concorso = 147
 
@@ -378,17 +383,18 @@ def main():
     generate_titan_chart(titan1, titan2, dodeca_pool, adjusted_scores)
 
     # 6. Preparazione Notifica Telegram
-    last_draw = history[-1]
-    last_comb = last_draw.get("combinazione") or last_draw.get("sestina", [])
+    last_comb = last_draw.get("combinazione") or last_draw.get("sestina") or last_draw.get("numbers") or []
+    last_jolly = last_draw.get("jolly", "N/A")
+    last_superstar = last_draw.get("superstar", "N/A")
     
     report_text = (
         f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"🎯 TARGET: Concorso N° {database['next_draw']['concorso']}\n"
         f"💰 Jackpot Stimato: {database['next_draw']['jackpot']}\n\n"
-        f"📊 ULTIMO RISULTATO (N° {last_draw.get('concorso')}):\n"
+        f"📊 ULTIMO RISULTATO (N° {last_concorso}):\n"
         f"Sestina: {last_comb}\n"
-        f"Jolly: {last_draw.get('jolly')} | SuperStar: {last_draw.get('superstar')}\n\n"
+        f"Jolly: {last_jolly} | SuperStar: {last_superstar}\n\n"
         f"🛡️ KELLY RISK MANAGEMENT:\n"
         f"• Stato: 🟠 PRUDENZA STATISTICA (EV: -0.957)\n"
         f"• Consigliati: 2 Sestine TITAN (Budget 2,00 €)\n\n"
