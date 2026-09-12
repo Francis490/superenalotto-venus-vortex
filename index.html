@@ -1,1 +1,347 @@
-<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body { background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; } .container { max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; } h1 { color: #a855f7; text-align: center; } .data-box { display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; } .data-item strong { font-size: 1.5rem; color: #34d399; } .pool { background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; } .risk-box { background: #1e1b4b; border: 1px solid #6366f1; padding: 1.2rem; border-radius: 8px; margin-bottom: 2rem; color: #e0e7ff; } .card { background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; } .nums { font-size: 1.4rem; font-weight: bold; }</style></head><body><div class="container"><h1>TITAN God Mode Optimal (2 Sestine Focused)</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° 145</strong></div><div class="data-item">Data<br><strong>10/09/2026</strong></div><div class="data-item">Jackpot<br><strong>€ 223.500.000</strong></div></div><div class="risk-box"><strong>🛡️ GESTIONE DEL RISCHIO (KELLY MODEL):</strong><br>Stato: 🟡 APPETIBILITÀ MEDIA<br>Livello Rischio: MODERATO (Gestione Budget Consigliata)<br>Strategia: Giocare 2 Sestine TITAN (Budget standard 2€).</div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">[2, 17, 39, 59, 63, 89] | Jolly: 62 | SuperStar: 62</div><h3 style="color: #a1a1aa;">Dodecaedro A.I. (Venus + Deep LSTM)</h3><div class="pool">[8, 12, 17, 23, 24, 28, 32, 39, 59, 64, 78, 89]</div><h3 style="color: #a1a1aa;">2 Sestine Concentrate (Massima Copertura Ortogonale)</h3><div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">TITAN 1</div><div class="nums">[12, 17, 32, 59, 64, 89]</div></div><div style="text-align: right; color: #a1a1aa;">Somma: 273<br>EV Score: <strong style="color: #fbbf24;">10.0 ⚡</strong></div></div><div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">TITAN 2</div><div class="nums">[8, 24, 39, 59, 64, 78]</div></div><div style="text-align: right; color: #a1a1aa;">Somma: 272<br>EV Score: <strong style="color: #fbbf24;">10.0 ⚡</strong></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITAN GOD MODE — Quantitative Dashboard</title>
+    <style>
+        :root {
+            --bg-main: #09090b;
+            --bg-card: #18181b;
+            --bg-inner: #27272a;
+            --accent-purple: #a855f7;
+            --accent-emerald: #34d399;
+            --accent-blue: #3b82f6;
+            --accent-amber: #f59e0b;
+            --accent-teal: #14b8a6;
+            --text-main: #f8fafc;
+            --text-muted: #a1a1aa;
+            --border-color: #27272a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header h1 {
+            color: var(--accent-purple);
+            font-size: 2rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        header .status-badge {
+            display: inline-block;
+            background: rgba(52, 211, 153, 0.1);
+            color: var(--accent-emerald);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        /* Top Grid Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-emerald);
+            margin-top: 0.25rem;
+        }
+
+        /* Kelly Risk Management Box */
+        .risk-container {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-left: 5px solid var(--accent-amber);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .risk-title {
+            color: var(--accent-amber);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Sections */
+        .section-title {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Ball Badges */
+        .balls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .ball {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--bg-inner);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+            border: 1px solid #3f3f46;
+        }
+
+        .ball.jolly { border-color: var(--accent-amber); color: var(--accent-amber); }
+        .ball.superstar { border-color: var(--accent-purple); color: var(--accent-purple); }
+        .ball.dodeca { border-color: var(--accent-teal); color: var(--accent-teal); }
+
+        /* TITAN Prediction Cards */
+        .titan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .titan-card {
+            background: var(--bg-card);
+            border-left: 5px solid var(--accent-blue);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .titan-card.titan-2 { border-left-color: var(--accent-teal); }
+
+        .titan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .titan-id {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--accent-blue);
+        }
+
+        .titan-card.titan-2 .titan-id { color: var(--accent-teal); }
+
+        .titan-numbers {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        .titan-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--bg-inner);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Analytics Chart Container */
+        .chart-container {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>TITAN God Mode</h1>
+        <div class="status-badge">⚡ SISTEMA OPERATIVO & IN SINCRONIA</div>
+    </header>
+
+    <!-- Top Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">Prossimo Concorso</div>
+            <div class="value" style="color: var(--accent-purple);">N° 147</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Data Estrazione</div>
+            <div class="value" style="color: var(--text-main);">12/09/2026</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Jackpot in Palio</div>
+            <div class="value">€ 26.500.000</div>
+        </div>
+    </div>
+
+    <!-- Kelly Model Risk Box -->
+    <div class="risk-container">
+        <div class="risk-title">
+            🛡️ GESTIONE DEL RISCHIO (KELLY MODEL POST-RESET)
+        </div>
+        <div><strong>Stato:</strong> 🟠 PRUDENZA STATISTICA (EV: -0.957)</div>
+        <div><strong>Livello Rischio:</strong> PRUDENTE (Reset Post-Vincita Jackpot)</div>
+        <div style="margin-top: 0.25rem;"><strong>Puntata Consigliata:</strong> Mantenere puntata minima di 2 Sestine TITAN (Budget 2,00 €).</div>
+    </div>
+
+    <!-- Ultima Estrazione -->
+    <div class="section-title">Ultima Estrazione Registrata (Concorso N° 146 — 11/09/2026)</div>
+    <div class="balls-row">
+        <div class="ball">08</div>
+        <div class="ball">13</div>
+        <div class="ball">16</div>
+        <div class="ball">52</div>
+        <div class="ball">64</div>
+        <div class="ball">70</div>
+        <div style="margin: 0 0.5rem; color: var(--text-muted);">|</div>
+        <div class="ball jolly" title="Jolly">17</div>
+        <div class="ball superstar" title="SuperStar">21</div>
+    </div>
+
+    <!-- Dodecaedro Pool -->
+    <div class="section-title">Dodecaedro A.I. Pool (Fisica Venus + Deep LSTM)</div>
+    <div class="balls-row">
+        <div class="ball dodeca">08</div>
+        <div class="ball dodeca">13</div>
+        <div class="ball dodeca">16</div>
+        <div class="ball dodeca">34</div>
+        <div class="ball dodeca">45</div>
+        <div class="ball dodeca">52</div>
+        <div class="ball dodeca">59</div>
+        <div class="ball dodeca">64</div>
+        <div class="ball dodeca">70</div>
+        <div class="ball dodeca">75</div>
+        <div class="ball dodeca">82</div>
+        <div class="ball dodeca">88</div>
+    </div>
+
+    <!-- Sestine Pronosticate -->
+    <div class="section-title">Matrice Sestine TITAN (Massima Copertura Ortogonale)</div>
+    <div class="titan-grid">
+        <!-- TITAN 1 -->
+        <div class="titan-card">
+            <div class="titan-header">
+                <span class="titan-id">TITAN 1</span>
+                <span style="color: var(--accent-amber); font-weight: bold; font-size: 0.85rem;">EV Score: 1.0 ⚡</span>
+            </div>
+            <div class="titan-numbers">[ 08 - 34 - 45 - 64 - 75 - 88 ]</div>
+            <div class="titan-metrics">
+                <span>Somma: <strong>314</strong></span>
+                <span>Z-Score: <strong>+0.90</strong></span>
+                <span>Confidenza: <strong>23.15%</strong></span>
+            </div>
+        </div>
+
+        <!-- TITAN 2 -->
+        <div class="titan-card titan-2">
+            <div class="titan-header">
+                <span class="titan-id">TITAN 2</span>
+                <span style="color: var(--accent-amber); font-weight: bold; font-size: 0.85rem;">EV Score: 1.0 ⚡</span>
+            </div>
+            <div class="titan-numbers">[ 13 - 16 - 52 - 59 - 70 - 82 ]</div>
+            <div class="titan-metrics">
+                <span>Somma: <strong>292</strong></span>
+                <span>Z-Score: <strong>+0.42</strong></span>
+                <span>Confidenza: <strong>24.80%</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafico Vortex Analytics -->
+    <div class="section-title">Analisi Telemetrica e Matrice di Copertura</div>
+    <div class="chart-container">
+        <img src="vortex_chart.png" alt="TITAN Analytics Chart" loading="eager">
+    </div>
+
+    <footer>
+        <p>TITAN SuperEnalotto Quantitative Engine — Aggiornato il 12/09/2026 16:30:00</p>
+    </footer>
+
+</div>
+
+</body>
+</html>
