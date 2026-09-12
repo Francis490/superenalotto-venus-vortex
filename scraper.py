@@ -2,6 +2,7 @@ import os
 import re
 import json
 import sys
+import time
 import urllib.parse
 import requests
 import numpy as np
@@ -9,6 +10,8 @@ import scipy.stats as stats
 from itertools import combinations
 from bs4 import BeautifulSoup
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -25,40 +28,60 @@ MAX_NUM = 90
 NUM_SESTINE = 2  # Focus concentrato su 2 Sestine Ottimali (Titan 1 & Titan 2)
 TICKET_COST = 1.0  # Costo giocata singola sestina (€)
 
+MAX_RETRIES = 5        # Numero di tentativi se l'estrazione non è ancora pubblicata
+RETRY_DELAY = 180      # Pausa di 3 minuti tra un tentativo e l'altro (in secondi)
+
 # ==========================================
 # 0. TELEGRAM NOTIFIER ENGINE
 # ==========================================
 def send_telegram_photo(photo_path, caption_html):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("⚠️ Token Telegram o Chat ID non configurati. Notifica saltata.")
         return
     token = TELEGRAM_BOT_TOKEN.strip()
-    if token.lower().startswith("bot"): token = token[3:]
+    if token.lower().startswith("bot"): 
+        token = token[3:]
     url = f"https://api.telegram.org/bot{token}/sendPhoto"
     try:
         with open(photo_path, 'rb') as photo:
-            payload = {"chat_id": TELEGRAM_CHAT_ID.strip(), "caption": caption_html, "parse_mode": "HTML"}
-            requests.post(url, data=payload, files={"photo": photo}, timeout=25)
-    except Exception:
-        pass
+            payload = {
+                "chat_id": TELEGRAM_CHAT_ID.strip(), 
+                "caption": caption_html, 
+                "parse_mode": "HTML"
+            }
+            res = requests.post(url, data=payload, files={"photo": photo}, timeout=25)
+            if res.status_code == 200:
+                print("✅ Notifica Telegram inviata con successo.")
+            else:
+                print(f"❌ Errore invio Telegram ({res.status_code}): {res.text}")
+    except Exception as e:
+        print(f"❌ Eccezione durante l'invio Telegram: {e}")
 
 # ==========================================
 # 1. MOTORE DI ACQUISIZIONE ZENIT (PRECISION V2)
 # ==========================================
 def validate_zenit_data(data):
-    if not data or not isinstance(data, dict): return False
-    if "N/A" in [data.get('concorso'), data.get('data'), data.get('jackpot')]: return False
-    if not isinstance(data.get('sestina'), list) or len(data.get('sestina')) != 6: return False
-    if str(data.get('jackpot', '')).strip() in ["€ 10", "€ 0", "€", ""]: return False
+    if not data or not isinstance(data, dict): 
+        return False
+    if "N/A" in [data.get('concorso'), data.get('data'), data.get('jackpot')]: 
+        return False
+    if not isinstance(data.get('sestina'), list) or len(data.get('sestina')) != 6: 
+        return False
+    if str(data.get('jackpot', '')).strip() in ["€ 10", "€ 0", "€", ""]: 
+        return False
     return True
 
-def fetch_titan_superenalotto():
+def fetch_single_attempt():
     targets = [
         "https://www.estrazionedellotto.it/estrazioni-superenalotto",
         "https://www.superenalotto.net/estrazioni"
     ]
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
     }
 
     months = {
@@ -67,25 +90,32 @@ def fetch_titan_superenalotto():
         "settembre": "09", "ottobre": "10", "novembre": "11", "dicembre": "12"
     }
 
+    timestamp = int(time.time())
+
     for target in targets:
+        # Aggiunta parametro dinamico Anti-Cache
+        target_uncached = f"{target}?_t={timestamp}"
         urls_to_try = [
-            f"https://api.codetabs.com/v1/proxy?quest={target}",
-            f"https://api.allorigins.win/get?url={urllib.parse.quote(target)}",
-            target
+            f"https://api.codetabs.com/v1/proxy?quest={urllib.parse.quote(target_uncached)}",
+            f"https://api.allorigins.win/get?url={urllib.parse.quote(target_uncached)}",
+            target_uncached
         ]
         
         for url in urls_to_try:
             try:
                 res = requests.get(url, headers=headers, timeout=15)
-                if res.status_code != 200: continue
+                if res.status_code != 200: 
+                    continue
                 
                 html = res.json().get("contents", "") if "allorigins" in url else res.text
-                if not html or len(html) < 500: continue
+                if not html or len(html) < 500: 
+                    continue
                 
                 soup = BeautifulSoup(html, 'html.parser')
                 text = re.sub(r'\s+', ' ', soup.get_text(separator=' ')).strip()
 
-                if "cloudflare" in text.lower(): continue
+                if "cloudflare" in text.lower(): 
+                    continue
 
                 result = {
                     "concorso": "N/A",
@@ -103,7 +133,7 @@ def fetch_titan_superenalotto():
 
                 date_match = re.search(r'\b(\d{2}[\/\-]\d{2}[\/\-]\d{4})\b', text)
                 if date_match:
-                    result["data"] = date_match.group(1)
+                    result["data"] = date_match.group(1).replace("-", "/")
                 else:
                     date_text_match = re.search(r'(\d{1,2})\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(\d{4})', text, re.I)
                     if date_text_match:
@@ -139,6 +169,27 @@ def fetch_titan_superenalotto():
                         
             except Exception:
                 continue
+
+    return None
+
+def fetch_titan_superenalotto_with_retry(target_date):
+    """
+    Esegue lo scraping fino a MAX_RETRIES volte finché la data del concorso non coincide con target_date.
+    """
+    for attempt in range(1, MAX_RETRIES + 1):
+        print(f"🔄 [TENTATIVO {attempt}/{MAX_RETRIES}] Download dati concorso (Target Date: {target_date})...")
+        data = fetch_single_attempt()
+        
+        if data and data.get("data") == target_date:
+            print(f"✅ Estrazione aggiornata trovata per la data di oggi: {target_date} (Concorso N° {data['concorso']})")
+            return data
+        
+        found_date = data.get("data") if data else "Nessun dato"
+        print(f"⏳ Concorso del {target_date} non ancora pubblicato (Letti dati per: {found_date}).")
+        
+        if attempt < MAX_RETRIES:
+            print(f"Attesa di {RETRY_DELAY // 60} minuti prima del prossimo tentativo...")
+            time.sleep(RETRY_DELAY)
 
     return None
 
@@ -190,10 +241,6 @@ def calculate_aerodynamic_wear(history):
 # 2.B MODULO DEEP SEQUENTIAL (LSTM / MARKOV TRANSITION WEIGHTS)
 # ==========================================
 def calculate_lstm_sequential_scores(history):
-    """
-    Simula una rete neurale ricorsiva (LSTM / Markovian Sequence Model)
-    analizzando la matrice di transizione temporale (t -> t+1) tra i numeri estratti.
-    """
     if len(history) < 5:
         return np.zeros(MAX_NUM)
         
@@ -226,10 +273,6 @@ def calculate_lstm_sequential_scores(history):
 # 2.C GESTIONE DEL RISCHIO INTEGRATA (KELLY CRITERION)
 # ==========================================
 def calculate_kelly_risk_management(jackpot_str, avg_ev_score):
-    """
-    Calcola il Criterio di Kelly adattato per definire il budget e la strategia
-    di gestione del rischio basata su Jackpot ed EV Score.
-    """
     try:
         clean_jp = re.sub(r'[^\d]', '', jackpot_str.split(',')[0])
         jackpot_val = float(clean_jp) if clean_jp else 100000000.0
@@ -291,6 +334,7 @@ def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SEST
     all_sestine = list(combinations(dodecaedro, 6))
     valid_candidates = []
     
+    # Primo passaggio con filtri rigidi
     for s in all_sestine:
         s = sorted(list(s))
         somma = sum(s)
@@ -316,6 +360,14 @@ def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SEST
         ev = round(min(10.0, max(1.0, score / 10.0)), 2)
         valid_candidates.append({"sestina": s, "somma": somma, "ev_index": ev})
         
+    # Fallback di sicurezza: se nessun candidato rispetta i vincoli rigidi, allenta i filtri
+    if not valid_candidates:
+        for s in all_sestine:
+            s = sorted(list(s))
+            somma = sum(s)
+            ev = round(min(10.0, max(1.0, 50.0 / 10.0)), 2)
+            valid_candidates.append({"sestina": s, "somma": somma, "ev_index": ev})
+
     valid_candidates.sort(key=lambda x: (x["ev_index"], -abs(273 - x["somma"])), reverse=True)
     
     # SELEZIONE METICOLOSA DELLE 2 SESTINE
@@ -378,35 +430,48 @@ def generate_web_dashboard(se_data, pool_12, matrix, kelly_info):
     superstar = se_data.get('superstar', 'N/A')
 
     html = f"""<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TITAN GOD MODE</title><style>body {{ background: #09090b; color: #f8fafc; font-family: sans-serif; padding: 2rem; }} .container {{ max-width: 900px; margin: 0 auto; background: #18181b; padding: 2rem; border-radius: 12px; }} h1 {{ color: #a855f7; text-align: center; }} .data-box {{ display: flex; justify-content: space-between; background: #27272a; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }} .data-item strong {{ font-size: 1.5rem; color: #34d399; }} .pool {{ background: #27272a; padding: 1rem; border-radius: 8px; text-align: center; font-size: 1.2rem; color: #a855f7; margin-bottom: 2rem; border: 1px dashed #a855f7; }} .risk-box {{ background: #1e1b4b; border: 1px solid #6366f1; padding: 1.2rem; border-radius: 8px; margin-bottom: 2rem; color: #e0e7ff; }} .card {{ background: #09090b; border-left: 5px solid #3b82f6; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }} .nums {{ font-size: 1.4rem; font-weight: bold; }}</style></head><body><div class="container"><h1>TITAN God Mode Optimal (2 Sestine Focused)</h1><div class="data-box"><div class="data-item">Concorso<br><strong>N° {conc}</strong></div><div class="data-item">Data<br><strong>{data_est}</strong></div><div class="data-item">Jackpot<br><strong>{jackpot}</strong></div></div><div class="risk-box"><strong>🛡️ GESTIONE DEL RISCHIO (KELLY MODEL):</strong><br>Stato: {kelly_info['advice_status']}<br>Livello Rischio: {kelly_info['risk_level']}<br>Strategia: {kelly_info['suggested_play']}</div><h3 style="color: #a1a1aa;">Ultima Estrazione</h3><div class="pool" style="color: #34d399;">{sestina} | Jolly: {jolly} | SuperStar: {superstar}</div><h3 style="color: #a1a1aa;">Dodecaedro A.I. (Venus + Deep LSTM)</h3><div class="pool">{pool_12}</div><h3 style="color: #a1a1aa;">2 Sestine Concentrate (Massima Copertura Ortogonale)</h3>"""
-    for m in matrix: html += f"""<div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">{m['id']}</div><div class="nums">{m['sestina']}</div></div><div style="text-align: right; color: #a1a1aa;">Somma: {m['somma']}<br>EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong></div></div>"""
+    for m in matrix: 
+        html += f"""<div class="card"><div><div style="color: #3b82f6; font-size: 0.8rem;">{m['id']}</div><div class="nums">{m['sestina']}</div></div><div style="text-align: right; color: #a1a1aa;">Somma: {m['somma']}<br>EV Score: <strong style="color: #fbbf24;">{m['ev_index']} ⚡</strong></div></div>"""
     html += "</div></body></html>"
-    with open(DASHBOARD_FILE, "w", encoding="utf-8") as f: f.write(html)
+    with open(DASHBOARD_FILE, "w", encoding="utf-8") as f: 
+        f.write(html)
 
 # ==========================================
 # MAIN EXECUTION
 # ==========================================
 def main():
+    # Ottiene la data corrente secondo il fuso orario italiano
+    now_italy = datetime.now(ZoneInfo("Europe/Rome"))
+    today_str = now_italy.strftime("%d/%m/%Y")
+    
+    print(f"🚀 Avvio TITAN Engine per la data odierna: {today_str}")
+
     history = []
     if os.path.exists(HISTORY_FILE):
         try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f: raw_history = json.load(f)
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f: 
+                raw_history = json.load(f)
             history = [h for h in raw_history if validate_zenit_data(h)]
-        except Exception:
+        except Exception as e:
+            print(f"⚠️ Errore lettura {HISTORY_FILE}: {e}")
             history = []
 
-    se_data = fetch_titan_superenalotto()
+    # Esegue lo scraping con tentativi reiterati
+    se_data = fetch_titan_superenalotto_with_retry(today_str)
     
-    if not se_data:
-        if len(history) > 0:
-            se_data = history[0]
-        else:
-            print("Errore critico: Impossibile recuperare dati.")
-            sys.exit(1)
+    # CONTROLLO TASSATIVO SULLE DATE:
+    # Se dopo tutti i tentativi non si hanno i dati odierni, ferma l'esecuzione.
+    if not se_data or se_data.get("data") != today_str:
+        print(f"⚠️ [ABORT] Nessuna estrazione valida reperita per la data {today_str}.")
+        print("Notifica Telegram annullata per evitare l'invio di duplicati vecchi.")
+        sys.exit(0) # Esce con codice 0 per non far fallire la pipeline Actions
             
+    # Aggiorna il database storico se il concorso è nuovo
     if validate_zenit_data(se_data):
         if not any(str(i.get("concorso")) == str(se_data.get("concorso")) for i in history):
             history.insert(0, se_data)
-            with open(HISTORY_FILE, "w", encoding="utf-8") as f: json.dump(history, f, indent=2)
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f: 
+                json.dump(history, f, indent=2)
 
     concorso_id = se_data.get('concorso', 1)
     pool_12, matrix, physics_scores = generate_titan_matrix(concorso_id, history, num_sestine_output=NUM_SESTINE)
@@ -441,6 +506,7 @@ def main():
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"<i>🌐 Sincronizzazione completata su GitHub Pages.</i>"
     )
+    
     send_telegram_photo(CHART_FILE, caption)
 
 if __name__ == "__main__":
