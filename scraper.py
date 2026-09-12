@@ -58,13 +58,36 @@ def send_telegram_photo(photo_path, caption_html):
         print(f"❌ Eccezione durante l'invio Telegram: {e}")
 
 # ==========================================
-# 1. MOTORE DI ACQUISIZIONE ZENIT (PRECISION V2)
+# 1. MOTORE DI ACQUISIZIONE ZENIT (WITH DATE GUARD)
 # ==========================================
+def is_official_draw_day(date_str):
+    """
+    Verifica che la data estratta (formato DD/MM/YYYY) corrisponda 
+    a un giorno di estrazione ufficiale SuperEnalotto:
+    Martedì (1), Giovedì (3), Venerdì (4), Sabato (5).
+    """
+    try:
+        dt = datetime.strptime(date_str, "%d/%m/%Y")
+        return dt.weekday() in [1, 3, 4, 5]
+    except (ValueError, TypeError):
+        return False
+
 def validate_zenit_data(data):
+    """
+    Valida la struttura e l'anagrafica temporale dei dati estratti.
+    """
     if not data or not isinstance(data, dict): 
         return False
-    if "N/A" in [data.get('concorso'), data.get('data'), data.get('jackpot')]: 
+    
+    date_val = data.get('data', 'N/A')
+    if "N/A" in [data.get('concorso'), date_val, data.get('jackpot')]: 
         return False
+    
+    # GUARDIA CALENDARIO: Scarta i dati se il giorno non è di estrazione ufficiale
+    if not is_official_draw_day(date_val):
+        print(f"⚠️ [DATE GUARD] Data non valida per estrazione ufficiale: {date_val}")
+        return False
+
     if not isinstance(data.get('sestina'), list) or len(data.get('sestina')) != 6: 
         return False
     if str(data.get('jackpot', '')).strip() in ["€ 10", "€ 0", "€", ""]: 
@@ -93,7 +116,6 @@ def fetch_single_attempt():
     timestamp = int(time.time())
 
     for target in targets:
-        # Aggiunta parametro dinamico Anti-Cache
         target_uncached = f"{target}?_t={timestamp}"
         urls_to_try = [
             f"https://api.codetabs.com/v1/proxy?quest={urllib.parse.quote(target_uncached)}",
@@ -360,7 +382,7 @@ def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SEST
         ev = round(min(10.0, max(1.0, score / 10.0)), 2)
         valid_candidates.append({"sestina": s, "somma": somma, "ev_index": ev})
         
-    # Fallback di sicurezza: se nessun candidato rispetta i vincoli rigidi, allenta i filtri
+    # Fallback di sicurezza
     if not valid_candidates:
         for s in all_sestine:
             s = sorted(list(s))
@@ -370,7 +392,6 @@ def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SEST
 
     valid_candidates.sort(key=lambda x: (x["ev_index"], -abs(273 - x["somma"])), reverse=True)
     
-    # SELEZIONE METICOLOSA DELLE 2 SESTINE
     selected_titan = []
     if valid_candidates:
         titan_1 = valid_candidates[0]
@@ -383,7 +404,7 @@ def generate_titan_matrix(concorso_id, history_data, num_sestine_output=NUM_SEST
             for cand in valid_candidates[1:]:
                 c_set = set(cand["sestina"])
                 overlap = len(t1_set.intersection(c_set))
-                if overlap <= 2:  # Massima copertura ortogonale
+                if overlap <= 2:
                     best_t2 = cand
                     break
                 elif overlap < min_overlap:
@@ -440,7 +461,6 @@ def generate_web_dashboard(se_data, pool_12, matrix, kelly_info):
 # MAIN EXECUTION
 # ==========================================
 def main():
-    # Ottiene la data corrente secondo il fuso orario italiano
     now_italy = datetime.now(ZoneInfo("Europe/Rome"))
     today_str = now_italy.strftime("%d/%m/%Y")
     
@@ -456,17 +476,13 @@ def main():
             print(f"⚠️ Errore lettura {HISTORY_FILE}: {e}")
             history = []
 
-    # Esegue lo scraping con tentativi reiterati
     se_data = fetch_titan_superenalotto_with_retry(today_str)
     
-    # CONTROLLO TASSATIVO SULLE DATE:
-    # Se dopo tutti i tentativi non si hanno i dati odierni, ferma l'esecuzione.
     if not se_data or se_data.get("data") != today_str:
         print(f"⚠️ [ABORT] Nessuna estrazione valida reperita per la data {today_str}.")
         print("Notifica Telegram annullata per evitare l'invio di duplicati vecchi.")
-        sys.exit(0) # Esce con codice 0 per non far fallire la pipeline Actions
+        sys.exit(0)
             
-    # Aggiorna il database storico se il concorso è nuovo
     if validate_zenit_data(se_data):
         if not any(str(i.get("concorso")) == str(se_data.get("concorso")) for i in history):
             history.insert(0, se_data)
@@ -509,5 +525,7 @@ def main():
     
     send_telegram_photo(CHART_FILE, caption)
 
+if __name__ == "__main__":
+    main()
 if __name__ == "__main__":
     main()
