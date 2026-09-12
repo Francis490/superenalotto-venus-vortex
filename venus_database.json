@@ -1,99 +1,99 @@
 {
-  "last_updated": "2026-09-09 16:04:34",
+  "last_updated": "2026-09-11 20:35:00",
   "latest_draw": {
-    "concorso": "144",
-    "data": "09/09/2026",
+    "concorso": "146",
+    "data": "11/09/2026",
     "sestina": [
-      23,
-      26,
-      41,
+      8,
+      13,
+      16,
       52,
-      59,
-      85
+      64,
+      70
     ],
-    "jolly": 49,
-    "superstar": 47,
-    "jackpot": "€ 222.400.000"
+    "jolly": 17,
+    "superstar": 21,
+    "jackpot": "€ 225.100.000"
   },
   "quant_metrics": {
-    "somma": 286,
-    "z_score": 0.29,
+    "somma": 223,
+    "z_score": -1.10,
     "anti_mass_index": 1.0
   },
   "omega_dodecahedron_pool": [
-    67,
-    60,
-    71,
-    68,
-    76,
-    47,
-    42,
-    64,
     8,
-    15,
-    11,
-    59
+    13,
+    16,
+    34,
+    45,
+    52,
+    59,
+    64,
+    70,
+    75,
+    82,
+    88
   ],
   "hyper_matrix_predictions": [
     {
       "id": "Sestina OMEGA 1",
       "sestina": [
-        47,
-        60,
-        67,
-        68,
-        71,
-        76
+        8,
+        34,
+        45,
+        64,
+        75,
+        88
       ],
-      "somma": 389,
-      "z_score": 2.55,
+      "somma": 314,
+      "z_score": 0.90,
       "ev_score": 1.0,
-      "confidence": 0.1767
+      "confidence": 0.2315
     },
     {
       "id": "Sestina OMEGA 2",
       "sestina": [
-        8,
-        42,
-        60,
-        64,
-        67,
-        71
+        13,
+        16,
+        52,
+        59,
+        70,
+        82
       ],
-      "somma": 312,
-      "z_score": 0.86,
+      "somma": 292,
+      "z_score": 0.42,
       "ev_score": 1.0,
-      "confidence": 0.2439
+      "confidence": 0.2480
     },
     {
       "id": "Sestina OMEGA 3",
       "sestina": [
-        11,
-        15,
-        47,
+        8,
+        16,
+        45,
         59,
-        68,
-        76
+        70,
+        88
       ],
-      "somma": 276,
-      "z_score": 0.07,
+      "somma": 286,
+      "z_score": 0.29,
       "ev_score": 1.0,
-      "confidence": 0.113
+      "confidence": 0.2110
     },
     {
       "id": "Sestina OMEGA 4",
       "sestina": [
-        8,
-        11,
-        15,
-        42,
-        59,
-        64
+        13,
+        34,
+        52,
+        64,
+        75,
+        82
       ],
-      "somma": 199,
-      "z_score": -1.63,
-      "ev_score": 0.85,
-      "confidence": 0.1802
+      "somma": 320,
+      "z_score": 1.03,
+      "ev_score": 0.88,
+      "confidence": 0.1945
     }
   ]
 }
