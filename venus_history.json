@@ -1,9 +1,33 @@
-{
-  "last_updated": "2026-09-12 16:30:00",
-  "latest_draw": {
-    "concorso": "146",
-    "data": "11/09/2026",
-    "sestina": [
+[
+  {
+    "concorso": 144,
+    "combinazione": [
+      4,
+      18,
+      22,
+      55,
+      68,
+      81
+    ],
+    "jolly": 12,
+    "superstar": 45
+  },
+  {
+    "concorso": 145,
+    "combinazione": [
+      2,
+      19,
+      34,
+      51,
+      60,
+      77
+    ],
+    "jolly": 8,
+    "superstar": 30
+  },
+  {
+    "concorso": 146,
+    "combinazione": [
       8,
       13,
       16,
@@ -11,70 +35,7 @@
       64,
       70
     ],
-    "jolly": 17,
-    "superstar": 21,
-    "jackpot_estratto": "€ 223.200.000 (VINTO)"
-  },
-  "next_draw": {
-    "concorso": "147",
-    "data": "12/09/2026",
-    "jackpot": "€ 26.500.000"
-  },
-  "quant_metrics": {
-    "somma": 223,
-    "z_score": -1.10,
-    "anti_mass_index": 1.0
-  },
-  "risk_management_kelly": {
-    "net_ev_per_euro": -0.957,
-    "advice_status": "🟠 PRUDENZA STATISTICA",
-    "risk_level": "PRUDENTE (Reset Post-Vincita)",
-    "suggested_play": "Mantenere puntata minima di 2 Sestine TITAN (Budget 2€)"
-  },
-  "omega_dodecahedron_pool": [
-    8,
-    13,
-    16,
-    34,
-    45,
-    52,
-    59,
-    64,
-    70,
-    75,
-    82,
-    88
-  ],
-  "hyper_matrix_predictions": [
-    {
-      "id": "TITAN 1",
-      "sestina": [
-        8,
-        34,
-        45,
-        64,
-        75,
-        88
-      ],
-      "somma": 314,
-      "z_score": 0.90,
-      "ev_score": 1.0,
-      "confidence": 0.2315
-    },
-    {
-      "id": "TITAN 2",
-      "sestina": [
-        13,
-        16,
-        52,
-        59,
-        70,
-        82
-      ],
-      "somma": 292,
-      "z_score": 0.42,
-      "ev_score": 1.0,
-      "confidence": 0.2480
-    }
-  ]
-}
+    "jolly": 5,
+    "superstar": 11
+  }
+]
