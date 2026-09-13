@@ -1,54 +1,42 @@
-name: SuperEnalotto Venus Vortex Database Auto-Sync
+name: TITAN Engine Automated Execution
 
 on:
   schedule:
-    # 20:00 UTC = 22:00 Italiane (CEST)
-    # Esegue nei giorni di estrazione: Martedì (2), Giovedì (4), Venerdì (5), Sabato (6)
-    - cron: '0 20 * * 2,4,5,6'
-  workflow_dispatch: # Permette il lancio manuale da interfaccia GitHub
+    # Esegue automaticamente Martedì, Giovedì, Venerdì e Sabato alle 20:15 UTC (22:15 Ora Italiana)
+    - cron: '15 20 * * 2,4,5,6'
+  workflow_dispatch: # Mantiene un pulsante manuale di scorta
+
+permissions:
+  contents: write
 
 jobs:
-  update-venus-db:
+  run-titan-engine:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Concede i permessi necessari per il git push automatizzato
-
-    env:
-      # Forza l'orario italiano per datetime.now() dentro Python
-      TZ: "Europe/Rome"
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
+      - name: Configurazione Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # Velocizza la build riutilizzando i pacchetti già scaricati
 
-      - name: Install Dependencies
+      - name: Installazione Dipendenze
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install matplotlib numpy scipy
 
-      - name: Execute TITAN Engine
+      - name: Esecuzione TITAN Engine
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          python scraper.py
+        run: python scraper.py
 
-      - name: Commit and Push Changes
+      - name: Salvataggio automatico del Database e Grafico su GitHub
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add -A
-          if ! git diff-index --quiet HEAD; then
-            git commit -m "Auto-sync database e predizioni TITAN [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
-          else
-            echo "Nessuna modifica rilevata nel database. Commit saltato."
-          fi
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add venus_database.json vortex_chart.png venus_history.json || true
+          git commit -m "Auto-update TITAN engine results [skip ci]" || true
+          git push
