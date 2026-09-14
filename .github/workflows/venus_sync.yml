@@ -2,8 +2,7 @@ name: TITAN Engine Automated Execution
 
 on:
   schedule:
-    # Martedì, Giovedì, Venerdì e Sabato alle 20:15 UTC.
-    # In Italia: 22:15 con ora legale (CEST), 21:15 con ora solare (CET).
+    # Mar/Gio/Ven/Sab alle 20:15 UTC (22:15 CEST / 21:15 CET)
     - cron: '15 20 * * 2,4,5,6'
   workflow_dispatch:
 
@@ -61,16 +60,17 @@ jobs:
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
-      # ==========================================
-      # PREPARAZIONE SITO STATICO PER GITHUB PAGES
-      # ==========================================
       - name: Preparazione cartella sito
         run: |
           mkdir -p _site
           cp index.html _site/index.html
-          [ -f vortex_chart.png ] && cp vortex_chart.png _site/vortex_chart.png || true
-          [ -f venus_database.json ] && cp venus_database.json _site/venus_database.json || true
-          # Disabilita Jekyll (evita che file con underscore vengano ignorati)
+          [ -f manifest.json ]        && cp manifest.json _site/manifest.json        || true
+          [ -f sw.js ]                && cp sw.js _site/sw.js                        || true
+          [ -f icon-192.png ]         && cp icon-192.png _site/icon-192.png          || true
+          [ -f icon-512.png ]         && cp icon-512.png _site/icon-512.png          || true
+          [ -f favicon.ico ]          && cp favicon.ico _site/favicon.ico            || true
+          [ -f vortex_chart.png ]     && cp vortex_chart.png _site/vortex_chart.png  || true
+          [ -f venus_database.json ]  && cp venus_database.json _site/venus_database.json || true
           touch _site/.nojekyll
 
       - name: Upload artifact per GitHub Pages
@@ -78,9 +78,6 @@ jobs:
         with:
           path: _site
 
-  # ==========================================
-  # JOB DI DEPLOY SU GITHUB PAGES
-  # ==========================================
   deploy-pages:
     needs: run-titan-engine
     runs-on: ubuntu-latest
