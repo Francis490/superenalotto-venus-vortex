@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 import itertools
 import urllib.request
 import urllib.parse
@@ -26,6 +26,9 @@ GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
 DEFAULT_JACKPOT = 26500000  # importo in euro (int), formattato poi dall'HTML
+
+# Giorni settimanali del SuperEnalotto (Lun=0, Mar=1, Mer=2, Gio=3, Ven=4, Sab=5, Dom=6)
+SUPERENALOTTO_WEEKDAYS = {1, 3, 4, 5}
 
 # ==========================================
 # 1. GESTIONE FILE JSON & NORMALIZZAZIONE UNIVERSALE
@@ -274,6 +277,26 @@ def estimate_confidence(z_score):
     val = max(0.0, 25.0 - abs(z_score) * 5.0)
     return round(val, 2)
 
+def calculate_next_draw_date(last_date_str):
+    """
+    Calcola la data del prossimo concorso SuperEnalotto.
+    I concorsi si tengono di Martedì, Giovedì, Venerdì e Sabato.
+    Restituisce una stringa in formato GG/MM/AAAA.
+    """
+    try:
+        last_date = datetime.strptime(str(last_date_str), "%d/%m/%Y")
+    except (ValueError, TypeError):
+        last_date = datetime.now()
+
+    candidate = last_date + timedelta(days=1)
+    for _ in range(7):
+        if candidate.weekday() in SUPERENALOTTO_WEEKDAYS:
+            return candidate.strftime("%d/%m/%Y")
+        candidate += timedelta(days=1)
+
+    # Fallback di sicurezza (non dovrebbe mai servire)
+    return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
+
 # ==========================================
 # 4. GENERAZIONE GRAFICO
 # ==========================================
@@ -402,7 +425,7 @@ def build_database_payload(history, dodeca_pool, titan1, titan2,
         "updated_at": now_str,
         "next_contest": {
             "number": next_concorso,
-            "date": datetime.now().strftime("%d/%m/%Y"),
+            "date": calculate_next_draw_date(last_date),
             "jackpot": DEFAULT_JACKPOT,
         },
         "last_draw": {
@@ -454,12 +477,14 @@ def main():
     if not history:
         print("[!] venus_history.json vuoto o mancante. Generazione dati di sicurezza...")
         history = [
-            {"concorso": 144, "combinazione": [4, 18, 22, 55, 68, 81],
-             "jolly": 12, "superstar": 45, "data": "08/09/2026"},
-            {"concorso": 145, "combinazione": [2, 19, 34, 51, 60, 77],
-             "jolly": 8, "superstar": 30, "data": "10/09/2026"},
+            {"concorso": 144, "combinazione": [23, 26, 41, 52, 59, 85],
+             "jolly": 49, "superstar": 47, "data": "08/09/2026"},
+            {"concorso": 145, "combinazione": [2, 17, 39, 59, 63, 89],
+             "jolly": 62, "superstar": 62, "data": "10/09/2026"},
             {"concorso": 146, "combinazione": [8, 13, 16, 52, 64, 70],
-             "jolly": 5, "superstar": 11, "data": "11/09/2026"},
+             "jolly": 17, "superstar": 21, "data": "11/09/2026"},
+            {"concorso": 147, "combinazione": [3, 7, 14, 40, 78, 81],
+             "jolly": 1, "superstar": 54, "data": "12/09/2026"},
         ]
         save_json(HISTORY_FILE, history)
 
@@ -482,7 +507,10 @@ def main():
     try:
         next_concorso = int(last_concorso) + 1
     except (ValueError, TypeError):
-        next_concorso = 147
+        next_concorso = 148
+
+    # Calcolo della data del prossimo concorso
+    next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
     # === SCRITTURA DATABASE (schema allineato all'index.html) ===
     payload = build_database_payload(
@@ -497,7 +525,7 @@ def main():
     report_text = (
         f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🎯 TARGET: Concorso N° {next_concorso}\n"
+        f"🎯 TARGET: Concorso N° {next_concorso} del {next_date_str}\n"
         f"💰 Jackpot Stimato: € {DEFAULT_JACKPOT:,}\n\n"
         f"📊 ULTIMO RISULTATO (N° {last_concorso}):\n"
         f"Sestina: {last_comb}\n"
