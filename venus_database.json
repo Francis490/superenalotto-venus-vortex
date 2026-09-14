@@ -1,23 +1,23 @@
 {
-  "updated_at": "2026-09-14T10:34:48",
+  "updated_at": "2026-09-14T10:47:45",
   "next_contest": {
-    "number": 147,
+    "number": 148,
     "date": "14/09/2026",
     "jackpot": 26500000
   },
   "last_draw": {
-    "contest_number": 146,
-    "date": "11/09/2026",
+    "contest_number": 147,
+    "date": "12/09/2026",
     "numbers": [
-      8,
-      13,
-      16,
-      52,
-      64,
-      70
+      3,
+      7,
+      14,
+      40,
+      78,
+      81
     ],
-    "jolly": 5,
-    "superstar": 11
+    "jolly": 1,
+    "superstar": 54
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
@@ -26,48 +26,48 @@
     "advice": "Mantenere puntata minima di 2 Sestine TITAN (Budget 2,00 €)."
   },
   "dodeca_pool": [
-    1,
-    15,
-    23,
-    29,
-    37,
-    39,
-    42,
-    49,
-    56,
-    58,
-    65,
-    84
+    5,
+    9,
+    20,
+    35,
+    43,
+    48,
+    53,
+    54,
+    77,
+    80,
+    82,
+    87
   ],
   "titan_predictions": [
     {
       "id": "TITAN 1",
       "numbers": [
-        1,
-        15,
-        37,
-        39,
-        65,
-        84
+        5,
+        35,
+        43,
+        48,
+        77,
+        87
       ],
-      "sum": 241,
-      "z_score": -0.74,
-      "confidence": 21.3,
+      "sum": 295,
+      "z_score": 0.51,
+      "confidence": 22.45,
       "ev_score": 1.0
     },
     {
       "id": "TITAN 2",
       "numbers": [
-        15,
-        23,
-        37,
-        42,
-        49,
-        56
+        5,
+        9,
+        20,
+        48,
+        54,
+        80
       ],
-      "sum": 222,
-      "z_score": -1.17,
-      "confidence": 19.15,
+      "sum": 216,
+      "z_score": -1.31,
+      "confidence": 18.45,
       "ev_score": 1.0
     }
   ]
