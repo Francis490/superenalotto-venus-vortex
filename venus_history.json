@@ -1,41 +1,32 @@
 [
-  {
-    "concorso": 144,
-    "combinazione": [
-      4,
-      18,
-      22,
-      55,
-      68,
-      81
-    ],
-    "jolly": 12,
-    "superstar": 45
-  },
-  {
-    "concorso": 145,
-    "combinazione": [
-      2,
-      19,
-      34,
-      51,
-      60,
-      77
-    ],
-    "jolly": 8,
-    "superstar": 30
-  },
-  {
-    "concorso": 146,
-    "combinazione": [
-      8,
-      13,
-      16,
-      52,
-      64,
-      70
-    ],
-    "jolly": 5,
-    "superstar": 11
-  }
+  {"concorso": 117, "data": "23/07/2026", "combinazione": [5, 23, 41, 58, 72, 87], "jolly": 14, "superstar": 63},
+  {"concorso": 118, "data": "24/07/2026", "combinazione": [12, 28, 33, 49, 61, 79], "jolly": 21, "superstar": 5},
+  {"concorso": 119, "data": "25/07/2026", "combinazione": [7, 19, 36, 54, 68, 83], "jolly": 25, "superstar": 71},
+  {"concorso": 120, "data": "28/07/2026", "combinazione": [3, 25, 44, 57, 71, 85], "jolly": 33, "superstar": 12},
+  {"concorso": 121, "data": "30/07/2026", "combinazione": [14, 31, 47, 62, 74, 88], "jolly": 7, "superstar": 55},
+  {"concorso": 122, "data": "31/07/2026", "combinazione": [9, 22, 38, 51, 66, 80], "jolly": 14, "superstar": 44},
+  {"concorso": 123, "data": "01/08/2026", "combinazione": [2, 17, 29, 43, 59, 76], "jolly": 63, "superstar": 11},
+  {"concorso": 124, "data": "04/08/2026", "combinazione": [11, 27, 40, 55, 69, 82], "jolly": 32, "superstar": 54},
+  {"concorso": 125, "data": "06/08/2026", "combinazione": [6, 20, 35, 50, 63, 78], "jolly": 17, "superstar": 44},
+  {"concorso": 126, "data": "07/08/2026", "combinazione": [15, 30, 46, 60, 73, 86], "jolly": 4, "superstar": 55},
+  {"concorso": 127, "data": "08/08/2026", "combinazione": [4, 21, 37, 53, 67, 81], "jolly": 14, "superstar": 72},
+  {"concorso": 128, "data": "11/08/2026", "combinazione": [10, 24, 39, 52, 65, 84], "jolly": 7, "superstar": 44},
+  {"concorso": 129, "data": "13/08/2026", "combinazione": [1, 18, 32, 48, 61, 75], "jolly": 25, "superstar": 83},
+  {"concorso": 130, "data": "14/08/2026", "combinazione": [13, 26, 42, 56, 70, 89], "jolly": 7, "superstar": 42},
+  {"concorso": 131, "data": "15/08/2026", "combinazione": [8, 23, 34, 49, 64, 77], "jolly": 15, "superstar": 62},
+  {"concorso": 132, "data": "18/08/2026", "combinazione": [16, 29, 45, 58, 72, 90], "jolly": 4, "superstar": 88},
+  {"concorso": 133, "data": "20/08/2026", "combinazione": [3, 20, 36, 51, 67, 82], "jolly": 12, "superstar": 75},
+  {"concorso": 134, "data": "21/08/2026", "combinazione": [12, 25, 41, 55, 71, 85], "jolly": 8, "superstar": 60},
+  {"concorso": 135, "data": "22/08/2026", "combinazione": [7, 19, 33, 47, 62, 79], "jolly": 15, "superstar": 68},
+  {"concorso": 136, "data": "25/08/2026", "combinazione": [14, 28, 44, 57, 73, 88], "jolly": 4, "superstar": 33},
+  {"concorso": 137, "data": "27/08/2026", "combinazione": [2, 22, 38, 53, 66, 80], "jolly": 11, "superstar": 45},
+  {"concorso": 138, "data": "28/08/2026", "combinazione": [9, 27, 43, 59, 75, 87], "jolly": 20, "superstar": 68},
+  {"concorso": 139, "data": "29/08/2026", "combinazione": [5, 21, 35, 50, 68, 83], "jolly": 15, "superstar": 47},
+  {"concorso": 140, "data": "01/09/2026", "combinazione": [11, 30, 46, 60, 74, 86], "jolly": 19, "superstar": 82},
+  {"concorso": 141, "data": "03/09/2026", "combinazione": [4, 17, 32, 48, 63, 78], "jolly": 7, "superstar": 66},
+  {"concorso": 142, "data": "04/09/2026", "combinazione": [10, 24, 40, 54, 69, 81], "jolly": 11, "superstar": 44},
+  {"concorso": 143, "data": "05/09/2026", "combinazione": [6, 18, 31, 45, 61, 76], "jolly": 11, "superstar": 55},
+  {"concorso": 144, "data": "08/09/2026", "combinazione": [4, 18, 22, 55, 68, 81], "jolly": 12, "superstar": 45},
+  {"concorso": 145, "data": "10/09/2026", "combinazione": [2, 19, 34, 51, 60, 77], "jolly": 8, "superstar": 30},
+  {"concorso": 146, "data": "11/09/2026", "combinazione": [8, 13, 16, 52, 64, 70], "jolly": 5, "superstar": 11}
 ]
