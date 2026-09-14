@@ -423,12 +423,22 @@ def build_database_payload(history, dodeca_pool, titan1, titan2,
     conf1 = estimate_confidence(z1)
     conf2 = estimate_confidence(z2)
 
+    # Priorità jackpot: override manuale > fetch automatico > default
     jackpot_value = DEFAULT_JACKPOT
-    if os.path.exists(JACKPOT_FILE):
+    if os.path.exists(MANUAL_OVERRIDE_FILE):
+        try:
+            with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
+                mdata = json.load(mf)
+                if isinstance(mdata.get("jackpot"), int) and mdata["jackpot"] > 0:
+                    jackpot_value = mdata["jackpot"]
+                    print(f"[+] Jackpot da OVERRIDE MANUALE: {jackpot_value:,} €")
+        except Exception as e:
+            print(f"[!] Errore lettura {MANUAL_OVERRIDE_FILE}: {e}")
+    elif os.path.exists(JACKPOT_FILE):
         try:
             with open(JACKPOT_FILE, "r", encoding="utf-8") as jf:
                 jdata = json.load(jf)
-                if isinstance(jdata.get("jackpot"), int):
+                if isinstance(jdata.get("jackpot"), int) and jdata["jackpot"] > 0:
                     jackpot_value = jdata["jackpot"]
                     print(f"[+] Jackpot letto da {JACKPOT_FILE}: {jackpot_value:,} €")
         except Exception as e:
@@ -501,6 +511,42 @@ def main():
         ]
         save_json(HISTORY_FILE, history)
 
+    # Applica override manuale dell'ultima estrazione (se presente e valida)
+    if os.path.exists(MANUAL_OVERRIDE_FILE):
+        try:
+            with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
+                mdata = json.load(mf)
+            manual_draw = mdata.get("last_draw", {})
+            manual_concorso = manual_draw.get("concorso")
+            manual_comb = manual_draw.get("combinazione", [])
+
+            # Valida: concorso int > 0, combinazione 6 numeri tra 1-90
+            if (isinstance(manual_concorso, int) and manual_concorso > 0
+                    and isinstance(manual_comb, list) and len(manual_comb) == 6
+                    and all(isinstance(n, int) and 1 <= n <= 90 for n in manual_comb)):
+
+                existing_ids = {item.get("concorso") for item in history
+                                if isinstance(item.get("concorso"), int)}
+
+                if manual_concorso not in existing_ids:
+                    new_entry = {
+                        "concorso": manual_concorso,
+                        "data": manual_draw.get("data", "N/A"),
+                        "combinazione": manual_comb,
+                        "jolly": manual_draw.get("jolly"),
+                        "superstar": manual_draw.get("superstar"),
+                    }
+                    history.append(new_entry)
+                    history.sort(key=lambda x: x.get("concorso", 0))
+                    save_json(HISTORY_FILE, history)
+                    print(f"[+] OVERRIDE: aggiunto concorso {manual_concorso} da file manuale")
+                else:
+                    print(f"[*] Override: concorso {manual_concorso} già presente, salto.")
+            else:
+                print("[*] Override manuale: nessuna estrazione valida (campi vuoti o incompleti).")
+        except Exception as e:
+            print(f"[!] Errore override manuale: {e}")
+
     raw_scores, delays, frequencies = calculate_raw_scores(history)
     adjusted_scores = apply_cooldown_factor(raw_scores, history)
     dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
@@ -535,11 +581,13 @@ def main():
     generate_titan_chart(titan1, titan2, dodeca_pool, adjusted_scores)
 
     # === REPORT TELEGRAM ===
+    jackpot_for_report = payload.get("next_contest", {}).get("jackpot", DEFAULT_JACKPOT)
+
     report_text = (
         f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"🎯 TARGET: Concorso N° {next_concorso} del {next_date_str}\n"
-        f"💰 Jackpot Stimato: € {DEFAULT_JACKPOT:,}\n\n"
+        f"💰 Jackpot Stimato: € {jackpot_for_report:,}\n\n"
         f"📊 ULTIMO RISULTATO (N° {last_concorso}):\n"
         f"Sestina: {last_comb}\n"
         f"Jolly: {last_jolly} | SuperStar: {last_superstar}\n\n"
