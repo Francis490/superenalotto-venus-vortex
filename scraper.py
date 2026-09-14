@@ -25,6 +25,8 @@ INDEX_FILE = "index.html"
 GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
+DEFAULT_JACKPOT = 26500000  # importo in euro (int), formattato poi dall'HTML
+
 # ==========================================
 # 1. GESTIONE FILE JSON & NORMALIZZAZIONE UNIVERSALE
 # ==========================================
@@ -46,13 +48,33 @@ def save_json(filepath, data):
     except Exception as e:
         print(f"[!] Errore durante il salvataggio di {filepath}: {e}")
 
+def _coerce_numbers(value):
+    """Trasforma stringhe/liste/JSON-string in una lista di interi."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except Exception:
+            value = value.replace("[", "").replace("]", "")
+            value = [x.strip() for x in value.split(",") if x.strip()]
+    if isinstance(value, (list, tuple)):
+        out = []
+        for n in value:
+            try:
+                out.append(int(n))
+            except (ValueError, TypeError):
+                continue
+        return out
+    return []
+
 def normalize_history(raw_data):
     """
     Parser Universale: trova i dati a prescindere da come sono chiamati nel JSON.
     """
     items = []
     if isinstance(raw_data, dict):
-        for k, v in raw_data.items():
+        for _, v in raw_data.items():
             if isinstance(v, list):
                 items = v
                 break
@@ -63,45 +85,49 @@ def normalize_history(raw_data):
 
     normalized = []
     for item in items:
-        if isinstance(item, dict):
-            clean_comb = []
-            
-            # 1. Cerca nelle chiavi comuni
-            for key in ["sestina", "combinazione", "numbers", "estratti", "numeri", "numeri_estratti", "winning_numbers"]:
-                val = item.get(key)
-                if val:
-                    if isinstance(val, str):
-                        try:
-                            val = json.loads(val)
-                        except:
-                            val = [x.strip() for x in val.replace('[','').replace(']','').split(',') if x.strip()]
-                    if isinstance(val, list):
-                        temp = [int(n) for n in val if str(n).isdigit()]
-                        if len(temp) >= 6:
-                            clean_comb = temp[:6]
-                            break
-            
-            # 2. Scansione brutale: se ancora vuoto, cerca in QUALSIASI lista presente
-            if not clean_comb:
-                for k, v in item.items():
-                    if isinstance(v, list):
-                        temp = [int(n) for n in v if str(n).isdigit()]
-                        if len(temp) >= 6:
-                            clean_comb = temp[:6]
-                            break
+        if not isinstance(item, dict):
+            continue
 
-            # Estrazione aggressiva di Jolly, SuperStar e Concorso
-            jolly = item.get("jolly", item.get("numero_jolly", item.get("Jolly", "N/A")))
-            superstar = item.get("superstar", item.get("numero_superstar", item.get("SuperStar", "N/A")))
-            concorso = item.get("concorso", item.get("draw", item.get("id", item.get("numero", "N/A"))))
+        clean_comb = []
 
-            new_item = dict(item)
-            new_item["combinazione"] = clean_comb
-            new_item["sestina"] = clean_comb
-            new_item["jolly"] = jolly
-            new_item["superstar"] = superstar
-            new_item["concorso"] = concorso
-            normalized.append(new_item)
+        # 1. Chiavi note per la combinazione
+        for key in ("sestina", "combinazione", "numbers", "estratti",
+                    "numeri", "numeri_estratti", "winning_numbers"):
+            nums = _coerce_numbers(item.get(key))
+            if len(nums) >= 6:
+                clean_comb = nums[:6]
+                break
+
+        # 2. Scansione brutale: qualsiasi lista con >= 6 numeri
+        if not clean_comb:
+            for _, v in item.items():
+                nums = _coerce_numbers(v)
+                if len(nums) >= 6:
+                    clean_comb = nums[:6]
+                    break
+
+        # Estrazione aggressiva di Jolly, SuperStar, Concorso, Data
+        jolly = item.get("jolly", item.get("numero_jolly", item.get("Jolly", "N/A")))
+        superstar = item.get("superstar",
+                             item.get("numero_superstar",
+                                      item.get("SuperStar",
+                                               item.get("super_star", "N/A"))))
+        concorso = item.get("concorso",
+                            item.get("draw",
+                                     item.get("id",
+                                              item.get("numero", "N/A"))))
+        data_estrazione = item.get("data",
+                                   item.get("date",
+                                            item.get("data_estrazione", "N/A")))
+
+        new_item = dict(item)
+        new_item["combinazione"] = clean_comb
+        new_item["sestina"] = clean_comb
+        new_item["jolly"] = jolly
+        new_item["superstar"] = superstar
+        new_item["concorso"] = concorso
+        new_item["data"] = data_estrazione
+        normalized.append(new_item)
 
     return normalized
 
@@ -112,7 +138,7 @@ def calculate_raw_scores(history):
     delays = {i: 0 for i in range(1, 91)}
     frequencies = {i: 0 for i in range(1, 91)}
     total_draws = len(history)
-    
+
     for num in range(1, 91):
         found = False
         for idx, draw in enumerate(reversed(history)):
@@ -130,7 +156,7 @@ def calculate_raw_scores(history):
         freq_score = frequencies[num] / max(1, total_draws)
         delay_score = math.log1p(delays[num])
         raw_scores[num] = (freq_score * 0.6) + (delay_score * 0.4)
-        
+
     return raw_scores, delays, frequencies
 
 def apply_cooldown_factor(raw_scores, history):
@@ -155,31 +181,39 @@ def apply_cooldown_factor(raw_scores, history):
 def build_tiered_dodecahedron(adjusted_scores, delays, history):
     dodeca_pool = []
     sorted_by_score = sorted(range(1, 91), key=lambda x: adjusted_scores[x], reverse=True)
+
+    # Strato 1: top 4 per score
     for num in sorted_by_score:
         if len(dodeca_pool) < 4:
             dodeca_pool.append(num)
 
-    medium_candidates = [n for n in range(1, 91) if 5 <= delays[n] <= 15 and n not in dodeca_pool]
+    # Strato 2: ritardo medio (5-15)
+    medium_candidates = [n for n in range(1, 91)
+                         if 5 <= delays[n] <= 15 and n not in dodeca_pool]
     medium_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
     for num in medium_candidates:
         if len(dodeca_pool) < 8:
             dodeca_pool.append(num)
-    
+
+    # Fallback per raggiungere 8
     if len(dodeca_pool) < 8:
         for num in sorted_by_score:
             if num not in dodeca_pool and len(dodeca_pool) < 8:
                 dodeca_pool.append(num)
 
+    # Strato 3: 2 più "freddi"
     cold_candidates = [n for n in range(1, 91) if n not in dodeca_pool]
     cold_candidates.sort(key=lambda x: delays[x], reverse=True)
     for num in cold_candidates[:2]:
         dodeca_pool.append(num)
 
+    # Strato 4: 2 anti-massa (32-90)
     anti_massa_candidates = [n for n in range(32, 91) if n not in dodeca_pool]
     anti_massa_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
     for num in anti_massa_candidates[:2]:
         dodeca_pool.append(num)
 
+    # Fallback finale
     while len(dodeca_pool) < 12:
         for num in sorted_by_score:
             if num not in dodeca_pool:
@@ -207,7 +241,9 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
 
     if not valid_sestinas:
         for combo in all_combos:
-            valid_sestinas.append((combo, sum(adjusted_scores[n] for n in combo), sum(combo)))
+            valid_sestinas.append(
+                (combo, sum(adjusted_scores[n] for n in combo), sum(combo))
+            )
 
     valid_sestinas.sort(key=lambda x: x[1], reverse=True)
     titan1 = list(valid_sestinas[0][0])
@@ -228,31 +264,48 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
     return titan1, titan2
 
 # ==========================================
-# 3. GENERAZIONE GRAFICO
+# 3. CONFIDENCE / EV (derivati statisticamente)
+# ==========================================
+def estimate_confidence(z_score):
+    """
+    Stima una confidence (%) basata sulla vicinanza alla media gaussiana.
+    z=0 -> ~25%, z=±1 -> ~20%, z=±2 -> ~15%, oltre -> decade.
+    """
+    val = max(0.0, 25.0 - abs(z_score) * 5.0)
+    return round(val, 2)
+
+# ==========================================
+# 4. GENERAZIONE GRAFICO
 # ==========================================
 def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
-    fig = plt.figure(figsize=(14, 8), facecolor='#09090b')
     plt.rcParams['text.color'] = '#f8fafc'
     plt.rcParams['axes.labelcolor'] = '#f8fafc'
     plt.rcParams['xtick.color'] = '#a1a1aa'
     plt.rcParams['ytick.color'] = '#a1a1aa'
 
+    fig = plt.figure(figsize=(14, 8), facecolor='#09090b')
+
     ax1 = fig.add_subplot(2, 2, (1, 3), facecolor='#18181b')
     x = np.linspace(100, 440, 500)
     y = norm.pdf(x, GAUSS_MEAN, GAUSS_STD)
     ax1.plot(x, y, color='#a855f7', linewidth=2.5, label='Curva Gaussiana Teorica')
-    
+
     sum1 = sum(titan1)
     sum2 = sum(titan2)
-    ax1.axvline(sum1, color='#3b82f6', linestyle='--', linewidth=2, label=f'TITAN 1 (Somma {sum1})')
-    ax1.axvline(sum2, color='#14b8a6', linestyle='--', linewidth=2, label=f'TITAN 2 (Somma {sum2})')
-    ax1.set_title("Distribuzione Gaussiana e Punti di Equilibrio", fontsize=12, fontweight='bold', color='#34d399')
+    ax1.axvline(sum1, color='#3b82f6', linestyle='--', linewidth=2,
+                label=f'TITAN 1 (Somma {sum1})')
+    ax1.axvline(sum2, color='#14b8a6', linestyle='--', linewidth=2,
+                label=f'TITAN 2 (Somma {sum2})')
+    ax1.set_title("Distribuzione Gaussiana e Punti di Equilibrio",
+                  fontsize=12, fontweight='bold', color='#34d399')
     ax1.legend(facecolor='#27272a', edgecolor='none')
 
     ax2 = fig.add_subplot(2, 2, 2, facecolor='#18181b')
     dodeca_scores = [scores.get(n, 1.0) for n in dodeca_pool]
-    ax2.bar([str(n) for n in dodeca_pool], dodeca_scores, color='#14b8a6', edgecolor='#27272a')
-    ax2.set_title("Ranking Energetico Dodecaedro Pool", fontsize=10, fontweight='bold')
+    ax2.bar([str(n) for n in dodeca_pool], dodeca_scores,
+            color='#14b8a6', edgecolor='#27272a')
+    ax2.set_title("Ranking Energetico Dodecaedro Pool",
+                  fontsize=10, fontweight='bold')
     ax2.tick_params(axis='x', rotation=45)
 
     ax3 = fig.add_subplot(2, 2, 4, facecolor='#18181b')
@@ -260,6 +313,7 @@ def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
     matrix_data[0, :] = titan1
     matrix_data[1, :] = titan2
     ax3.matshow(matrix_data, cmap='plasma')
+    ax3.xaxis.tick_top()
     ax3.set_yticks([0, 1])
     ax3.set_yticklabels(['TITAN 1', 'TITAN 2'], fontweight='bold')
     ax3.set_xticks(range(6))
@@ -267,15 +321,17 @@ def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
     for i in range(2):
         for j in range(6):
             val = int(matrix_data[i, j])
-            ax3.text(j, i, str(val), va='center', ha='center', color='white', fontweight='bold', fontsize=12)
-    ax3.set_title("Matrice di Copertura Ortogonale", fontsize=10, fontweight='bold')
+            ax3.text(j, i, str(val), va='center', ha='center',
+                     color='white', fontweight='bold', fontsize=12)
+    ax3.set_title("Matrice di Copertura Ortogonale",
+                  fontsize=10, fontweight='bold', pad=20)
 
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
     plt.close()
 
 # ==========================================
-# 4. NOTIFICA TELEGRAM
+# 5. NOTIFICA TELEGRAM (multipart corretto)
 # ==========================================
 def send_telegram_notification(caption_text, chart_path):
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
@@ -285,41 +341,125 @@ def send_telegram_notification(caption_text, chart_path):
         return
 
     url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+
     try:
         with open(chart_path, "rb") as image_file:
-            boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
-            body = []
-            body.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{chat_id}".encode())
-            body.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption_text}".encode())
-            body.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"{os.path.basename(chart_path)}\"\r\nContent-Type: image/png\r\n\r\n".encode())
-            body.append(image_file.read())
-            body.append(f"\r\n--{boundary}--".encode())
-            payload = b"\r\n".join(body)
+            image_bytes = image_file.read()
 
-            req = urllib.request.Request(url, data=payload, method="POST")
-            req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
-            with urllib.request.urlopen(req) as response:
-                print("[+] Notifica Telegram inviata con successo!")
+        boundary = "----TITANBoundary7MA4YWxkTrZu0gW"
+        filename = os.path.basename(chart_path)
+
+        body = bytearray()
+        body += f"--{boundary}\r\n".encode("utf-8")
+        body += b'Content-Disposition: form-data; name="chat_id"\r\n\r\n'
+        body += f"{chat_id}\r\n".encode("utf-8")
+
+        body += f"--{boundary}\r\n".encode("utf-8")
+        body += b'Content-Disposition: form-data; name="caption"\r\n'
+        body += b"Content-Type: text/plain; charset=utf-8\r\n\r\n"
+        body += caption_text.encode("utf-8")
+        body += b"\r\n"
+
+        body += f"--{boundary}\r\n".encode("utf-8")
+        body += (f'Content-Disposition: form-data; name="photo"; '
+                 f'filename="{filename}"\r\n').encode("utf-8")
+        body += b"Content-Type: image/png\r\n\r\n"
+        body += image_bytes
+        body += b"\r\n"
+
+        body += f"--{boundary}--\r\n".encode("utf-8")
+
+        req = urllib.request.Request(url, data=bytes(body), method="POST")
+        req.add_header("Content-Type",
+                       f"multipart/form-data; boundary={boundary}")
+        req.add_header("Content-Length", str(len(body)))
+
+        with urllib.request.urlopen(req, timeout=30) as response:
+            resp_body = response.read().decode("utf-8", errors="ignore")
+            print(f"[+] Notifica Telegram inviata con successo! ({response.status})")
+
     except Exception as e:
         print(f"[!] Errore Telegram: {e}")
 
 # ==========================================
-# 5. MAIN PIPELINE (SELF-HEALING)
+# 6. COSTRUZIONE DATABASE PER L'HTML
+# ==========================================
+def build_database_payload(history, dodeca_pool, titan1, titan2,
+                           sum1, sum2, z1, z2, next_concorso):
+    now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+    last_draw = history[-1] if history else {}
+    last_comb = last_draw.get("combinazione", []) or []
+    last_concorso = last_draw.get("concorso", "N/A")
+    last_date = last_draw.get("data", "N/A")
+    last_jolly = last_draw.get("jolly", "N/A")
+    last_superstar = last_draw.get("superstar", "N/A")
+
+    conf1 = estimate_confidence(z1)
+    conf2 = estimate_confidence(z2)
+
+    payload = {
+        "updated_at": now_str,
+        "next_contest": {
+            "number": next_concorso,
+            "date": datetime.now().strftime("%d/%m/%Y"),
+            "jackpot": DEFAULT_JACKPOT,
+        },
+        "last_draw": {
+            "contest_number": last_concorso,
+            "date": last_date,
+            "numbers": last_comb,
+            "jolly": last_jolly,
+            "superstar": last_superstar,
+        },
+        "risk": {
+            "status": "🟠 PRUDENZA STATISTICA",
+            "ev": -0.957,
+            "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
+            "advice": ("Mantenere puntata minima di 2 Sestine TITAN "
+                       "(Budget 2,00 €)."),
+        },
+        "dodeca_pool": dodeca_pool,
+        "titan_predictions": [
+            {
+                "id": "TITAN 1",
+                "numbers": titan1,
+                "sum": sum1,
+                "z_score": z1,
+                "confidence": conf1,
+                "ev_score": 1.0,
+            },
+            {
+                "id": "TITAN 2",
+                "numbers": titan2,
+                "sum": sum2,
+                "z_score": z2,
+                "confidence": conf2,
+                "ev_score": 1.0,
+            },
+        ],
+    }
+    return payload
+
+# ==========================================
+# 7. MAIN PIPELINE (SELF-HEALING)
 # ==========================================
 def main():
     print("=== INIZIO ESECUZIONE TITAN ENGINE (GOD MODE PARSER) ===")
-    
+
     raw_history = load_json(HISTORY_FILE, [])
     history = normalize_history(raw_history)
-    database = load_json(DATABASE_FILE, {})
 
-    # AUTO-GUARIGIONE: Se lo storico è vuoto o mancante, crea dati di ripristino ed evita il crash
+    # AUTO-GUARIGIONE: se lo storico è vuoto, crea dati di ripristino
     if not history:
-        print("[!] File venus_history.json vuoto o mancante. Generazione dati di sicurezza...")
+        print("[!] venus_history.json vuoto o mancante. Generazione dati di sicurezza...")
         history = [
-            {"concorso": 144, "combinazione": [4, 18, 22, 55, 68, 81], "jolly": 12, "superstar": 45},
-            {"concorso": 145, "combinazione": [2, 19, 34, 51, 60, 77], "jolly": 8, "superstar": 30},
-            {"concorso": 146, "combinazione": [8, 13, 16, 52, 64, 70], "jolly": 5, "superstar": 11}
+            {"concorso": 144, "combinazione": [4, 18, 22, 55, 68, 81],
+             "jolly": 12, "superstar": 45, "data": "08/09/2026"},
+            {"concorso": 145, "combinazione": [2, 19, 34, 51, 60, 77],
+             "jolly": 8, "superstar": 30, "data": "10/09/2026"},
+            {"concorso": 146, "combinazione": [8, 13, 16, 52, 64, 70],
+             "jolly": 5, "superstar": 11, "data": "11/09/2026"},
         ]
         save_json(HISTORY_FILE, history)
 
@@ -333,33 +473,32 @@ def main():
     z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2)
 
     last_draw = history[-1] if history else {}
-    last_concorso = last_draw.get("concorso", 146)
+    last_concorso = last_draw.get("concorso", "N/A")
     last_comb = last_draw.get("combinazione") or []
     last_jolly = last_draw.get("jolly", "N/A")
     last_superstar = last_draw.get("superstar", "N/A")
-    
+
+    # Calcolo del prossimo concorso (robusto a int o str)
     try:
         next_concorso = int(last_concorso) + 1
-    except:
+    except (ValueError, TypeError):
         next_concorso = 147
 
-    database["next_draw"] = {
-        "concorso": next_concorso,
-        "date": datetime.now().strftime("%d/%m/%Y"),
-        "jackpot": "€ 26.500.000",
-        "dodecahedron_pool": dodeca_pool,
-        "titan_1": {"numbers": titan1, "sum": sum1, "z_score": z1},
-        "titan_2": {"numbers": titan2, "sum": sum2, "z_score": z2}
-    }
-    save_json(DATABASE_FILE, database)
+    # === SCRITTURA DATABASE (schema allineato all'index.html) ===
+    payload = build_database_payload(
+        history, dodeca_pool, titan1, titan2, sum1, sum2, z1, z2, next_concorso
+    )
+    save_json(DATABASE_FILE, payload)
 
+    # === GRAFICO ===
     generate_titan_chart(titan1, titan2, dodeca_pool, adjusted_scores)
 
+    # === REPORT TELEGRAM ===
     report_text = (
         f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🎯 TARGET: Concorso N° {database['next_draw']['concorso']}\n"
-        f"💰 Jackpot Stimato: {database['next_draw']['jackpot']}\n\n"
+        f"🎯 TARGET: Concorso N° {next_concorso}\n"
+        f"💰 Jackpot Stimato: € {DEFAULT_JACKPOT:,}\n\n"
         f"📊 ULTIMO RISULTATO (N° {last_concorso}):\n"
         f"Sestina: {last_comb}\n"
         f"Jolly: {last_jolly} | SuperStar: {last_superstar}\n\n"
