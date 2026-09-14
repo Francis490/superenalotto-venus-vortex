@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-14T10:25:06",
+  "updated_at": "2026-09-14T10:34:48",
   "next_contest": {
     "number": 147,
     "date": "14/09/2026",
@@ -7,7 +7,7 @@
   },
   "last_draw": {
     "contest_number": 146,
-    "date": "N/A",
+    "date": "11/09/2026",
     "numbers": [
       8,
       13,
@@ -27,47 +27,47 @@
   },
   "dodeca_pool": [
     1,
-    3,
-    5,
-    6,
-    7,
-    9,
-    10,
-    11,
-    12,
-    14,
-    32,
-    33
+    15,
+    23,
+    29,
+    37,
+    39,
+    42,
+    49,
+    56,
+    58,
+    65,
+    84
   ],
   "titan_predictions": [
     {
       "id": "TITAN 1",
       "numbers": [
         1,
-        3,
-        5,
-        6,
-        7,
-        9
+        15,
+        37,
+        39,
+        65,
+        84
       ],
-      "sum": 31,
-      "z_score": -5.56,
-      "confidence": 0.0,
+      "sum": 241,
+      "z_score": -0.74,
+      "confidence": 21.3,
       "ev_score": 1.0
     },
     {
       "id": "TITAN 2",
       "numbers": [
-        1,
-        3,
-        10,
-        11,
-        12,
-        14
+        15,
+        23,
+        37,
+        42,
+        49,
+        56
       ],
-      "sum": 51,
-      "z_score": -5.1,
-      "confidence": 0.0,
+      "sum": 222,
+      "z_score": -1.17,
+      "confidence": 19.15,
       "ev_score": 1.0
     }
   ]
