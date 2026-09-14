@@ -46,7 +46,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          for file in venus_database.json vortex_chart.png venus_history.json; do
+          for file in venus_database.json vortex_chart.png venus_history.json venus_jackpot.json; do
             if [ -f "$file" ]; then
               git add "$file"
             fi
