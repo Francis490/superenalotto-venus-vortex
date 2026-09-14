@@ -1,8 +1,8 @@
 """
 fetch_latest_draw.py
-Scarica le ultime estrazioni SuperEnalotto e il jackpot corrente
-da fonti pubbliche. Aggiorna venus_history.json e venus_jackpot.json.
-Eseguito automaticamente dal workflow prima di scraper.py.
+Scarica le ultime estrazioni SuperEnalotto e il jackpot corrente.
+Usa proxy intermedi (r.jina.ai, allorigins, corsproxy) per bypassare
+i blocchi IP di GitHub Actions verso i siti italiani.
 """
 import json
 import os
@@ -27,7 +27,6 @@ HEADERS = {
     "User-Agent": USER_AGENT,
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-    "Cache-Control": "no-cache",
 }
 
 # ==========================================
@@ -82,26 +81,12 @@ def normalize_date(raw):
     if m:
         y, mo, d = m.groups()
         return f"{int(d):02d}/{int(mo):02d}/{y}"
-    mesi = {
-        "gennaio": "01", "febbraio": "02", "marzo": "03", "aprile": "04",
-        "maggio": "05", "giugno": "06", "luglio": "07", "agosto": "08",
-        "settembre": "09", "ottobre": "10", "novembre": "11", "dicembre": "12",
-    }
-    m = re.match(r"^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$", raw)
-    if m:
-        d, mese, y = m.groups()
-        if mese.lower() in mesi:
-            return f"{int(d):02d}/{mesi[mese.lower()]}/{y}"
     return None
 
 def parse_jackpot_text(text):
-    """
-    Cerca un jackpot tipo '27.300.000' o '27,300,000' o '27300000' nel testo.
-    Ritorna un int (importo in euro) o None.
-    """
+    """Cerca un importo jackpot plausibile (10M-400M €) nel testo."""
     if not text:
         return None
-    # Es: 27.300.000 / 27,300,000 / 27 300 000 / 27300000
     pattern = r"(\d{1,3}(?:[.,\s]\d{3}){1,4}|\d{6,9})"
     matches = re.findall(pattern, text)
     candidates = []
@@ -111,214 +96,177 @@ def parse_jackpot_text(text):
             val = int(clean)
         except ValueError:
             continue
-        # Filtro di plausibilità: 10M - 400M
         if 10_000_000 <= val <= 400_000_000:
             candidates.append(val)
     if not candidates:
         return None
-    # Prendi il più alto (tende a essere il jackpot, non altri numeri)
     return max(candidates)
 
 # ==========================================
-# FETCH ESTRAZIONI
+# FETCH MULTI-PROXY
 # ==========================================
-def fetch_draws_from_estrazionedelotto():
-    url = "https://www.estrazionedelotto.it/estrazione-superenalotto"
-    print(f"[*] Estrazioni fonte 1: {url}")
-    r = requests.get(url, headers=HEADERS, timeout=20)
+def fetch_via_jina(url, timeout=30):
+    """r.jina.ai renderizza JS e restituisce markdown pulito."""
+    proxy_url = f"https://r.jina.ai/{url}"
+    print(f"    → tentativo jina.ai...")
+    r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
     r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-    text = soup.get_text("\n", strip=True)
-    lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+    return r.text, "text"
 
-    results = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        m = re.search(r"concorso\s*n[°.]?\s*(\d+).*?(\d{2}/\d{2}/\d{4})",
-                      line, re.IGNORECASE)
-        if m:
-            concorso = int(m.group(1))
-            data = m.group(2)
-            nums, jolly, superstar = [], None, None
-            j = i + 1
-            while j < len(lines) and len(nums) < 6:
-                n = to_int(lines[j])
-                if n is not None and 1 <= n <= 90:
-                    nums.append(n)
-                j += 1
-            while j < len(lines) and jolly is None:
-                n = to_int(lines[j])
-                if n is not None and 1 <= n <= 90:
-                    jolly = n
-                j += 1
-            while j < len(lines) and superstar is None:
-                n = to_int(lines[j])
-                if n is not None and 1 <= n <= 90:
-                    superstar = n
-                j += 1
-            if len(nums) == 6 and jolly and superstar:
-                results.append({
-                    "concorso": concorso, "data": data,
-                    "combinazione": nums, "jolly": jolly, "superstar": superstar,
-                })
-            i = j
-        else:
-            i += 1
-    return results
-
-def fetch_draws_from_lottologia():
-    url = "https://www.lottologia.com/superenalotto/estrazioni/"
-    print(f"[*] Estrazioni fonte 2: {url}")
-    r = requests.get(url, headers=HEADERS, timeout=20)
+def fetch_via_allorigins(url, timeout=25):
+    proxy_url = f"https://api.allorigins.win/raw?url={url}"
+    print(f"    → tentativo allorigins.win...")
+    r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
     r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-    results = []
-    for table in soup.find_all("table"):
-        for row in table.find_all("tr"):
-            cells = [c.get_text(" ", strip=True) for c in row.find_all(["td", "th"])]
-            if len(cells) < 3:
-                continue
-            joined = " | ".join(cells)
-            m = re.search(r"(\d{4,5})\s*\|.*?(\d{2}[/\-.]\d{2}[/\-.]\d{4})", joined)
-            if not m:
-                continue
-            concorso = int(m.group(1))
-            data = normalize_date(m.group(2))
-            nums = []
-            for c in cells:
-                n = to_int(c)
-                if n is not None and 1 <= n <= 90:
-                    nums.append(n)
-            if len(nums) >= 8:
-                results.append({
-                    "concorso": concorso, "data": data,
-                    "combinazione": nums[:6], "jolly": nums[6], "superstar": nums[7],
-                })
-    return results
+    return r.text, "html"
 
-def fetch_draws_from_superenalotto_net():
-    url = "https://www.superenalotto.net/estrazioni"
-    print(f"[*] Estrazioni fonte 3: {url}")
-    r = requests.get(url, headers=HEADERS, timeout=20)
+def fetch_via_corsproxy(url, timeout=25):
+    proxy_url = f"https://corsproxy.io/?{url}"
+    print(f"    → tentativo corsproxy.io...")
+    r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
     r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-    text = soup.get_text("\n", strip=True)
-    lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+    return r.text, "html"
+
+def fetch_via_direct(url, timeout=20):
+    print(f"    → tentativo diretto...")
+    r = requests.get(url, headers=HEADERS, timeout=timeout)
+    r.raise_for_status()
+    return r.text, "html"
+
+def smart_fetch(url):
+    """
+    Prova tutti i metodi in cascata.
+    Ritorna (contenuto, tipo) dove tipo è 'html' o 'text'. None se tutto fallisce.
+    """
+    for fn in (fetch_via_jina, fetch_via_allorigins,
+               fetch_via_corsproxy, fetch_via_direct):
+        try:
+            content, kind = fn(url)
+            if content and len(content) > 500:
+                print(f"    ✓ successo ({len(content)} byte, {kind})")
+                return content, kind
+            else:
+                print(f"    ✗ risposta troppo corta")
+        except Exception as e:
+            print(f"    ✗ errore: {e}")
+        time.sleep(1)
+    return None, None
+
+# ==========================================
+# PARSING — Estrazioni
+# ==========================================
+def parse_draws_from_text(text):
+    """
+    Parser generico: cerca pattern 'Concorso N. XXX del GG/MM/AAAA'
+    seguito da 6 numeri + jolly + superstar.
+    """
     results = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        m = re.search(r"(\d{2,4}).*?(\d{2}/\d{2}/\d{4})", line)
-        if m:
-            concorso = int(m.group(1))
-            data = m.group(2)
-            nums = []
-            j = i + 1
-            while j < len(lines) and len(nums) < 8:
-                n = to_int(lines[j])
-                if n is not None and 1 <= n <= 90:
-                    nums.append(n)
-                j += 1
-            if len(nums) >= 8:
-                results.append({
-                    "concorso": concorso, "data": data,
-                    "combinazione": nums[:6], "jolly": nums[6], "superstar": nums[7],
-                })
-            i = j
-        else:
-            i += 1
+    text = re.sub(r"\s+", " ", text)
+    pattern = re.compile(
+        r"concorso\s*n[°.]?\s*(\d{2,4})\s*(?:del\s*)?(\d{2}[/\-.]\d{2}[/\-.]\d{4})"
+        r"(.{0,400}?)(?=concorso\s*n|$)",
+        re.IGNORECASE
+    )
+    for m in pattern.finditer(text):
+        concorso = int(m.group(1))
+        data = normalize_date(m.group(2))
+        chunk = m.group(3)
+        # Estrai tutti i numeri 1-90 nel chunk
+        nums = [int(n) for n in re.findall(r"\b(\d{1,2})\b", chunk)
+                if 1 <= int(n) <= 90]
+        # Deduplica mantenendo ordine (evita di prendere lo stesso num 2 volte)
+        seen = set()
+        unique_nums = []
+        for n in nums:
+            if n not in seen:
+                seen.add(n)
+                unique_nums.append(n)
+        if len(unique_nums) >= 8:
+            results.append({
+                "concorso": concorso,
+                "data": data,
+                "combinazione": unique_nums[:6],
+                "jolly": unique_nums[6],
+                "superstar": unique_nums[7],
+            })
     return results
 
 def fetch_all_draws():
-    candidates = []
-    for fn in (fetch_draws_from_estrazionedelotto,
-               fetch_draws_from_lottologia,
-               fetch_draws_from_superenalotto_net):
-        try:
-            res = fn()
-            print(f"    → {len(res)} estrazioni trovate.")
-            if res:
-                candidates.append(res)
-        except Exception as e:
-            print(f"    [!] Errore: {e}")
+    """Prova più siti, ritorna la lista più lunga trovata."""
+    sources = [
+        "https://www.estrazionedelotto.it/estrazione-superenalotto",
+        "https://www.superenalotto.net/estrazioni",
+        "https://www.lottologia.com/superenalotto/estrazioni/",
+    ]
+    all_results = []
+    for url in sources:
+        print(f"[*] Estrazioni da: {url}")
+        content, kind = smart_fetch(url)
+        if not content:
+            print(f"    [!] Fonte non raggiungibile.")
+            continue
+        # Se HTML, estrai prima il testo
+        if kind == "html":
+            soup = BeautifulSoup(content, "html.parser")
+            text = soup.get_text(" ", strip=True)
+        else:
+            text = content
+        draws = parse_draws_from_text(text)
+        print(f"    ✓ {len(draws)} estrazioni estratte.")
+        if draws:
+            all_results.append(draws)
         time.sleep(1)
-    if not candidates:
+    if not all_results:
         return []
-    best = max(candidates, key=len)
+    # Prendi la lista più lunga
+    best = max(all_results, key=len)
+    # Deduplica per concorso
     seen = set()
     clean = []
-    for item in best:
-        c = item.get("concorso")
-        if c and c not in seen and len(item.get("combinazione", [])) == 6:
+    for item in sorted(best, key=lambda x: x["concorso"]):
+        c = item["concorso"]
+        if c not in seen:
             seen.add(c)
             clean.append(item)
     return clean
 
 # ==========================================
-# FETCH JACKPOT
+# PARSING — Jackpot
 # ==========================================
-def fetch_jackpot_from_superenalotto_net():
-    url = "https://www.superenalotto.net/"
-    print(f"[*] Jackpot fonte 1: {url}")
-    r = requests.get(url, headers=HEADERS, timeout=20)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    # Cerca ovunque il termine jackpot e prendi il numero vicino
-    for el in soup.find_all(string=re.compile(r"jackpot", re.IGNORECASE)):
-        parent_text = el.parent.get_text(" ", strip=True) if el.parent else ""
-        val = parse_jackpot_text(parent_text)
-        if val:
-            return val
-    # Fallback: cerca nel testo completo della pagina
-    return parse_jackpot_text(soup.get_text(" ", strip=True))
-
-def fetch_jackpot_from_sisal():
-    url = "https://www.sisal.it/"
-    print(f"[*] Jackpot fonte 2: {url}")
-    r = requests.get(url, headers=HEADERS, timeout=20)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-    text = soup.get_text(" ", strip=True)
-    # Cerca sezione con "JACKPOT"
-    m = re.search(r"JACKPOT[^\d]{0,40}([\d.,\s]{6,20})", text, re.IGNORECASE)
-    if m:
-        val = parse_jackpot_text(m.group(1))
-        if val:
-            return val
-    return parse_jackpot_text(text)
-
-def fetch_jackpot_from_estrazionedelotto():
-    url = "https://www.estrazionedelotto.it/estrazione-superenalotto"
-    print(f"[*] Jackpot fonte 3: {url}")
-    r = requests.get(url, headers=HEADERS, timeout=20)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-    text = soup.get_text(" ", strip=True)
-    m = re.search(r"jackpot[^\d]{0,40}([\d.,\s]{6,20})", text, re.IGNORECASE)
-    if m:
-        val = parse_jackpot_text(m.group(1))
-        if val:
-            return val
-    return parse_jackpot_text(text)
-
-def fetch_all_jackpots():
-    for fn in (fetch_jackpot_from_superenalotto_net,
-               fetch_jackpot_from_sisal,
-               fetch_jackpot_from_estrazionedelotto):
-        try:
-            val = fn()
+def fetch_jackpot():
+    """Cerca il jackpot corrente su più siti."""
+    sources = [
+        "https://www.superenalotto.net/",
+        "https://www.estrazionedelotto.it/estrazione-superenalotto",
+        "https://www.lottologia.com/superenalotto/",
+    ]
+    for url in sources:
+        print(f"[*] Jackpot da: {url}")
+        content, kind = smart_fetch(url)
+        if not content:
+            continue
+        if kind == "html":
+            soup = BeautifulSoup(content, "html.parser")
+            text = soup.get_text(" ", strip=True)
+        else:
+            text = content
+        # Cerca un numero preceduto da "jackpot"
+        m = re.search(r"jackpot[^\d]{0,60}([\d.,\s]{6,20})", text, re.IGNORECASE)
+        if m:
+            val = parse_jackpot_text(m.group(1))
             if val:
-                print(f"    → Jackpot trovato: {val:,} €")
+                print(f"    ✓ Jackpot trovato: {val:,} €")
                 return val
-        except Exception as e:
-            print(f"    [!] Errore: {e}")
+        # Fallback: cerca in tutto il testo
+        val = parse_jackpot_text(text)
+        if val:
+            print(f"    ✓ Jackpot (fallback): {val:,} €")
+            return val
         time.sleep(1)
     return None
 
 # ==========================================
-# MERGE STORICO
+# MERGE
 # ==========================================
 def merge_history(existing, fetched):
     existing_ids = {item.get("concorso") for item in existing
@@ -341,7 +289,7 @@ def merge_history(existing, fetched):
 # MAIN
 # ==========================================
 def main():
-    print("=== FETCH LATEST DRAW + JACKPOT ===")
+    print("=== FETCH LATEST DRAW + JACKPOT (PROXY MODE) ===")
 
     # 1) Estrazioni
     history = load_history()
@@ -364,11 +312,11 @@ def main():
 
     # 2) Jackpot
     print()
-    jackpot = fetch_all_jackpots()
+    jackpot = fetch_jackpot()
     if jackpot:
         save_jackpot(jackpot)
     else:
-        print("[!] Impossibile recuperare il jackpot. Verrà usato il DEFAULT.")
+        print("[!] Impossibile recuperare il jackpot.")
 
 if __name__ == "__main__":
     main()
