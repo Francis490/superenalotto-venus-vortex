@@ -20,6 +20,7 @@ from scipy.stats import norm
 HISTORY_FILE = "venus_history.json"
 DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
+JACKPOT_FILE = "venus_jackpot.json"
 INDEX_FILE = "index.html"
 
 GAUSS_MEAN = 273.0
