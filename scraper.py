@@ -422,7 +422,7 @@ def build_database_payload(history, dodeca_pool, titan1, titan2,
     conf1 = estimate_confidence(z1)
     conf2 = estimate_confidence(z2)
 
-        jackpot_value = DEFAULT_JACKPOT
+    jackpot_value = DEFAULT_JACKPOT
     if os.path.exists(JACKPOT_FILE):
         try:
             with open(JACKPOT_FILE, "r", encoding="utf-8") as jf:
