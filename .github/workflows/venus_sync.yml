@@ -2,16 +2,23 @@ name: TITAN Engine Automated Execution
 
 on:
   schedule:
-    # Esegue automaticamente Martedì, Giovedì, Venerdì e Sabato alle 20:15 UTC (22:15 Ora Italiana)
+    # Martedì, Giovedì, Venerdì e Sabato alle 20:15 UTC.
+    # In Italia: 22:15 con ora legale (CEST), 21:15 con ora solare (CET).
     - cron: '15 20 * * 2,4,5,6'
-  workflow_dispatch: # Mantiene un pulsante manuale di scorta
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: titan-engine-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   run-titan-engine:
     runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
 
     steps:
       - name: Checkout Repository
@@ -26,6 +33,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install matplotlib numpy scipy
+          # Se scraper.py importa altre librerie, aggiungile qui:
+          # pip install requests beautifulsoup4 pandas
 
       - name: Esecuzione TITAN Engine
         env:
@@ -37,6 +46,17 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add venus_database.json vortex_chart.png venus_history.json || true
-          git commit -m "Auto-update TITAN engine results [skip ci]" || true
-          git push
+
+          for file in venus_database.json vortex_chart.png venus_history.json; do
+            if [ -f "$file" ]; then
+              git add "$file"
+            fi
+          done
+
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica da salvare."
+          else
+            git commit -m "Auto-update TITAN engine results [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
