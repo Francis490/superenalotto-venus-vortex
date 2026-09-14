@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard quantitativa TITAN per SuperEnalotto: statistiche, pronostici e gestione del rischio.">
+    <meta name="theme-color" content="#09090b">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TITAN">
+
     <title>TITAN GOD MODE — Quantitative Dashboard</title>
+
     <style>
         :root {
             --bg-main: #09090b;
@@ -29,10 +42,7 @@
             line-height: 1.5;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1000px; margin: 0 auto; }
 
         header {
             text-align: center;
@@ -60,10 +70,9 @@
             border: 1px solid rgba(52, 211, 153, 0.3);
         }
 
-        /* Top Grid Stats */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -90,7 +99,6 @@
             margin-top: 0.25rem;
         }
 
-        /* Kelly Risk Management Box */
         .risk-container {
             background: rgba(245, 158, 11, 0.08);
             border: 1px solid rgba(245, 158, 11, 0.3);
@@ -110,7 +118,6 @@
             gap: 0.5rem;
         }
 
-        /* Sections */
         .section-title {
             color: var(--text-muted);
             font-size: 0.9rem;
@@ -120,7 +127,6 @@
             font-weight: 600;
         }
 
-        /* Ball Badges */
         .balls-row {
             display: flex;
             flex-wrap: wrap;
@@ -152,10 +158,9 @@
         .ball.superstar { border-color: var(--accent-purple); color: var(--accent-purple); }
         .ball.dodeca { border-color: var(--accent-teal); color: var(--accent-teal); }
 
-        /* TITAN Prediction Cards */
         .titan-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -178,6 +183,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .titan-id {
@@ -199,6 +206,8 @@
         .titan-metrics {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.25rem 0.75rem;
             font-size: 0.85rem;
             color: var(--text-muted);
             background: var(--bg-inner);
@@ -206,7 +215,6 @@
             border-radius: 6px;
         }
 
-        /* Analytics Chart Container */
         .chart-container {
             background: var(--bg-card);
             padding: 1.25rem;
@@ -221,6 +229,8 @@
             height: auto;
             border-radius: 8px;
             border: 1px solid var(--border-color);
+            display: block;
+            margin: 0 auto;
         }
 
         footer {
@@ -231,6 +241,18 @@
             padding-top: 1rem;
             border-top: 1px solid var(--border-color);
         }
+
+        .error-msg {
+            color: #f87171;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            background: rgba(248, 113, 113, 0.08);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -239,109 +261,255 @@
 
     <header>
         <h1>TITAN God Mode</h1>
-        <div class="status-badge">⚡ SISTEMA OPERATIVO & IN SINCRONIA</div>
+        <div class="status-badge">⚡ SISTEMA OPERATIVO &amp; IN SINCRONIA</div>
     </header>
 
-    <!-- Top Stats -->
+    <div id="errorBox" class="error-msg"></div>
+
     <div class="stats-grid">
         <div class="stat-card">
             <div class="label">Prossimo Concorso</div>
-            <div class="value" style="color: var(--accent-purple);">N° 147</div>
+            <div class="value" id="nextContestNumber" style="color: var(--accent-purple);">—</div>
         </div>
         <div class="stat-card">
             <div class="label">Data Estrazione</div>
-            <div class="value" style="color: var(--text-main);">12/09/2026</div>
+            <div class="value" id="nextContestDate" style="color: var(--text-main);">—</div>
         </div>
         <div class="stat-card">
             <div class="label">Jackpot in Palio</div>
-            <div class="value">€ 26.500.000</div>
+            <div class="value" id="nextContestJackpot">—</div>
         </div>
     </div>
 
-    <!-- Kelly Model Risk Box -->
     <div class="risk-container">
-        <div class="risk-title">
-            🛡️ GESTIONE DEL RISCHIO (KELLY MODEL POST-RESET)
-        </div>
-        <div><strong>Stato:</strong> 🟠 PRUDENZA STATISTICA (EV: -0.957)</div>
-        <div><strong>Livello Rischio:</strong> PRUDENTE (Reset Post-Vincita Jackpot)</div>
-        <div style="margin-top: 0.25rem;"><strong>Puntata Consigliata:</strong> Mantenere puntata minima di 2 Sestine TITAN (Budget 2,00 €).</div>
+        <div class="risk-title">🛡️ GESTIONE DEL RISCHIO (KELLY MODEL POST-RESET)</div>
+        <div><strong>Stato:</strong> <span id="riskStatus">—</span></div>
+        <div><strong>Livello Rischio:</strong> <span id="riskLevel">—</span></div>
+        <div style="margin-top: 0.25rem;"><strong>Puntata Consigliata:</strong> <span id="riskAdvice">—</span></div>
     </div>
 
-    <!-- Ultima Estrazione -->
-    <div class="section-title">Ultima Estrazione Registrata (Concorso N° 146 — 11/09/2026)</div>
-    <div class="balls-row">
-        <div class="ball">08</div>
-        <div class="ball">13</div>
-        <div class="ball">16</div>
-        <div class="ball">52</div>
-        <div class="ball">64</div>
-        <div class="ball">70</div>
-        <div style="margin: 0 0.5rem; color: var(--text-muted);">|</div>
-        <div class="ball jolly" title="Jolly">17</div>
-        <div class="ball superstar" title="SuperStar">21</div>
-    </div>
+    <div class="section-title" id="lastDrawTitle">Ultima Estrazione Registrata</div>
+    <div class="balls-row" id="lastDrawBalls"></div>
 
-    <!-- Dodecaedro Pool -->
     <div class="section-title">Dodecaedro A.I. Pool (Fisica Venus + Deep LSTM)</div>
-    <div class="balls-row">
-        <div class="ball dodeca">08</div>
-        <div class="ball dodeca">13</div>
-        <div class="ball dodeca">16</div>
-        <div class="ball dodeca">34</div>
-        <div class="ball dodeca">45</div>
-        <div class="ball dodeca">52</div>
-        <div class="ball dodeca">59</div>
-        <div class="ball dodeca">64</div>
-        <div class="ball dodeca">70</div>
-        <div class="ball dodeca">75</div>
-        <div class="ball dodeca">82</div>
-        <div class="ball dodeca">88</div>
-    </div>
+    <div class="balls-row" id="dodecaPool"></div>
 
-    <!-- Sestine Pronosticate -->
     <div class="section-title">Matrice Sestine TITAN (Massima Copertura Ortogonale)</div>
-    <div class="titan-grid">
-        <!-- TITAN 1 -->
-        <div class="titan-card">
-            <div class="titan-header">
-                <span class="titan-id">TITAN 1</span>
-                <span style="color: var(--accent-amber); font-weight: bold; font-size: 0.85rem;">EV Score: 1.0 ⚡</span>
-            </div>
-            <div class="titan-numbers">[ 08 - 34 - 45 - 64 - 75 - 88 ]</div>
-            <div class="titan-metrics">
-                <span>Somma: <strong>314</strong></span>
-                <span>Z-Score: <strong>+0.90</strong></span>
-                <span>Confidenza: <strong>23.15%</strong></span>
-            </div>
-        </div>
+    <div class="titan-grid" id="titanGrid"></div>
 
-        <!-- TITAN 2 -->
-        <div class="titan-card titan-2">
-            <div class="titan-header">
-                <span class="titan-id">TITAN 2</span>
-                <span style="color: var(--accent-amber); font-weight: bold; font-size: 0.85rem;">EV Score: 1.0 ⚡</span>
-            </div>
-            <div class="titan-numbers">[ 13 - 16 - 52 - 59 - 70 - 82 ]</div>
-            <div class="titan-metrics">
-                <span>Somma: <strong>292</strong></span>
-                <span>Z-Score: <strong>+0.42</strong></span>
-                <span>Confidenza: <strong>24.80%</strong></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Grafico Vortex Analytics -->
     <div class="section-title">Analisi Telemetrica e Matrice di Copertura</div>
     <div class="chart-container">
-        <img src="vortex_chart.png" alt="TITAN Analytics Chart" loading="eager">
+        <img id="vortexChart" src="vortex_chart.png" alt="TITAN Analytics Chart" loading="eager" decoding="async">
     </div>
 
     <footer>
-        <p>TITAN SuperEnalotto Quantitative Engine — Aggiornato il 12/09/2026 16:30:00</p>
+        <p>TITAN SuperEnalotto Quantitative Engine — Aggiornato il <span id="updatedAt">—</span></p>
     </footer>
 
 </div>
+
+<script>
+(function () {
+    "use strict";
+
+    const $ = (id) => document.getElementById(id);
+    const pad2 = (n) => String(n).padStart(2, "0");
+
+    const AUTO_REFRESH_MS = 60 * 1000; // 60 secondi
+    let refreshTimer = null;
+
+    const formatEuro = (n) => {
+        if (typeof n !== "number" || !isFinite(n)) return "—";
+        return "€ " + n.toLocaleString("it-IT");
+    };
+
+    const formatNumber = (n, decimals = 2) => {
+        if (typeof n !== "number" || !isFinite(n)) return "—";
+        return n.toFixed(decimals);
+    };
+
+    const formatSigned = (n, decimals = 2) => {
+        if (typeof n !== "number" || !isFinite(n)) return "—";
+        const v = n.toFixed(decimals);
+        return (n >= 0 ? "+" : "") + v;
+    };
+
+    const showError = (msg) => {
+        const box = $("errorBox");
+        box.textContent = msg;
+        box.style.display = "block";
+    };
+
+    const hideError = () => { $("errorBox").style.display = "none"; };
+
+    const renderLastDraw = (draw) => {
+        const container = $("lastDrawBalls");
+        container.innerHTML = "";
+        if (!draw) return;
+
+        if (draw.contest_number != null && draw.date) {
+            $("lastDrawTitle").textContent =
+                `Ultima Estrazione Registrata (Concorso N° ${draw.contest_number} — ${draw.date})`;
+        }
+
+        (draw.numbers || []).forEach((n) => {
+            const d = document.createElement("div");
+            d.className = "ball";
+            d.textContent = pad2(n);
+            container.appendChild(d);
+        });
+
+        const sep = document.createElement("div");
+        sep.style.margin = "0 0.5rem";
+        sep.style.color = "var(--text-muted)";
+        sep.textContent = "|";
+        container.appendChild(sep);
+
+        if (draw.jolly != null) {
+            const d = document.createElement("div");
+            d.className = "ball jolly";
+            d.title = "Jolly";
+            d.textContent = pad2(draw.jolly);
+            container.appendChild(d);
+        }
+        if (draw.superstar != null) {
+            const d = document.createElement("div");
+            d.className = "ball superstar";
+            d.title = "SuperStar";
+            d.textContent = pad2(draw.superstar);
+            container.appendChild(d);
+        }
+    };
+
+    const renderDodecaPool = (pool) => {
+        const container = $("dodecaPool");
+        container.innerHTML = "";
+        (pool || []).forEach((n) => {
+            const d = document.createElement("div");
+            d.className = "ball dodeca";
+            d.textContent = pad2(n);
+            container.appendChild(d);
+        });
+    };
+
+    const renderTitan = (predictions) => {
+        const grid = $("titanGrid");
+        grid.innerHTML = "";
+        (predictions || []).forEach((p, idx) => {
+            const card = document.createElement("div");
+            card.className = "titan-card" + (idx === 1 ? " titan-2" : "");
+
+            const header = document.createElement("div");
+            header.className = "titan-header";
+
+            const idEl = document.createElement("span");
+            idEl.className = "titan-id";
+            idEl.textContent = p.id || `TITAN ${idx + 1}`;
+            header.appendChild(idEl);
+
+            const evEl = document.createElement("span");
+            evEl.style.color = "var(--accent-amber)";
+            evEl.style.fontWeight = "bold";
+            evEl.style.fontSize = "0.85rem";
+            evEl.textContent = `EV Score: ${formatNumber(p.ev_score, 1)} ⚡`;
+            header.appendChild(evEl);
+
+            card.appendChild(header);
+
+            const nums = document.createElement("div");
+            nums.className = "titan-numbers";
+            nums.textContent = "[ " + (p.numbers || []).map(pad2).join(" - ") + " ]";
+            card.appendChild(nums);
+
+            const metrics = document.createElement("div");
+            metrics.className = "titan-metrics";
+
+            const m1 = document.createElement("span");
+            m1.innerHTML = `Somma: <strong>${p.sum ?? "—"}</strong>`;
+            metrics.appendChild(m1);
+
+            const m2 = document.createElement("span");
+            m2.innerHTML = `Z-Score: <strong>${formatSigned(p.z_score)}</strong>`;
+            metrics.appendChild(m2);
+
+            const m3 = document.createElement("span");
+            m3.innerHTML = `Confidenza: <strong>${formatNumber(p.confidence)}%</strong>`;
+            metrics.appendChild(m3);
+
+            card.appendChild(metrics);
+            grid.appendChild(card);
+        });
+    };
+
+    const render = (data) => {
+        const nc = data.next_contest || {};
+        $("nextContestNumber").textContent = nc.number != null ? `N° ${nc.number}` : "—";
+        $("nextContestDate").textContent = nc.date || "—";
+        $("nextContestJackpot").textContent = formatEuro(nc.jackpot);
+
+        const r = data.risk || {};
+        const evText = (typeof r.ev === "number") ? ` (EV: ${formatSigned(r.ev, 3)})` : "";
+        $("riskStatus").textContent = (r.status || "—") + evText;
+        $("riskLevel").textContent = r.level || "—";
+        $("riskAdvice").textContent = r.advice || "—";
+
+        renderLastDraw(data.last_draw);
+        renderDodecaPool(data.dodeca_pool);
+        renderTitan(data.titan_predictions);
+
+        $("updatedAt").textContent = data.updated_at
+            ? data.updated_at.replace("T", " ")
+            : "—";
+
+        const chart = $("vortexChart");
+        chart.src = "vortex_chart.png?ts=" + Date.now();
+    };
+
+    const load = async (silent = false) => {
+        try {
+            const res = await fetch("venus_database.json?ts=" + Date.now(), { cache: "no-store" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            render(data);
+            hideError();
+        } catch (err) {
+            if (!silent) {
+                showError("Impossibile caricare venus_database.json: " + err.message);
+                console.error(err);
+            }
+        }
+    };
+
+    const startAutoRefresh = () => {
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(() => load(true), AUTO_REFRESH_MS);
+    };
+
+    const stopAutoRefresh = () => {
+        if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    };
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) stopAutoRefresh();
+        else { load(true); startAutoRefresh(); }
+    });
+
+    const init = () => {
+        load();
+        startAutoRefresh();
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(() => {});
+        }
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
+</script>
 
 </body>
 </html>
