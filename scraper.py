@@ -21,6 +21,7 @@ HISTORY_FILE = "venus_history.json"
 DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
 JACKPOT_FILE = "venus_jackpot.json"
+MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
 INDEX_FILE = "index.html"
 
 GAUSS_MEAN = 273.0
