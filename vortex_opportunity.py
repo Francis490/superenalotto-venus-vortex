@@ -120,6 +120,7 @@ def determine_budget_mode(jackpot):
     """
     Modula il numero di sestine in base all'EV.
     Soglie realistiche per SuperEnalotto (EV tipico -0.35/-0.55).
+    Costo sestina: 1,00 € (prezzo reale SuperEnalotto).
     """
     ev_data = calculate_ev(jackpot)
     ev = ev_data["ev_total"]
@@ -138,38 +139,37 @@ def determine_budget_mode(jackpot):
             "mode": "MINIMO",
             "emoji": "🟢",
             "n_sestinas": 1,
-            "cost_eur": 0.5,
+            "cost_eur": 1.0,
             "ev": ev,
-            "message": "EV basso. 1 sestina.",
+            "message": "EV basso. 1 sestina (1,00 €).",
         }
     elif ev < -0.10:
         return {
             "mode": "NORMALE",
             "emoji": "🟡",
             "n_sestinas": 2,
-            "cost_eur": 1.0,
+            "cost_eur": 2.0,
             "ev": ev,
-            "message": "EV neutro. 2 sestine.",
+            "message": "EV neutro. 2 sestine (2,00 €).",
         }
     elif ev < 0.05:
         return {
             "mode": "ATTACK",
             "emoji": "🟠",
             "n_sestinas": 4,
-            "cost_eur": 2.0,
+            "cost_eur": 4.0,
             "ev": ev,
-            "message": "EV positivo. Attack: 4 sestine.",
+            "message": "EV positivo. Attack: 4 sestine (4,00 €).",
         }
     else:
         return {
             "mode": "ALL-IN",
             "emoji": "🔥",
             "n_sestinas": 6,
-            "cost_eur": 3.0,
+            "cost_eur": 6.0,
             "ev": ev,
-            "message": "EV molto positivo! 6 sestine.",
+            "message": "EV molto positivo! 6 sestine (6,00 €).",
         }
-
 
 # ==========================================
 # 4. VORTEX SIGNATURE
