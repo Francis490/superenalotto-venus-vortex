@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-15T13:42:43",
+  "updated_at": "2026-09-15T14:05:55",
   "next_contest": {
     "number": 148,
     "date": "15/09/2026",
@@ -26,12 +26,12 @@
     "advice": "Mantenere puntata minima di 2 Sestine Vortex (Budget 2,00 €)."
   },
   "budget_mode": {
-    "mode": "SKIP",
-    "emoji": "🚫",
-    "n_sestinas": 0,
-    "cost_eur": 0.0,
+    "mode": "MINIMO",
+    "emoji": "🟢",
+    "n_sestinas": 1,
+    "cost_eur": 0.5,
     "ev": -0.5404,
-    "message": "EV molto negativo. Salta questo concorso e risparmia."
+    "message": "EV basso. 1 sestina."
   },
   "dodeca_pool": [
     5,
