@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-15T12:20:22",
+  "updated_at": "2026-09-15T13:42:43",
   "next_contest": {
     "number": 148,
     "date": "15/09/2026",
@@ -24,6 +24,14 @@
     "ev": -0.957,
     "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
     "advice": "Mantenere puntata minima di 2 Sestine Vortex (Budget 2,00 €)."
+  },
+  "budget_mode": {
+    "mode": "SKIP",
+    "emoji": "🚫",
+    "n_sestinas": 0,
+    "cost_eur": 0.0,
+    "ev": -0.5404,
+    "message": "EV molto negativo. Salta questo concorso e risparmia."
   },
   "dodeca_pool": [
     5,
@@ -55,27 +63,9 @@
       "confidence": 24.75,
       "ev_score": 1.0,
       "signature": "VX-2026-148-C4C985"
-    },
-    {
-      "id": "VORTEX 2",
-      "numbers": [
-        43,
-        53,
-        54,
-        77,
-        87,
-        90
-      ],
-      "sum": 404,
-      "z_score": 3.01,
-      "confidence": 9.95,
-      "ev_score": 1.0,
-      "signature": "VX-2026-148-9C50ED"
     }
   ],
   "vortex": {
-    "signature_1": "VX-2026-148-C4C985",
-    "signature_2": "VX-2026-148-9C50ED",
     "ev": {
       "jackpot": 27300000,
       "players_estimated": 25000000,
