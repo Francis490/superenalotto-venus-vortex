@@ -47,9 +47,8 @@ INDEX_FILE = "index.html"
 GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
-DEFAULT_JACKPOT = 26500000  # importo in euro (int)
+DEFAULT_JACKPOT = 26500000
 
-# Giorni settimanali del SuperEnalotto (Lun=0, Mar=1, Mer=2, Gio=3, Ven=4, Sab=5, Dom=6)
 SUPERENALOTTO_WEEKDAYS = {1, 3, 4, 5}
 
 # ==========================================
@@ -234,7 +233,6 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
     return sorted(dodeca_pool[:12])
 
 def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
-    """Fallback TITAN classico (usato se vortex_opportunity non è disponibile)."""
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
     all_combos = list(itertools.combinations(dodeca_pool, 6))
 
@@ -297,7 +295,7 @@ def calculate_next_draw_date(last_date_str):
     return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
 
 # ==========================================
-# 4. GENERAZIONE GRAFICO (fino a 6 sestine)
+# 4. GENERAZIONE GRAFICO (0-6 sestine)
 # ==========================================
 def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
     plt.rcParams['text.color'] = '#f1e8ff'
@@ -319,6 +317,12 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
         color = colors[i % len(colors)]
         ax1.axvline(s_sum, color=color, linestyle='--', linewidth=2,
                     label=f'Vortex {i+1} (Somma {s_sum})')
+
+    if not all_sestinas:
+        ax1.text(0.5, 0.5, "SKIP MODE — Nessuna sestina",
+                 transform=ax1.transAxes, ha='center', va='center',
+                 fontsize=14, color='#f87171', fontweight='bold')
+
     ax1.set_title("Distribuzione Gaussiana — Punti di Equilibrio",
                   fontsize=12, fontweight='bold', color='#10b981')
     ax1.legend(facecolor='#150b1f', edgecolor='#c026d3', fontsize=8)
@@ -332,25 +336,32 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
                   fontsize=10, fontweight='bold')
     ax2.tick_params(axis='x', rotation=45)
 
-    # --- Matrice ---
+    # --- Matrice (solo se ci sono sestine) ---
     ax3 = fig.add_subplot(2, 2, 4, facecolor='#150b1f')
-    n = max(1, len(all_sestinas))
-    matrix_data = np.zeros((n, 6))
-    for i, sestina in enumerate(all_sestinas):
-        matrix_data[i, :] = sestina
-    ax3.matshow(matrix_data, cmap='plasma')
-    ax3.xaxis.tick_top()
-    ax3.set_yticks(range(n))
-    ax3.set_yticklabels([f'Vortex {i+1}' for i in range(n)], fontweight='bold', fontsize=8)
-    ax3.set_xticks(range(6))
-    ax3.set_xticklabels([f'Pos {i+1}' for i in range(6)])
-    for i in range(n):
-        for j in range(6):
-            val = int(matrix_data[i, j])
-            ax3.text(j, i, str(val), va='center', ha='center',
-                     color='white', fontweight='bold', fontsize=10)
-    ax3.set_title("Matrice di Copertura Armonica",
-                  fontsize=10, fontweight='bold', pad=20)
+    if all_sestinas:
+        n = len(all_sestinas)
+        matrix_data = np.zeros((n, 6))
+        for i, sestina in enumerate(all_sestinas):
+            matrix_data[i, :] = sestina
+        ax3.matshow(matrix_data, cmap='plasma')
+        ax3.xaxis.tick_top()
+        ax3.set_yticks(range(n))
+        ax3.set_yticklabels([f'Vortex {i+1}' for i in range(n)],
+                            fontweight='bold', fontsize=8)
+        ax3.set_xticks(range(6))
+        ax3.set_xticklabels([f'Pos {i+1}' for i in range(6)])
+        for i in range(n):
+            for j in range(6):
+                val = int(matrix_data[i, j])
+                ax3.text(j, i, str(val), va='center', ha='center',
+                         color='white', fontweight='bold', fontsize=10)
+        ax3.set_title("Matrice di Copertura Armonica",
+                      fontsize=10, fontweight='bold', pad=20)
+    else:
+        ax3.axis('off')
+        ax3.text(0.5, 0.5, "SKIP MODE",
+                 transform=ax3.transAxes, ha='center', va='center',
+                 fontsize=16, color='#f87171', fontweight='bold')
 
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
@@ -421,7 +432,7 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
     last_jolly = last_draw.get("jolly", "N/A")
     last_superstar = last_draw.get("superstar", "N/A")
 
-    # --- JACKPOT: priorità override manuale > fetch auto > default ---
+    # --- JACKPOT ---
     jackpot_value = DEFAULT_JACKPOT
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
@@ -448,10 +459,13 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         try:
             ev_data = calculate_ev(jackpot_value)
             rollover_data = rollover_status(jackpot_value)
-            bt_data = backtest(history,
-                               all_sestinas[0],
-                               all_sestinas[1] if len(all_sestinas) > 1 else all_sestinas[0],
-                               last_n=30)
+            bt_data = None
+            if len(all_sestinas) >= 2:
+                bt_data = backtest(history, all_sestinas[0], all_sestinas[1],
+                                   last_n=30)
+            elif len(all_sestinas) == 1:
+                bt_data = backtest(history, all_sestinas[0], all_sestinas[0],
+                                   last_n=30)
             vortex_data = {
                 "ev": ev_data,
                 "rollover": rollover_data,
@@ -460,7 +474,7 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         except Exception as e:
             print(f"[!] Errore VORTEX analysis: {e}")
 
-    # --- Costruzione titan_predictions per TUTTE le sestine ---
+    # --- titan_predictions ---
     titan_predictions = []
     for i, sestina in enumerate(all_sestinas):
         s_sum = sum(sestina)
@@ -572,7 +586,7 @@ def main():
     adjusted_scores = apply_cooldown_factor(raw_scores, history)
     dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
 
-    # === BILANCIAMENTO POOL (Venus Vortex v3.2) ===
+    # === BILANCIAMENTO POOL ===
     if VORTEX_ENGINE_AVAILABLE:
         try:
             dodeca_pool = balance_pool(dodeca_pool)
@@ -580,7 +594,7 @@ def main():
         except Exception as e:
             print(f"[!] Errore bilanciamento pool: {e}")
 
-    # === LETTURA JACKPOT PER BUDGET MODE ===
+    # === LETTURA JACKPOT ===
     jackpot_for_mode = DEFAULT_JACKPOT
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
@@ -605,39 +619,42 @@ def main():
         except Exception as e:
             print(f"[!] Errore budget mode: {e}")
 
-    n_sestinas = max(1, int(budget_mode.get("n_sestinas", 2)))
+    # === FIX: SKIP = 0 SESTINE ===
+    n_sestinas = int(budget_mode.get("n_sestinas", 2))
+    skip_mode = (n_sestinas == 0)
 
     # === SELEZIONE SESTINE ===
     all_sestinas = []
-    if VORTEX_ENGINE_AVAILABLE:
-        try:
-            vortex_sel = select_vortex_sestinas_multi(
-                dodeca_pool, adjusted_scores, history, n_sestinas=n_sestinas
-            )
-            all_sestinas = [list(s[0]) for s in vortex_sel]
-            print(f"[+] {len(all_sestinas)} sestine selezionate con VORTEX ENGINE")
-        except Exception as e:
-            print(f"[!] Errore VORTEX multi: {e}. Fallback a 2 sestine.")
-            vortex_sel = select_vortex_sestinas(dodeca_pool, adjusted_scores,
-                                                history, top_n=2)
-            all_sestinas = [list(vortex_sel[0][0])]
-            if len(vortex_sel) > 1:
-                all_sestinas.append(list(vortex_sel[1][0]))
+
+    if skip_mode:
+        print("[*] BUDGET MODE = SKIP: nessuna sestina generata.")
     else:
-        t1, t2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
-        all_sestinas = [t1, t2]
-        print("[*] Sestine selezionate con TITAN classico (fallback)")
+        if VORTEX_ENGINE_AVAILABLE:
+            try:
+                vortex_sel = select_vortex_sestinas_multi(
+                    dodeca_pool, adjusted_scores, history, n_sestinas=n_sestinas
+                )
+                all_sestinas = [list(s[0]) for s in vortex_sel]
+                print(f"[+] {len(all_sestinas)} sestine selezionate con VORTEX ENGINE")
+            except Exception as e:
+                print(f"[!] Errore VORTEX multi: {e}. Fallback a 2 sestine.")
+                vortex_sel = select_vortex_sestinas(dodeca_pool, adjusted_scores,
+                                                    history, top_n=2)
+                all_sestinas = [list(vortex_sel[0][0])]
+                if len(vortex_sel) > 1:
+                    all_sestinas.append(list(vortex_sel[1][0]))
+        else:
+            t1, t2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
+            all_sestinas = [t1, t2]
+            print("[*] Sestine selezionate con TITAN classico (fallback)")
 
-    # Assicura che ci sia almeno 1 sestina
-    if not all_sestinas:
-        all_sestinas = [sorted(dodeca_pool[:6])]
-
-    titan1 = all_sestinas[0]
+    titan1 = all_sestinas[0] if all_sestinas else []
     titan2 = all_sestinas[1] if len(all_sestinas) > 1 else titan1
 
-    sum1, sum2 = sum(titan1), sum(titan2)
-    z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2)
-    z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2)
+    sum1 = sum(titan1) if titan1 else 0
+    sum2 = sum(titan2) if titan2 else 0
+    z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2) if titan1 else 0
+    z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2) if titan2 else 0
 
     last_draw = history[-1] if history else {}
     last_concorso = last_draw.get("concorso", "N/A")
@@ -708,7 +725,11 @@ def main():
             f"   • Somma: {s_sum} · Z: {s_z:+0.2f}\n"
             f"   • ✦ {s_sig}"
         )
-    sestinas_block = "\n".join(sestinas_lines) if sestinas_lines else "—"
+
+    if skip_mode:
+        sestinas_block = "🚫 SKIP MODE — Nessuna sestina da giocare.\nRisparmia il budget per il prossimo concorso."
+    else:
+        sestinas_block = "\n".join(sestinas_lines) if sestinas_lines else "—"
 
     report_text = (
         f"🌪️ VENUS VORTEX — COSMIC ANALYSIS 🌪️\n"
