@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-15T09:23:56",
+  "updated_at": "2026-09-15T12:20:22",
   "next_contest": {
     "number": 148,
     "date": "15/09/2026",
@@ -44,38 +44,38 @@
       "id": "VORTEX 1",
       "numbers": [
         5,
-        43,
+        20,
+        35,
         48,
-        77,
         80,
         87
       ],
-      "sum": 340,
-      "z_score": 1.54,
-      "confidence": 17.3,
+      "sum": 275,
+      "z_score": 0.05,
+      "confidence": 24.75,
       "ev_score": 1.0,
-      "signature": "VX-2026-148-EFE205"
+      "signature": "VX-2026-148-C4C985"
     },
     {
       "id": "VORTEX 2",
       "numbers": [
-        9,
-        48,
+        43,
         53,
         54,
         77,
+        87,
         90
       ],
-      "sum": 331,
-      "z_score": 1.33,
-      "confidence": 18.35,
+      "sum": 404,
+      "z_score": 3.01,
+      "confidence": 9.95,
       "ev_score": 1.0,
-      "signature": "VX-2026-148-5F76EC"
+      "signature": "VX-2026-148-9C50ED"
     }
   ],
   "vortex": {
-    "signature_1": "VX-2026-148-EFE205",
-    "signature_2": "VX-2026-148-5F76EC",
+    "signature_1": "VX-2026-148-C4C985",
+    "signature_2": "VX-2026-148-9C50ED",
     "ev": {
       "jackpot": 27300000,
       "players_estimated": 25000000,
@@ -92,11 +92,11 @@
       "message": "EV negativo. Gioca il minimo o salta."
     },
     "backtest": {
-      "3_hits": 1,
+      "3_hits": 0,
       "4_hits": 0,
       "5_hits": 0,
       "total": 30,
-      "hit_rate_3plus": 3.33,
+      "hit_rate_3plus": 0.0,
       "baseline_expected": 0.31
     }
   }
