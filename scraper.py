@@ -15,6 +15,23 @@ import numpy as np
 from scipy.stats import norm
 
 # ==========================================
+# VORTEX OPPORTUNITY ENGINE (opzionale)
+# ==========================================
+try:
+    from vortex_opportunity import (
+        calculate_ev,
+        rollover_status,
+        vortex_signature,
+        backtest,
+        select_vortex_sestinas,
+    )
+    VORTEX_ENGINE_AVAILABLE = True
+    print("[+] Venus Vortex — Opportunity Engine: ATTIVO")
+except ImportError as e:
+    VORTEX_ENGINE_AVAILABLE = False
+    print(f"[!] vortex_opportunity non disponibile ({e}). Fallback TITAN classico.")
+
+# ==========================================
 # COSTANTI E CONFIGURAZIONE DI SISTEMA
 # ==========================================
 HISTORY_FILE = "venus_history.json"
@@ -27,13 +44,13 @@ INDEX_FILE = "index.html"
 GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
-DEFAULT_JACKPOT = 26500000  # importo in euro (int), formattato poi dall'HTML
+DEFAULT_JACKPOT = 26500000  # importo in euro (int)
 
 # Giorni settimanali del SuperEnalotto (Lun=0, Mar=1, Mer=2, Gio=3, Ven=4, Sab=5, Dom=6)
 SUPERENALOTTO_WEEKDAYS = {1, 3, 4, 5}
 
 # ==========================================
-# 1. GESTIONE FILE JSON & NORMALIZZAZIONE UNIVERSALE
+# 1. GESTIONE FILE JSON & NORMALIZZAZIONE
 # ==========================================
 def load_json(filepath, default_value):
     if os.path.exists(filepath):
@@ -54,7 +71,6 @@ def save_json(filepath, data):
         print(f"[!] Errore durante il salvataggio di {filepath}: {e}")
 
 def _coerce_numbers(value):
-    """Trasforma stringhe/liste/JSON-string in una lista di interi."""
     if value is None:
         return []
     if isinstance(value, str):
@@ -74,9 +90,6 @@ def _coerce_numbers(value):
     return []
 
 def normalize_history(raw_data):
-    """
-    Parser Universale: trova i dati a prescindere da come sono chiamati nel JSON.
-    """
     items = []
     if isinstance(raw_data, dict):
         for _, v in raw_data.items():
@@ -94,8 +107,6 @@ def normalize_history(raw_data):
             continue
 
         clean_comb = []
-
-        # 1. Chiavi note per la combinazione
         for key in ("sestina", "combinazione", "numbers", "estratti",
                     "numeri", "numeri_estratti", "winning_numbers"):
             nums = _coerce_numbers(item.get(key))
@@ -103,7 +114,6 @@ def normalize_history(raw_data):
                 clean_comb = nums[:6]
                 break
 
-        # 2. Scansione brutale: qualsiasi lista con >= 6 numeri
         if not clean_comb:
             for _, v in item.items():
                 nums = _coerce_numbers(v)
@@ -111,7 +121,6 @@ def normalize_history(raw_data):
                     clean_comb = nums[:6]
                     break
 
-        # Estrazione aggressiva di Jolly, SuperStar, Concorso, Data
         jolly = item.get("jolly", item.get("numero_jolly", item.get("Jolly", "N/A")))
         superstar = item.get("superstar",
                              item.get("numero_superstar",
@@ -187,12 +196,10 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
     dodeca_pool = []
     sorted_by_score = sorted(range(1, 91), key=lambda x: adjusted_scores[x], reverse=True)
 
-    # Strato 1: top 4 per score
     for num in sorted_by_score:
         if len(dodeca_pool) < 4:
             dodeca_pool.append(num)
 
-    # Strato 2: ritardo medio (5-15)
     medium_candidates = [n for n in range(1, 91)
                          if 5 <= delays[n] <= 15 and n not in dodeca_pool]
     medium_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
@@ -200,25 +207,21 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
         if len(dodeca_pool) < 8:
             dodeca_pool.append(num)
 
-    # Fallback per raggiungere 8
     if len(dodeca_pool) < 8:
         for num in sorted_by_score:
             if num not in dodeca_pool and len(dodeca_pool) < 8:
                 dodeca_pool.append(num)
 
-    # Strato 3: 2 più "freddi"
     cold_candidates = [n for n in range(1, 91) if n not in dodeca_pool]
     cold_candidates.sort(key=lambda x: delays[x], reverse=True)
     for num in cold_candidates[:2]:
         dodeca_pool.append(num)
 
-    # Strato 4: 2 anti-massa (32-90)
     anti_massa_candidates = [n for n in range(32, 91) if n not in dodeca_pool]
     anti_massa_candidates.sort(key=lambda x: adjusted_scores[x], reverse=True)
     for num in anti_massa_candidates[:2]:
         dodeca_pool.append(num)
 
-    # Fallback finale
     while len(dodeca_pool) < 12:
         for num in sorted_by_score:
             if num not in dodeca_pool:
@@ -228,6 +231,7 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
     return sorted(dodeca_pool[:12])
 
 def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
+    """Fallback TITAN classico (usato se vortex_opportunity non è disponibile)."""
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
     all_combos = list(itertools.combinations(dodeca_pool, 6))
 
@@ -269,22 +273,13 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
     return titan1, titan2
 
 # ==========================================
-# 3. CONFIDENCE / EV (derivati statisticamente)
+# 3. CONFIDENCE / DATE
 # ==========================================
 def estimate_confidence(z_score):
-    """
-    Stima una confidence (%) basata sulla vicinanza alla media gaussiana.
-    z=0 -> ~25%, z=±1 -> ~20%, z=±2 -> ~15%, oltre -> decade.
-    """
     val = max(0.0, 25.0 - abs(z_score) * 5.0)
     return round(val, 2)
 
 def calculate_next_draw_date(last_date_str):
-    """
-    Calcola la data del prossimo concorso SuperEnalotto.
-    I concorsi si tengono di Martedì, Giovedì, Venerdì e Sabato.
-    Restituisce una stringa in formato GG/MM/AAAA.
-    """
     try:
         last_date = datetime.strptime(str(last_date_str), "%d/%m/%Y")
     except (ValueError, TypeError):
@@ -296,51 +291,50 @@ def calculate_next_draw_date(last_date_str):
             return candidate.strftime("%d/%m/%Y")
         candidate += timedelta(days=1)
 
-    # Fallback di sicurezza (non dovrebbe mai servire)
     return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
 
 # ==========================================
 # 4. GENERAZIONE GRAFICO
 # ==========================================
 def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
-    plt.rcParams['text.color'] = '#f8fafc'
-    plt.rcParams['axes.labelcolor'] = '#f8fafc'
-    plt.rcParams['xtick.color'] = '#a1a1aa'
-    plt.rcParams['ytick.color'] = '#a1a1aa'
+    plt.rcParams['text.color'] = '#f1e8ff'
+    plt.rcParams['axes.labelcolor'] = '#f1e8ff'
+    plt.rcParams['xtick.color'] = '#a89bbd'
+    plt.rcParams['ytick.color'] = '#a89bbd'
 
-    fig = plt.figure(figsize=(14, 8), facecolor='#09090b')
+    fig = plt.figure(figsize=(14, 8), facecolor='#0a0612')
 
-    ax1 = fig.add_subplot(2, 2, (1, 3), facecolor='#18181b')
+    ax1 = fig.add_subplot(2, 2, (1, 3), facecolor='#150b1f')
     x = np.linspace(100, 440, 500)
     y = norm.pdf(x, GAUSS_MEAN, GAUSS_STD)
-    ax1.plot(x, y, color='#a855f7', linewidth=2.5, label='Curva Gaussiana Teorica')
+    ax1.plot(x, y, color='#c026d3', linewidth=2.5, label='Gaussiana Teorica')
 
     sum1 = sum(titan1)
     sum2 = sum(titan2)
-    ax1.axvline(sum1, color='#3b82f6', linestyle='--', linewidth=2,
-                label=f'TITAN 1 (Somma {sum1})')
-    ax1.axvline(sum2, color='#14b8a6', linestyle='--', linewidth=2,
-                label=f'TITAN 2 (Somma {sum2})')
-    ax1.set_title("Distribuzione Gaussiana e Punti di Equilibrio",
-                  fontsize=12, fontweight='bold', color='#34d399')
-    ax1.legend(facecolor='#27272a', edgecolor='none')
+    ax1.axvline(sum1, color='#ec4899', linestyle='--', linewidth=2,
+                label=f'Vortex 1 (Somma {sum1})')
+    ax1.axvline(sum2, color='#06b6d4', linestyle='--', linewidth=2,
+                label=f'Vortex 2 (Somma {sum2})')
+    ax1.set_title("Distribuzione Gaussiana — Punti di Equilibrio",
+                  fontsize=12, fontweight='bold', color='#10b981')
+    ax1.legend(facecolor='#150b1f', edgecolor='#c026d3')
 
-    ax2 = fig.add_subplot(2, 2, 2, facecolor='#18181b')
+    ax2 = fig.add_subplot(2, 2, 2, facecolor='#150b1f')
     dodeca_scores = [scores.get(n, 1.0) for n in dodeca_pool]
     ax2.bar([str(n) for n in dodeca_pool], dodeca_scores,
-            color='#14b8a6', edgecolor='#27272a')
-    ax2.set_title("Ranking Energetico Dodecaedro Pool",
+            color='#06b6d4', edgecolor='#150b1f')
+    ax2.set_title("Vortex Numerical Field — Ranking Energetico",
                   fontsize=10, fontweight='bold')
     ax2.tick_params(axis='x', rotation=45)
 
-    ax3 = fig.add_subplot(2, 2, 4, facecolor='#18181b')
+    ax3 = fig.add_subplot(2, 2, 4, facecolor='#150b1f')
     matrix_data = np.zeros((2, 6))
     matrix_data[0, :] = titan1
     matrix_data[1, :] = titan2
     ax3.matshow(matrix_data, cmap='plasma')
     ax3.xaxis.tick_top()
     ax3.set_yticks([0, 1])
-    ax3.set_yticklabels(['TITAN 1', 'TITAN 2'], fontweight='bold')
+    ax3.set_yticklabels(['Vortex 1', 'Vortex 2'], fontweight='bold')
     ax3.set_xticks(range(6))
     ax3.set_xticklabels([f'Pos {i+1}' for i in range(6)])
     for i in range(2):
@@ -348,7 +342,7 @@ def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
             val = int(matrix_data[i, j])
             ax3.text(j, i, str(val), va='center', ha='center',
                      color='white', fontweight='bold', fontsize=12)
-    ax3.set_title("Matrice di Copertura Ortogonale",
+    ax3.set_title("Matrice di Copertura Armonica",
                   fontsize=10, fontweight='bold', pad=20)
 
     plt.tight_layout()
@@ -356,7 +350,7 @@ def generate_titan_chart(titan1, titan2, dodeca_pool, scores):
     plt.close()
 
 # ==========================================
-# 5. NOTIFICA TELEGRAM (multipart corretto)
+# 5. NOTIFICA TELEGRAM
 # ==========================================
 def send_telegram_notification(caption_text, chart_path):
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
@@ -371,7 +365,7 @@ def send_telegram_notification(caption_text, chart_path):
         with open(chart_path, "rb") as image_file:
             image_bytes = image_file.read()
 
-        boundary = "----TITANBoundary7MA4YWxkTrZu0gW"
+        boundary = "----VenusVortexBoundary7MA4YWxkTrZu0gW"
         filename = os.path.basename(chart_path)
 
         body = bytearray()
@@ -423,7 +417,7 @@ def build_database_payload(history, dodeca_pool, titan1, titan2,
     conf1 = estimate_confidence(z1)
     conf2 = estimate_confidence(z2)
 
-    # Priorità jackpot: override manuale > fetch automatico > default
+    # --- JACKPOT: priorità override manuale > fetch auto > default ---
     jackpot_value = DEFAULT_JACKPOT
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
@@ -444,6 +438,27 @@ def build_database_payload(history, dodeca_pool, titan1, titan2,
         except Exception as e:
             print(f"[!] Errore lettura {JACKPOT_FILE}: {e}. Uso DEFAULT.")
 
+    # --- VORTEX OPPORTUNITY ANALYSIS ---
+    vortex_data = {}
+    if VORTEX_ENGINE_AVAILABLE and jackpot_value > 0:
+        try:
+            ev_data = calculate_ev(jackpot_value)
+            rollover_data = rollover_status(jackpot_value)
+            sig1 = vortex_signature(titan1, next_concorso,
+                                    datetime.now().strftime("%d/%m/%Y"))
+            sig2 = vortex_signature(titan2, next_concorso,
+                                    datetime.now().strftime("%d/%m/%Y"))
+            bt_data = backtest(history, titan1, titan2, last_n=30)
+            vortex_data = {
+                "signature_1": sig1,
+                "signature_2": sig2,
+                "ev": ev_data,
+                "rollover": rollover_data,
+                "backtest": bt_data,
+            }
+        except Exception as e:
+            print(f"[!] Errore VORTEX analysis: {e}")
+
     payload = {
         "updated_at": now_str,
         "next_contest": {
@@ -462,43 +477,45 @@ def build_database_payload(history, dodeca_pool, titan1, titan2,
             "status": "🟠 PRUDENZA STATISTICA",
             "ev": -0.957,
             "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
-            "advice": ("Mantenere puntata minima di 2 Sestine TITAN "
+            "advice": ("Mantenere puntata minima di 2 Sestine Vortex "
                        "(Budget 2,00 €)."),
         },
         "dodeca_pool": dodeca_pool,
         "titan_predictions": [
             {
-                "id": "TITAN 1",
+                "id": "VORTEX 1",
                 "numbers": titan1,
                 "sum": sum1,
                 "z_score": z1,
                 "confidence": conf1,
                 "ev_score": 1.0,
+                "signature": vortex_data.get("signature_1", ""),
             },
             {
-                "id": "TITAN 2",
+                "id": "VORTEX 2",
                 "numbers": titan2,
                 "sum": sum2,
                 "z_score": z2,
                 "confidence": conf2,
                 "ev_score": 1.0,
+                "signature": vortex_data.get("signature_2", ""),
             },
         ],
+        "vortex": vortex_data,
     }
     return payload
 
 # ==========================================
-# 7. MAIN PIPELINE (SELF-HEALING)
+# 7. MAIN PIPELINE
 # ==========================================
 def main():
-    print("=== INIZIO ESECUZIONE TITAN ENGINE (GOD MODE PARSER) ===")
+    print("=== VENUS VORTEX — COSMIC PATTERN ENGINE ===")
 
     raw_history = load_json(HISTORY_FILE, [])
     history = normalize_history(raw_history)
 
-    # AUTO-GUARIGIONE: se lo storico è vuoto, crea dati di ripristino
     if not history:
-        print("[!] venus_history.json vuoto o mancante. Generazione dati di sicurezza...")
+        print("[!] venus_history.json vuoto. Generazione dati di sicurezza...")
         history = [
             {"concorso": 144, "combinazione": [23, 26, 41, 52, 59, 85],
              "jolly": 49, "superstar": 47, "data": "08/09/2026"},
@@ -511,7 +528,7 @@ def main():
         ]
         save_json(HISTORY_FILE, history)
 
-    # Applica override manuale dell'ultima estrazione (se presente e valida)
+    # Override manuale dell'ultima estrazione
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
             with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
@@ -520,7 +537,6 @@ def main():
             manual_concorso = manual_draw.get("concorso")
             manual_comb = manual_draw.get("combinazione", [])
 
-            # Valida: concorso int > 0, combinazione 6 numeri tra 1-90
             if (isinstance(manual_concorso, int) and manual_concorso > 0
                     and isinstance(manual_comb, list) and len(manual_comb) == 6
                     and all(isinstance(n, int) and 1 <= n <= 90 for n in manual_comb)):
@@ -539,18 +555,27 @@ def main():
                     history.append(new_entry)
                     history.sort(key=lambda x: x.get("concorso", 0))
                     save_json(HISTORY_FILE, history)
-                    print(f"[+] OVERRIDE: aggiunto concorso {manual_concorso} da file manuale")
+                    print(f"[+] OVERRIDE: aggiunto concorso {manual_concorso}")
                 else:
-                    print(f"[*] Override: concorso {manual_concorso} già presente, salto.")
+                    print(f"[*] Override: concorso {manual_concorso} già presente.")
             else:
-                print("[*] Override manuale: nessuna estrazione valida (campi vuoti o incompleti).")
+                print("[*] Override manuale: nessuna estrazione valida.")
         except Exception as e:
             print(f"[!] Errore override manuale: {e}")
 
     raw_scores, delays, frequencies = calculate_raw_scores(history)
     adjusted_scores = apply_cooldown_factor(raw_scores, history)
     dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
-    titan1, titan2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
+
+    # === SELEZIONE SESTINE ===
+    if VORTEX_ENGINE_AVAILABLE:
+        vortex_sel = select_vortex_sestinas(dodeca_pool, adjusted_scores, history, top_n=2)
+        titan1 = list(vortex_sel[0][0])
+        titan2 = list(vortex_sel[1][0]) if len(vortex_sel) > 1 else titan1
+        print("[+] Sestine selezionate con VORTEX ENGINE (anti-crowd)")
+    else:
+        titan1, titan2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
+        print("[*] Sestine selezionate con TITAN classico (fallback)")
 
     sum1, sum2 = sum(titan1), sum(titan2)
     z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2)
@@ -562,16 +587,14 @@ def main():
     last_jolly = last_draw.get("jolly", "N/A")
     last_superstar = last_draw.get("superstar", "N/A")
 
-    # Calcolo del prossimo concorso (robusto a int o str)
     try:
         next_concorso = int(last_concorso) + 1
     except (ValueError, TypeError):
         next_concorso = 148
 
-    # Calcolo della data del prossimo concorso
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
-    # === SCRITTURA DATABASE (schema allineato all'index.html) ===
+    # === SCRITTURA DATABASE ===
     payload = build_database_payload(
         history, dodeca_pool, titan1, titan2, sum1, sum2, z1, z2, next_concorso
     )
@@ -582,29 +605,56 @@ def main():
 
     # === REPORT TELEGRAM ===
     jackpot_for_report = payload.get("next_contest", {}).get("jackpot", DEFAULT_JACKPOT)
+    vortex_data = payload.get("vortex", {})
+    ev_data = vortex_data.get("ev", {})
+    rollover_data = vortex_data.get("rollover", {})
+    bt_data = vortex_data.get("backtest", {})
+    sig1 = vortex_data.get("signature_1", "—")
+    sig2 = vortex_data.get("signature_2", "—")
+
+    ev_line = "—"
+    if ev_data:
+        ev_line = f"{ev_data.get('ev_total', 0):+.4f} € · {ev_data.get('recommendation', '—')}"
+
+    rollover_line = "—"
+    if rollover_data:
+        rollover_line = f"{rollover_data.get('emoji', '')} {rollover_data.get('level', '—')}"
+
+    bt_line = "—"
+    if bt_data and bt_data.get("total", 0) > 0:
+        bt_line = (f"{bt_data.get('hit_rate_3plus', 0)}% "
+                   f"(baseline {bt_data.get('baseline_expected', 0)}%)")
 
     report_text = (
-        f"⚡ TITAN GOD MODE — OPTIMAL ANALYSIS ⚡\n"
+        f"🌪️ VENUS VORTEX — COSMIC ANALYSIS 🌪️\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🎯 TARGET: Concorso N° {next_concorso} del {next_date_str}\n"
-        f"💰 Jackpot Stimato: € {jackpot_for_report:,}\n\n"
+        f"🎯 TARGET: Concorso N° {next_concorso}\n"
+        f"📅 {next_date_str} · ore 20:00\n"
+        f"💰 Jackpot: € {jackpot_for_report:,}\n\n"
         f"📊 ULTIMO RISULTATO (N° {last_concorso}):\n"
         f"Sestina: {last_comb}\n"
         f"Jolly: {last_jolly} | SuperStar: {last_superstar}\n\n"
-        f"🛡️ KELLY RISK MANAGEMENT:\n"
-        f"• Stato: 🟠 PRUDENZA STATISTICA (EV: -0.957)\n"
-        f"• Consigliati: 2 Sestine TITAN (Budget 2,00 €)\n\n"
-        f"🔮 DODECAEDRO A.I. POOL (4 Strati Bilanciati):\n"
+        f"⚡ OPPORTUNITY ENGINE:\n"
+        f"• EV: {ev_line}\n"
+        f"• Rollover: {rollover_line}\n"
+        f"• Backtest: {bt_line}\n\n"
+        f"🛡️ COSMIC RISK SHIELD:\n"
+        f"• Budget: 2,00 € · 2 sestine\n"
+        f"• Stato: PRUDENZA STATISTICA\n\n"
+        f"🔮 VORTEX NUMERICAL FIELD:\n"
         f"{dodeca_pool}\n\n"
-        f"🔥 SESTINE CONCENTRATE (Filtrate Anti-Overfitting):\n"
-        f"1️⃣ TITAN 1: {titan1}\n"
-        f"   • Somma: {sum1} | Z-Score: {z1:+0.2f}\n"
-        f"2️⃣ TITAN 2: {titan2}\n"
-        f"   • Somma: {sum2} | Z-Score: {z2:+0.2f}\n"
+        f"🔥 VORTEX SESTINE — Harmonic Filter:\n"
+        f"1️⃣ {titan1}\n"
+        f"   • Somma: {sum1} · Z: {z1:+0.2f}\n"
+        f"   • ✦ {sig1}\n"
+        f"2️⃣ {titan2}\n"
+        f"   • Somma: {sum2} · Z: {z2:+0.2f}\n"
+        f"   • ✦ {sig2}\n\n"
+        f"🌌 Venus Vortex — Cosmic Pattern Engine"
     )
 
     send_telegram_notification(report_text, CHART_FILE)
-    print("=== ESECUZIONE COMPLETATA CON SUCCESSO ===")
+    print("=== VENUS VORTEX — COMPLETATO ===")
 
 if __name__ == "__main__":
     main()
