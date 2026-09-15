@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-15T08:50:24",
+  "updated_at": "2026-09-15T09:23:56",
   "next_contest": {
     "number": 148,
     "date": "15/09/2026",
@@ -36,8 +36,8 @@
     54,
     77,
     80,
-    82,
-    87
+    87,
+    90
   ],
   "titan_predictions": [
     {
@@ -64,18 +64,18 @@
         53,
         54,
         77,
-        82
+        90
       ],
-      "sum": 323,
-      "z_score": 1.15,
-      "confidence": 19.25,
+      "sum": 331,
+      "z_score": 1.33,
+      "confidence": 18.35,
       "ev_score": 1.0,
-      "signature": "VX-2026-148-184333"
+      "signature": "VX-2026-148-5F76EC"
     }
   ],
   "vortex": {
     "signature_1": "VX-2026-148-EFE205",
-    "signature_2": "VX-2026-148-184333",
+    "signature_2": "VX-2026-148-5F76EC",
     "ev": {
       "jackpot": 27300000,
       "players_estimated": 25000000,
@@ -92,11 +92,11 @@
       "message": "EV negativo. Gioca il minimo o salta."
     },
     "backtest": {
-      "3_hits": 0,
+      "3_hits": 1,
       "4_hits": 0,
       "5_hits": 0,
       "total": 30,
-      "hit_rate_3plus": 0.0,
+      "hit_rate_3plus": 3.33,
       "baseline_expected": 0.31
     }
   }
