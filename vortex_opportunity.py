@@ -3,10 +3,11 @@ vortex_opportunity.py
 VENUS VORTEX — Opportunity Engine v3.3
 
 Novità v3.3:
-- determine_budget_mode: modula n° sestine in base all'EV
+- determine_budget_mode: modula n° sestine in base all'EV (soglie realistiche)
 - select_vortex_sestinas_multi: genera N sestine complementari
 - Balance pool 4/4/4
 - Somma 240-310 obbligatoria
+- SKIP mode = 0 sestine
 """
 import hashlib
 import itertools
@@ -168,15 +169,6 @@ def determine_budget_mode(jackpot):
             "ev": ev,
             "message": "EV molto positivo! 6 sestine.",
         }
-    else:
-        return {
-            "mode": "ALL-IN",
-            "emoji": "🔥",
-            "n_sestinas": 6,
-            "cost_eur": 3.0,
-            "ev": ev,
-            "message": "EV molto positivo! 6 sestine per massimizzare.",
-        }
 
 
 # ==========================================
@@ -290,7 +282,6 @@ def _score_assassin(combo, adjusted_scores):
 # 8. SELEZIONE MULTI-SESTINA (v3.3)
 # ==========================================
 def _build_candidates(dodeca_pool, adjusted_scores, history):
-    """Genera tutte le sestine candidate con filtri."""
     all_combos = list(itertools.combinations(dodeca_pool, 6))
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
 
@@ -305,20 +296,12 @@ def _build_candidates(dodeca_pool, adjusted_scores, history):
 
 
 def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestinas=2):
-    """
-    Genera N sestine complementari:
-    - Sestina 1: realistica (bilanciata)
-    - Sestina 2: anti-crowd
-    - Sestine 3+: le migliori rimanenti con overlap minimo
-    """
     if n_sestinas <= 0:
         return []
 
     base_combos = _build_candidates(dodeca_pool, adjusted_scores, history)
 
-    # ==========================================
     # SESTINA 1: REALISTICA
-    # ==========================================
     realistic = []
     for combo in base_combos:
         s = sorted(combo)
@@ -354,9 +337,7 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     if n_sestinas == 1:
         return [(tuple(s), sc, anti_crowd_score(s), sc) for s, sc in selected]
 
-    # ==========================================
     # SESTINA 2: ANTI-CROWD
-    # ==========================================
     assassin = []
     for combo in base_combos:
         overlap_s1 = len(set(combo).intersection(selected_sets[0]))
@@ -389,9 +370,7 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     selected.append((sestina2, _score_assassin(sestina2, adjusted_scores)))
     selected_sets.append(set(sestina2))
 
-    # ==========================================
-    # SESTINE 3+: le migliori con overlap <= 2 con tutte le precedenti
-    # ==========================================
+    # SESTINE 3+
     for _ in range(2, n_sestinas):
         pool_candidates = []
         for combo in base_combos:
@@ -401,15 +380,12 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
                 continue
             if has_visual_pattern(combo):
                 continue
-            # Overlap minimo con tutte le selezionate
             max_overlap = max(len(set(combo).intersection(s_set))
                               for s_set in selected_sets)
             if max_overlap > 2:
                 continue
-            # Score misto: media tra realistico e anti-crowd
             score = (_score_realistic(combo, adjusted_scores)
                      + _score_assassin(combo, adjusted_scores)) / 2
-            # Bonus per bassa overlap
             score += (2 - max_overlap) * 10
             pool_candidates.append((combo, score))
 
@@ -430,6 +406,5 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     ]
 
 
-# Alias per compatibilità con scraper.py v3.2
 def select_vortex_sestinas(dodeca_pool, adjusted_scores, history, top_n=2):
     return select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, top_n)
