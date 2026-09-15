@@ -1,10 +1,10 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Dashboard quantitativa TITAN per SuperEnalotto: statistiche, pronostici e gestione del rischio.">
-    <meta name="theme-color" content="#09090b">
+    <meta name="description" content="Venus Vortex — Cosmic Pattern Engine per SuperEnalotto">
+    <meta name="theme-color" content="#0a0612">
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -13,63 +13,174 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="TITAN">
+    <meta name="apple-mobile-web-app-title" content="Venus Vortex">
 
-    <title>TITAN GOD MODE — Quantitative Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <title>VENUS VORTEX — Cosmic Pattern Engine</title>
 
     <style>
         :root {
-            --bg-main: #09090b;
-            --bg-card: #18181b;
-            --bg-inner: #27272a;
-            --accent-purple: #a855f7;
-            --accent-emerald: #34d399;
-            --accent-blue: #3b82f6;
-            --accent-amber: #f59e0b;
-            --accent-teal: #14b8a6;
-            --text-main: #f8fafc;
-            --text-muted: #a1a1aa;
-            --border-color: #27272a;
+            --space: #0a0612;
+            --space-2: #150b1f;
+            --card: rgba(21, 11, 31, 0.75);
+            --card-inner: rgba(10, 6, 18, 0.6);
+            --venus: #c026d3;
+            --vortex: #06b6d4;
+            --solar: #fbbf24;
+            --nebula: #ec4899;
+            --cosmic: #10b981;
+            --text: #f1e8ff;
+            --text-dim: #a89bbd;
+            --border: rgba(192, 38, 211, 0.25);
+            --border-soft: rgba(192, 38, 211, 0.1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 1.5rem;
+        html, body {
+            background: var(--space);
+            color: var(--text);
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            padding: 1.5rem 1rem 3rem;
             line-height: 1.5;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .container { max-width: 1000px; margin: 0 auto; }
+        /* VORTEX BACKGROUND */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%; left: 50%;
+            width: 200vmax; height: 200vmax;
+            margin: -100vmax 0 0 -100vmax;
+            background: conic-gradient(
+                from 0deg,
+                rgba(192, 38, 211, 0.08),
+                rgba(6, 182, 212, 0.06),
+                rgba(236, 72, 153, 0.08),
+                rgba(192, 38, 211, 0.08)
+            );
+            animation: rotate 80s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(60px);
+        }
 
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at center, transparent 0%, rgba(10, 6, 18, 0.85) 70%),
+                radial-gradient(circle at 20% 20%, rgba(192, 38, 211, 0.15), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.12), transparent 40%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* HEADER */
         header {
             text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 0 2rem;
         }
 
-        header h1 {
-            color: var(--accent-purple);
-            font-size: 2rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        header .status-badge {
+        .vortex-logo {
             display: inline-block;
-            background: rgba(52, 211, 153, 0.1);
-            color: var(--accent-emerald);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 0.5rem;
-            border: 1px solid rgba(52, 211, 153, 0.3);
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            animation: spin-slow 20s linear infinite;
         }
 
+        @keyframes spin-slow {
+            to { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            background: linear-gradient(90deg, var(--venus), var(--vortex), var(--venus));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .tagline {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--cosmic);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            letter-spacing: 0.1em;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.15); }
+        }
+
+        /* CARDS */
+        .stat-card, .risk-container, .balls-row, .titan-card, .chart-container, .vortex-card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before, .titan-card::before, .vortex-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--venus), transparent);
+            opacity: 0.6;
+        }
+
+        /* STATS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
@@ -78,86 +189,166 @@
         }
 
         .stat-card {
-            background: var(--bg-card);
-            padding: 1.25rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
+            padding: 1.4rem 1.2rem;
             text-align: center;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--venus);
         }
 
         .stat-card .label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 0.72rem;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.15em;
+            font-weight: 600;
         }
 
         .stat-card .value {
-            font-size: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
             font-weight: 700;
-            color: var(--accent-emerald);
-            margin-top: 0.25rem;
+            color: var(--cosmic);
+            margin-top: 0.4rem;
         }
 
+        /* VORTEX OPPORTUNITY PANEL */
+        .vortex-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .vortex-card {
+            padding: 1.2rem;
+        }
+
+        .vortex-card .v-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .vortex-card .v-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .v-ev { color: var(--solar); }
+        .v-rollover { color: var(--nebula); }
+        .v-backtest { color: var(--vortex); }
+
+        .v-sub {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            margin-top: 0.35rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* RISK BOX */
         .risk-container {
-            background: rgba(245, 158, 11, 0.08);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-left: 5px solid var(--accent-amber);
-            padding: 1.25rem;
-            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(192, 38, 211, 0.05));
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-left: 4px solid var(--solar);
+            padding: 1.2rem 1.3rem;
             margin-bottom: 2rem;
         }
 
         .risk-title {
-            color: var(--accent-amber);
+            color: var(--solar);
             font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.08em;
+        }
+
+        .risk-container div {
+            font-size: 0.88rem;
+            margin-bottom: 0.2rem;
+        }
+
+        /* SECTION TITLE */
+        .section-title {
+            color: var(--vortex);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 0.9rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
-        .section-title {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.75rem;
-            font-weight: 600;
+        .section-title::before {
+            content: "";
+            width: 20px;
+            height: 1px;
+            background: var(--vortex);
+            opacity: 0.6;
         }
 
+        /* BALLS */
         .balls-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.55rem;
             justify-content: center;
             align-items: center;
-            background: var(--bg-card);
-            padding: 1.25rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
+            padding: 1.3rem 1rem;
             margin-bottom: 2rem;
         }
 
         .ball {
-            width: 42px;
-            height: 42px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
-            background: var(--bg-inner);
-            color: var(--text-main);
+            background: radial-gradient(circle at 30% 30%, rgba(192, 38, 211, 0.25), rgba(10, 6, 18, 0.9));
+            color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            font-size: 1.05rem;
-            border: 1px solid #3f3f46;
+            font-size: 1rem;
+            border: 1px solid rgba(192, 38, 211, 0.5);
+            box-shadow: 0 0 12px rgba(192, 38, 211, 0.15), inset 0 0 8px rgba(192, 38, 211, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .ball.jolly { border-color: var(--accent-amber); color: var(--accent-amber); }
-        .ball.superstar { border-color: var(--accent-purple); color: var(--accent-purple); }
-        .ball.dodeca { border-color: var(--accent-teal); color: var(--accent-teal); }
+        .ball:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 20px rgba(192, 38, 211, 0.4);
+        }
 
+        .ball.jolly {
+            border-color: var(--solar);
+            color: var(--solar);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+        }
+        .ball.superstar {
+            border-color: var(--nebula);
+            color: var(--nebula);
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.25);
+        }
+        .ball.dodeca {
+            border-color: var(--vortex);
+            color: var(--vortex);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+        }
+
+        /* TITAN CARDS */
         .titan-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
@@ -166,17 +357,16 @@
         }
 
         .titan-card {
-            background: var(--bg-card);
-            border-left: 5px solid var(--accent-blue);
-            padding: 1.25rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            border-left: 4px solid var(--venus);
+            padding: 1.4rem;
+            transition: transform 0.3s ease;
         }
 
-        .titan-card.titan-2 { border-left-color: var(--accent-teal); }
+        .titan-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .titan-card.titan-2 { border-left-color: var(--vortex); }
 
         .titan-header {
             display: flex;
@@ -188,38 +378,67 @@
         }
 
         .titan-id {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: var(--accent-blue);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--venus);
+            letter-spacing: 0.1em;
         }
 
-        .titan-card.titan-2 .titan-id { color: var(--accent-teal); }
+        .titan-card.titan-2 .titan-id { color: var(--vortex); }
+
+        .titan-ev {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--solar);
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            background: rgba(251, 191, 36, 0.1);
+            border-radius: 9999px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
 
         .titan-numbers {
-            font-size: 1.35rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--text-main);
+            letter-spacing: 0.05em;
+            color: var(--text);
             margin-bottom: 1rem;
+        }
+
+        .titan-signature {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.08em;
+            margin-bottom: 0.9rem;
+            padding: 0.35rem 0.6rem;
+            background: rgba(6, 182, 212, 0.05);
+            border-left: 2px solid var(--vortex);
+            border-radius: 3px;
         }
 
         .titan-metrics {
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 0.25rem 0.75rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            background: var(--bg-inner);
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
+            gap: 0.4rem 0.8rem;
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            background: var(--card-inner);
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-soft);
         }
 
+        .titan-metrics strong {
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* CHART */
         .chart-container {
-            background: var(--bg-card);
-            padding: 1.25rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
+            padding: 1.2rem;
             margin-bottom: 2rem;
             text-align: center;
         }
@@ -227,31 +446,47 @@
         .chart-container img {
             max-width: 100%;
             height: auto;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            border: 1px solid var(--border-soft);
             display: block;
             margin: 0 auto;
+            box-shadow: 0 0 30px rgba(192, 38, 211, 0.1);
         }
 
+        /* FOOTER */
         footer {
             text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 2.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-soft);
+            letter-spacing: 0.1em;
         }
 
+        footer .vx-mark {
+            display: inline-block;
+            color: var(--venus);
+            font-weight: 700;
+            letter-spacing: 0.2em;
+        }
+
+        /* ERROR */
         .error-msg {
             color: #f87171;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             padding: 1rem;
             border: 1px solid rgba(248, 113, 113, 0.4);
             background: rgba(248, 113, 113, 0.08);
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 2rem;
             display: none;
+        }
+
+        /* SVG VORTEX */
+        .vortex-svg {
+            filter: drop-shadow(0 0 8px rgba(192, 38, 211, 0.5));
         }
     </style>
 </head>
@@ -260,20 +495,41 @@
 <div class="container">
 
     <header>
-        <h1>TITAN God Mode</h1>
-        <div class="status-badge">⚡ SISTEMA OPERATIVO &amp; IN SINCRONIA</div>
+        <div class="vortex-logo">
+            <svg class="vortex-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="vg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#c026d3"/>
+                        <stop offset="50%" stop-color="#ec4899"/>
+                        <stop offset="100%" stop-color="#06b6d4"/>
+                    </linearGradient>
+                </defs>
+                <path d="M32 4 C 50 4, 60 16, 60 32 C 60 48, 48 60, 32 60 C 16 60, 4 48, 4 32 C 4 16, 16 4, 32 4 Z"
+                      fill="none" stroke="url(#vg)" stroke-width="1.5" opacity="0.4"/>
+                <path d="M32 12 C 45 12, 52 20, 52 32 C 52 44, 44 52, 32 52 C 20 52, 12 44, 12 32 C 12 20, 20 12, 32 12 Z"
+                      fill="none" stroke="url(#vg)" stroke-width="1.8" opacity="0.6"/>
+                <path d="M32 20 C 40 20, 44 25, 44 32 C 44 39, 39 44, 32 44 C 25 44, 20 39, 20 32 C 20 25, 25 20, 32 20 Z"
+                      fill="none" stroke="url(#vg)" stroke-width="2" opacity="0.8"/>
+                <polygon points="32,26 38,32 32,38 26,32" fill="url(#vg)"/>
+                <circle cx="32" cy="32" r="2.5" fill="#fbbf24"/>
+            </svg>
+        </div>
+        <h1>VENUS VORTEX</h1>
+        <div class="tagline">Cosmic Pattern Engine</div>
+        <div class="status-badge">⚡ SISTEMA OPERATIVO — SINCRONIA COSMICA</div>
     </header>
 
     <div id="errorBox" class="error-msg"></div>
 
+    <!-- TOP STATS -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="label">Prossimo Concorso</div>
-            <div class="value" id="nextContestNumber" style="color: var(--accent-purple);">—</div>
+            <div class="value" id="nextContestNumber" style="color: var(--venus);">—</div>
         </div>
         <div class="stat-card">
             <div class="label">Data Estrazione</div>
-            <div class="value" id="nextContestDate" style="color: var(--text-main);">—</div>
+            <div class="value" id="nextContestDate" style="color: var(--text);">—</div>
         </div>
         <div class="stat-card">
             <div class="label">Jackpot in Palio</div>
@@ -281,29 +537,55 @@
         </div>
     </div>
 
-    <div class="risk-container">
-        <div class="risk-title">🛡️ GESTIONE DEL RISCHIO (KELLY MODEL POST-RESET)</div>
-        <div><strong>Stato:</strong> <span id="riskStatus">—</span></div>
-        <div><strong>Livello Rischio:</strong> <span id="riskLevel">—</span></div>
-        <div style="margin-top: 0.25rem;"><strong>Puntata Consigliata:</strong> <span id="riskAdvice">—</span></div>
+    <!-- VORTEX OPPORTUNITY PANEL -->
+    <div class="section-title">Opportunity Engine</div>
+    <div class="vortex-panel">
+        <div class="vortex-card">
+            <div class="v-label">⚡ Expected Value</div>
+            <div class="v-value v-ev" id="vortexEV">—</div>
+            <div class="v-sub" id="vortexEVSub">—</div>
+        </div>
+        <div class="vortex-card">
+            <div class="v-label">🔮 Rollover Status</div>
+            <div class="v-value v-rollover" id="vortexRollover">—</div>
+            <div class="v-sub" id="vortexRolloverSub">—</div>
+        </div>
+        <div class="vortex-card">
+            <div class="v-label">📊 Backtest Rate</div>
+            <div class="v-value v-backtest" id="vortexBacktest">—</div>
+            <div class="v-sub" id="vortexBacktestSub">—</div>
+        </div>
     </div>
 
-    <div class="section-title" id="lastDrawTitle">Ultima Estrazione Registrata</div>
+    <!-- RISK -->
+    <div class="risk-container">
+        <div class="risk-title">🛡️ COSMIC RISK SHIELD</div>
+        <div><strong>Stato:</strong> <span id="riskStatus">—</span></div>
+        <div><strong>Livello:</strong> <span id="riskLevel">—</span></div>
+        <div style="margin-top: 0.35rem;"><strong>Strategia:</strong> <span id="riskAdvice">—</span></div>
+    </div>
+
+    <!-- LAST DRAW -->
+    <div class="section-title" id="lastDrawTitle">Ultima Estrazione</div>
     <div class="balls-row" id="lastDrawBalls"></div>
 
-    <div class="section-title">Dodecaedro A.I. Pool (Fisica Venus + Deep LSTM)</div>
+    <!-- DODECA POOL -->
+    <div class="section-title">Vortex Numerical Field</div>
     <div class="balls-row" id="dodecaPool"></div>
 
-    <div class="section-title">Matrice Sestine TITAN (Massima Copertura Ortogonale)</div>
+    <!-- TITAN -->
+    <div class="section-title">Vortex Sestine — Harmonic Filter</div>
     <div class="titan-grid" id="titanGrid"></div>
 
-    <div class="section-title">Analisi Telemetrica e Matrice di Copertura</div>
+    <!-- CHART -->
+    <div class="section-title">Analisi Telemetrica</div>
     <div class="chart-container">
-        <img id="vortexChart" src="vortex_chart.png" alt="TITAN Analytics Chart" loading="eager" decoding="async">
+        <img id="vortexChart" src="vortex_chart.png" alt="Venus Vortex Analytics" loading="eager" decoding="async">
     </div>
 
     <footer>
-        <p>TITAN SuperEnalotto Quantitative Engine — Aggiornato il <span id="updatedAt">—</span></p>
+        <p><span class="vx-mark">VENUS VORTEX</span> — Cosmic Pattern Engine</p>
+        <p style="margin-top: 0.4rem;">Ultima sincronizzazione: <span id="updatedAt">—</span></p>
     </footer>
 
 </div>
@@ -315,7 +597,7 @@
     const $ = (id) => document.getElementById(id);
     const pad2 = (n) => String(n).padStart(2, "0");
 
-    const AUTO_REFRESH_MS = 60 * 1000; // 60 secondi
+    const AUTO_REFRESH_MS = 60 * 1000;
     let refreshTimer = null;
 
     const formatEuro = (n) => {
@@ -339,56 +621,54 @@
         box.textContent = msg;
         box.style.display = "block";
     };
-
     const hideError = () => { $("errorBox").style.display = "none"; };
 
     const renderLastDraw = (draw) => {
-        const container = $("lastDrawBalls");
-        container.innerHTML = "";
+        const c = $("lastDrawBalls");
+        c.innerHTML = "";
         if (!draw) return;
 
         if (draw.contest_number != null && draw.date) {
             $("lastDrawTitle").textContent =
-                `Ultima Estrazione Registrata (Concorso N° ${draw.contest_number} — ${draw.date})`;
+                `Ultima Estrazione — Concorso N° ${draw.contest_number} · ${draw.date}`;
         }
 
         (draw.numbers || []).forEach((n) => {
             const d = document.createElement("div");
             d.className = "ball";
             d.textContent = pad2(n);
-            container.appendChild(d);
+            c.appendChild(d);
         });
 
         const sep = document.createElement("div");
-        sep.style.margin = "0 0.5rem";
-        sep.style.color = "var(--text-muted)";
+        sep.style.cssText = "margin:0 0.5rem;color:var(--text-dim)";
         sep.textContent = "|";
-        container.appendChild(sep);
+        c.appendChild(sep);
 
         if (draw.jolly != null) {
             const d = document.createElement("div");
             d.className = "ball jolly";
             d.title = "Jolly";
             d.textContent = pad2(draw.jolly);
-            container.appendChild(d);
+            c.appendChild(d);
         }
         if (draw.superstar != null) {
             const d = document.createElement("div");
             d.className = "ball superstar";
             d.title = "SuperStar";
             d.textContent = pad2(draw.superstar);
-            container.appendChild(d);
+            c.appendChild(d);
         }
     };
 
     const renderDodecaPool = (pool) => {
-        const container = $("dodecaPool");
-        container.innerHTML = "";
+        const c = $("dodecaPool");
+        c.innerHTML = "";
         (pool || []).forEach((n) => {
             const d = document.createElement("div");
             d.className = "ball dodeca";
             d.textContent = pad2(n);
-            container.appendChild(d);
+            c.appendChild(d);
         });
     };
 
@@ -404,41 +684,78 @@
 
             const idEl = document.createElement("span");
             idEl.className = "titan-id";
-            idEl.textContent = p.id || `TITAN ${idx + 1}`;
+            idEl.textContent = p.id || `VORTEX ${idx + 1}`;
             header.appendChild(idEl);
 
             const evEl = document.createElement("span");
-            evEl.style.color = "var(--accent-amber)";
-            evEl.style.fontWeight = "bold";
-            evEl.style.fontSize = "0.85rem";
-            evEl.textContent = `EV Score: ${formatNumber(p.ev_score, 1)} ⚡`;
+            evEl.className = "titan-ev";
+            evEl.textContent = `⚡ ${formatNumber(p.ev_score, 1)}`;
             header.appendChild(evEl);
 
             card.appendChild(header);
 
             const nums = document.createElement("div");
             nums.className = "titan-numbers";
-            nums.textContent = "[ " + (p.numbers || []).map(pad2).join(" - ") + " ]";
+            nums.textContent = "[ " + (p.numbers || []).map(pad2).join(" · ") + " ]";
             card.appendChild(nums);
+
+            if (p.signature) {
+                const sig = document.createElement("div");
+                sig.className = "titan-signature";
+                sig.textContent = "✦ " + p.signature;
+                card.appendChild(sig);
+            }
 
             const metrics = document.createElement("div");
             metrics.className = "titan-metrics";
 
             const m1 = document.createElement("span");
-            m1.innerHTML = `Somma: <strong>${p.sum ?? "—"}</strong>`;
+            m1.innerHTML = `Somma <strong>${p.sum ?? "—"}</strong>`;
             metrics.appendChild(m1);
 
             const m2 = document.createElement("span");
-            m2.innerHTML = `Z-Score: <strong>${formatSigned(p.z_score)}</strong>`;
+            m2.innerHTML = `Z <strong>${formatSigned(p.z_score)}</strong>`;
             metrics.appendChild(m2);
 
             const m3 = document.createElement("span");
-            m3.innerHTML = `Confidenza: <strong>${formatNumber(p.confidence)}%</strong>`;
+            m3.innerHTML = `Conf <strong>${formatNumber(p.confidence)}%</strong>`;
             metrics.appendChild(m3);
 
             card.appendChild(metrics);
             grid.appendChild(card);
         });
+    };
+
+    const renderVortexPanel = (vortex) => {
+        const v = vortex || {};
+        const ev = v.ev || {};
+        const roll = v.rollover || {};
+        const bt = v.backtest || {};
+
+        if (ev.ev_total != null) {
+            $("vortexEV").textContent = formatSigned(ev.ev_total, 3) + " €";
+            $("vortexEVSub").textContent = ev.recommendation || "—";
+        } else {
+            $("vortexEV").textContent = "—";
+            $("vortexEVSub").textContent = "In attesa dati";
+        }
+
+        if (roll.level) {
+            $("vortexRollover").textContent = (roll.emoji || "") + " " + roll.level;
+            $("vortexRolloverSub").textContent = roll.message || "—";
+        } else {
+            $("vortexRollover").textContent = "—";
+            $("vortexRolloverSub").textContent = "In attesa dati";
+        }
+
+        if (bt.hit_rate_3plus != null) {
+            $("vortexBacktest").textContent = bt.hit_rate_3plus + "%";
+            $("vortexBacktestSub").textContent =
+                `Baseline ${bt.baseline_expected || "—"}% · ${bt.total || 0} estrazioni`;
+        } else {
+            $("vortexBacktest").textContent = "—";
+            $("vortexBacktestSub").textContent = "In attesa dati";
+        }
     };
 
     const render = (data) => {
@@ -453,6 +770,7 @@
         $("riskLevel").textContent = r.level || "—";
         $("riskAdvice").textContent = r.advice || "—";
 
+        renderVortexPanel(data.vortex);
         renderLastDraw(data.last_draw);
         renderDodecaPool(data.dodeca_pool);
         renderTitan(data.titan_predictions);
@@ -474,7 +792,7 @@
             hideError();
         } catch (err) {
             if (!silent) {
-                showError("Impossibile caricare venus_database.json: " + err.message);
+                showError("Errore caricamento venus_database.json: " + err.message);
                 console.error(err);
             }
         }
@@ -497,7 +815,6 @@
     const init = () => {
         load();
         startAutoRefresh();
-
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("sw.js").catch(() => {});
         }
