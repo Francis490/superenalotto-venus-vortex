@@ -471,6 +471,26 @@
             letter-spacing: 0.2em;
         }
 
+        .bot-link {
+            display: inline-block;
+            color: var(--vortex);
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid var(--vortex);
+            padding: 0.5rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .bot-link:hover {
+            background: rgba(6, 182, 212, 0.12);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            transform: translateY(-2px);
+        }
+
         /* ERROR */
         .error-msg {
             color: #f87171;
@@ -562,6 +582,7 @@
         <div class="risk-title">🛡️ COSMIC RISK SHIELD</div>
         <div><strong>Stato:</strong> <span id="riskStatus">—</span></div>
         <div><strong>Livello:</strong> <span id="riskLevel">—</span></div>
+        <div style="margin-top: 0.35rem;"><strong>Budget:</strong> <span id="riskBudget">—</span></div>
         <div style="margin-top: 0.35rem;"><strong>Strategia:</strong> <span id="riskAdvice">—</span></div>
     </div>
 
@@ -586,6 +607,11 @@
     <footer>
         <p><span class="vx-mark">VENUS VORTEX</span> — Cosmic Pattern Engine</p>
         <p style="margin-top: 0.4rem;">Ultima sincronizzazione: <span id="updatedAt">—</span></p>
+        <p>
+            <a href="https://t.me/IL_TUO_BOT_USERNAME" target="_blank" rel="noopener" class="bot-link">
+                🤖 APRI BOT TELEGRAM
+            </a>
+        </p>
     </footer>
 
 </div>
@@ -768,7 +794,15 @@
         const evText = (typeof r.ev === "number") ? ` (EV: ${formatSigned(r.ev, 3)})` : "";
         $("riskStatus").textContent = (r.status || "—") + evText;
         $("riskLevel").textContent = r.level || "—";
-        $("riskAdvice").textContent = r.advice || "—";
+
+        // Budget Mode dinamico
+        const bm = data.budget_mode || {};
+        const bmEmoji = bm.emoji || "🟡";
+        const bmMode = bm.mode || "NORMALE";
+        const bmN = bm.n_sestinas || 2;
+        const bmCost = bm.cost_eur || 2.0;
+        $("riskBudget").textContent = `${bmEmoji} ${bmMode} · ${bmN} sestine · ${bmCost.toFixed(2)} €`;
+        $("riskAdvice").textContent = bm.message || r.advice || "—";
 
         renderVortexPanel(data.vortex);
         renderLastDraw(data.last_draw);
