@@ -1,6 +1,6 @@
 """
 vortex_opportunity.py
-VENUS VORTEX — Opportunity Engine
+VENUS VORTEX — Opportunity Engine v3.0
 
 Moduli:
 1. Anti-Crowd Filter — evita numeri popolari (date, pattern visivi)
@@ -8,7 +8,9 @@ Moduli:
 3. Rollover Detector — identifica finestre di opportunità
 4. Vortex Signature — traccia ogni sestina con ID crittografico
 5. Backtest Engine — verifica performance storiche
-6. Vortex Optimizer — selezione finale anti-crowd + statistica
+6. Doppia Sestina Complementare:
+   - Sestina 1 "Realistica": bilanciata, firma di estrazione vera
+   - Sestina 2 "Assassina": numeri alti, anti-crowd estremo
 """
 import hashlib
 import itertools
@@ -22,41 +24,30 @@ def anti_crowd_weight(number):
     Peso di desiderabilità basato su quanto il crowd gioca un numero.
     Più alto = meno giocato = miglior valore atteso.
     """
-    # 1-31: date di nascita, giocatissimi
     if 1 <= number <= 31:
-        return 0.4
-    # 32-45: giorni dei mesi, abbastanza giocati
+        return 0.4       # date di nascita, giocatissimi
     elif 32 <= number <= 45:
-        return 0.7
-    # 46-60: rari
+        return 0.7       # giorni dei mesi
     elif 46 <= number <= 60:
-        return 1.2
-    # 61-90: molto rari
+        return 1.2       # rari
     elif 61 <= number <= 90:
-        return 1.5
+        return 1.5       # molto rari
     return 1.0
 
 
 def has_visual_pattern(sestina):
     """Rileva pattern visivi tipici dei giocatori casuali."""
     s = sorted(sestina)
-
-    # Troppi consecutivi (3+)
     consecutivi = sum(1 for i in range(len(s) - 1) if s[i + 1] - s[i] == 1)
     if consecutivi >= 2:
         return True
-
-    # Tutti nella stessa decade o 2 decadi
     decadi = set((n - 1) // 10 for n in s)
     if len(decadi) <= 2:
         return True
-
-    # Tutti multipli di 5 o 10 (pattern schedina)
     if all(n % 5 == 0 for n in s):
         return True
     if all(n % 10 == 0 for n in s):
         return True
-
     return False
 
 
@@ -71,10 +62,7 @@ def anti_crowd_score(sestina):
 # 2. EV CALCULATOR
 # ==========================================
 def estimate_players(jackpot):
-    """
-    Stima il numero di giocate totali basato sul jackpot.
-    Più il jackpot è alto, più gente gioca.
-    """
+    """Stima il numero di giocate totali basato sul jackpot."""
     if jackpot < 30_000_000:
         return 25_000_000
     elif jackpot < 50_000_000:
@@ -88,23 +76,13 @@ def estimate_players(jackpot):
 
 
 def calculate_ev(jackpot, anti_crowd_factor=2.5, ticket_cost=1.0):
-    """
-    Calcola l'Expected Value per una giocata da 1€.
-    Ritorna dizionario con tutti i dati utili.
-    """
+    """Calcola l'Expected Value per una giocata da 1€."""
     prob_6 = 1 / 622_614_630
     players = estimate_players(jackpot)
     expected_winners = max(1.0, players * prob_6)
-
-    # Con anti-crowd, il jackpot effettivo è moltiplicato
-    # perché dividiamo con meno persone
     effective_jackpot = (jackpot / expected_winners) * anti_crowd_factor
-
     ev_6 = prob_6 * effective_jackpot
-
-    # Contributo stimato degli altri premi (5+1, 5, 4, 3)
     ev_other = 0.35
-
     total_ev = ev_6 + ev_other - ticket_cost
 
     return {
@@ -131,35 +109,20 @@ def calculate_ev(jackpot, anti_crowd_factor=2.5, ticket_cost=1.0):
 def rollover_status(jackpot):
     """Classifica il jackpot in zone di opportunità."""
     if jackpot < 30_000_000:
-        return {
-            "level": "NORMALE",
-            "emoji": "⚪",
-            "message": "EV negativo. Gioca il minimo o salta.",
-        }
+        return {"level": "NORMALE", "emoji": "⚪",
+                "message": "EV negativo. Gioca il minimo o salta."}
     elif jackpot < 50_000_000:
-        return {
-            "level": "INTERESSANTE",
-            "emoji": "🟡",
-            "message": "EV quasi neutro. Puoi giocare 2 sestine.",
-        }
+        return {"level": "INTERESSANTE", "emoji": "🟡",
+                "message": "EV quasi neutro. Puoi giocare 2 sestine."}
     elif jackpot < 70_000_000:
-        return {
-            "level": "BUONA",
-            "emoji": "🟠",
-            "message": "EV vicino allo zero. Vale la pena giocare.",
-        }
+        return {"level": "BUONA", "emoji": "🟠",
+                "message": "EV vicino allo zero. Vale la pena giocare."}
     elif jackpot < 100_000_000:
-        return {
-            "level": "OTTIMA",
-            "emoji": "🔴",
-            "message": "EV positivo. Attack mode!",
-        }
+        return {"level": "OTTIMA", "emoji": "🔴",
+                "message": "EV positivo. Attack mode!"}
     else:
-        return {
-            "level": "ECCEZIONALE",
-            "emoji": "🔥",
-            "message": "EV molto positivo. Gioca forte!",
-        }
+        return {"level": "ECCEZIONALE", "emoji": "🔥",
+                "message": "EV molto positivo. Gioca forte!"}
 
 
 # ==========================================
@@ -177,13 +140,9 @@ def vortex_signature(sestina, concorso, data_str):
 # 5. BACKTEST ENGINE
 # ==========================================
 def backtest(history, sestina1, sestina2, last_n=30):
-    """
-    Verifica quante volte le sestine attuali avrebbero 'azzeccato'
-    almeno 3 numeri nelle ultime last_n estrazioni.
-    """
+    """Verifica quante volte le sestine attuali avrebbero azzeccato 3+."""
     if not history or len(history) < 2:
         return None
-
     if len(history) < last_n + 1:
         last_n = len(history) - 1
     if last_n < 5:
@@ -214,7 +173,6 @@ def backtest(history, sestina1, sestina2, last_n=30):
             (results["3_hits"] + results["4_hits"] + results["5_hits"])
             / results["total"] * 100, 2
         )
-        # Baseline teorica: P(3+ per sestina) ~ 0.31%
         results["baseline_expected"] = round(
             (1 / 327 + 1 / 11907 + 1 / 1250230 + 1 / 103769105 + 1 / 622614630)
             * 100, 2
@@ -223,85 +181,187 @@ def backtest(history, sestina1, sestina2, last_n=30):
 
 
 # ==========================================
-# 6. VORTEX OPTIMIZER
+# 6. DOPPIA SESTINA COMPLEMENTARE
 # ==========================================
-def score_sestina(sestina, adjusted_scores):
+def _score_realistic(combo, adjusted_scores):
     """
-    Punteggio finale combinando statistica + anti-crowd.
+    Punteggio per sestina 'realistica'.
+    Premia: somma vicina a 273, struttura bilanciata, anti-crowd moderato.
     """
-    stat_score = sum(adjusted_scores.get(n, 0.5) for n in sestina)
-    crowd_score = anti_crowd_score(sestina)
-    return stat_score * crowd_score
+    s = sorted(combo)
+    total = sum(s)
+
+    # Distanza dalla media gaussiana (più vicina, meglio è)
+    dist_from_mean = abs(total - 273)
+
+    # Parità bilanciata (preferiamo 3/3, poi 2/4 o 4/2)
+    pari = sum(1 for n in s if n % 2 == 0)
+    parity_penalty = abs(pari - 3) * 5
+
+    # Bassi/Alti bilanciati
+    bassi = sum(1 for n in s if n <= 45)
+    balance_penalty = abs(bassi - 3) * 5
+
+    # Decadi diverse (bonus)
+    decadi = len(set((n - 1) // 10 for n in s))
+    decades_bonus = decadi * 3
+
+    # Statistica
+    stat_score = sum(adjusted_scores[n] for n in combo)
+
+    # Anti-crowd moderato
+    crowd = anti_crowd_score(combo)
+
+    final = (stat_score * crowd
+             - dist_from_mean * 0.5
+             - parity_penalty
+             - balance_penalty
+             + decades_bonus)
+    return final
+
+
+def _score_assassin(combo, adjusted_scores):
+    """
+    Punteggio per sestina 'assassina' (anti-crowd estremo).
+    Premia: numeri > 60, somma alta, no pattern visivi.
+    """
+    s = sorted(combo)
+    total = sum(s)
+
+    # Conta numeri alti (>60)
+    high_count = sum(1 for n in s if n > 60)
+
+    # Somma alta (bonus oltre 280)
+    sum_bonus = max(0, total - 280) * 0.5
+
+    # Anti-crowd estremo (peso più alto)
+    crowd = anti_crowd_score(combo) ** 1.5
+
+    # Statistica
+    stat_score = sum(adjusted_scores[n] for n in combo)
+
+    # Bonus per numeri alti
+    high_bonus = high_count * 15
+
+    final = stat_score * crowd + sum_bonus + high_bonus
+    return final
 
 
 def select_vortex_sestinas(dodeca_pool, adjusted_scores, history, top_n=2):
     """
-    Seleziona le N sestine migliori combinando:
-    - Filtri statistici (somma, parità, cooldown)
-    - Filtri anti-crowd (numeri > 45, no pattern visivi)
-    - Massima diversità tra le sestine selezionate
+    DOPPIA SESTINA COMPLEMENTARE:
+    - Sestina 1: realistica (somma 180-310, bilanciata, firma di estrazione vera)
+    - Sestina 2: assassina (numeri alti, anti-crowd estremo, overlap minimo con s1)
     """
     all_combos = list(itertools.combinations(dodeca_pool, 6))
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
 
-    valid = []
+    # --- FILTRO BASE: overlap con ultima estrazione ---
+    base_combos = []
     for combo in all_combos:
-        # Filtri statistici
         overlap_t1 = len(set(combo).intersection(t1_set))
-        if overlap_t1 > 2:
+        if overlap_t1 <= 2:
+            base_combos.append(combo)
+
+    if not base_combos:
+        base_combos = all_combos
+
+    # ==========================================
+    # SESTINA 1: REALISTICA
+    # ==========================================
+    realistic_candidates = []
+    for combo in base_combos:
+        s = sorted(combo)
+        total = sum(s)
+
+        # Range somma 180-310 (richiesto dall'utente)
+        if not (180 <= total <= 310):
             continue
-        combo_sum = sum(combo)
-        if not (200 <= combo_sum <= 340):
+
+        # Parità 2-4
+        pari = sum(1 for n in s if n % 2 == 0)
+        if pari < 2 or pari > 4:
             continue
-        if len([n for n in combo if n >= 32]) < 2:
+
+        # Bassi/Alti bilanciati
+        bassi = sum(1 for n in s if n <= 45)
+        if bassi < 2 or bassi > 4:
             continue
 
-        # Filtri anti-crowd (soft: penalizziamo, non scartiamo)
-        crowd = anti_crowd_score(combo)
-        if has_visual_pattern(combo):
-            crowd *= 0.5  # forte penalità ma non escludiamo
+        # Almeno 4 decadi diverse
+        decadi = len(set((n - 1) // 10 for n in s))
+        if decadi < 4:
+            continue
 
-        # Almeno 2 numeri "alti" (>45)
-        high_count = sum(1 for n in combo if n >= 46)
-        if high_count < 1:
-            crowd *= 0.6  # penalità se troppo "basso"
+        # Max 1 coppia di consecutivi
+        consecutivi = sum(1 for i in range(len(s) - 1) if s[i + 1] - s[i] == 1)
+        if consecutivi > 1:
+            continue
 
-        stat_score = sum(adjusted_scores[n] for n in combo)
-        final_score = stat_score * crowd
+        score = _score_realistic(combo, adjusted_scores)
+        realistic_candidates.append((combo, score))
 
-        valid.append((combo, stat_score, crowd, final_score))
+    realistic_candidates.sort(key=lambda x: x[1], reverse=True)
 
-    if not valid:
+    if realistic_candidates:
+        sestina1 = list(realistic_candidates[0][0])
+    else:
         # Fallback: rilassa i filtri
-        for combo in all_combos:
-            stat_score = sum(adjusted_scores[n] for n in combo)
-            crowd_score = anti_crowd_score(combo)
-            valid.append((combo, stat_score, crowd_score, stat_score * crowd_score))
+        relaxed = []
+        for combo in base_combos:
+            total = sum(combo)
+            if 150 <= total <= 340:
+                relaxed.append((combo, _score_realistic(combo, adjusted_scores)))
+        relaxed.sort(key=lambda x: x[1], reverse=True)
+        sestina1 = list(relaxed[0][0]) if relaxed else list(base_combos[0])
 
-    valid.sort(key=lambda x: x[3], reverse=True)
+    # ==========================================
+    # SESTINA 2: ASSASSINA (overlap minimo con s1)
+    # ==========================================
+    s1_set = set(sestina1)
+    assassin_candidates = []
+    for combo in base_combos:
+        # Max 1 numero in comune con la sestina 1
+        overlap_s1 = len(set(combo).intersection(s1_set))
+        if overlap_s1 > 1:
+            continue
 
-    if not valid:
-        return []
+        s = sorted(combo)
 
-    # Prendi la prima (miglior punteggio)
-    result = [valid[0]]
+        # Almeno 3 numeri > 55
+        if sum(1 for n in s if n > 55) < 3:
+            continue
 
-    # Prendi le successive con overlap minimo
-    for item in valid[1:]:
-        if len(result) >= top_n:
-            break
-        # Verifica overlap con tutte le già selezionate
-        candidate_set = set(item[0])
-        max_overlap = max(
-            len(candidate_set.intersection(set(r[0]))) for r in result
-        )
-        if max_overlap <= 2:
-            result.append(item)
+        # No pattern visivi
+        if has_visual_pattern(combo):
+            continue
 
-    # Se non trovate abbastanza diverse, prendi le migliori successive
-    idx = 1
-    while len(result) < top_n and idx < len(valid):
-        result.append(valid[idx])
-        idx += 1
+        score = _score_assassin(combo, adjusted_scores)
+        assassin_candidates.append((combo, score))
 
-    return result
+    assassin_candidates.sort(key=lambda x: x[1], reverse=True)
+
+    if assassin_candidates:
+        sestina2 = list(assassin_candidates[0][0])
+    else:
+        # Fallback: rilassa
+        relaxed = []
+        for combo in base_combos:
+            overlap_s1 = len(set(combo).intersection(s1_set))
+            if overlap_s1 <= 2:
+                relaxed.append((combo, _score_assassin(combo, adjusted_scores)))
+        relaxed.sort(key=lambda x: x[1], reverse=True)
+        sestina2 = list(relaxed[0][0]) if relaxed else sestina1
+
+    # ==========================================
+    # Ritorna nel formato atteso dal resto del codice
+    # ==========================================
+    score1 = _score_realistic(sestina1, adjusted_scores)
+    score2 = _score_assassin(sestina2, adjusted_scores)
+    crowd1 = anti_crowd_score(sestina1)
+    crowd2 = anti_crowd_score(sestina2)
+
+    return [
+        (tuple(sestina1), score1, crowd1, score1),
+        (tuple(sestina2), score2, crowd2, score2),
+    ]
