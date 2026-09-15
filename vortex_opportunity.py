@@ -117,47 +117,56 @@ def rollover_status(jackpot):
 # ==========================================
 def determine_budget_mode(jackpot):
     """
-    Modula il numero di sestine in base all'EV corrente.
-    Ritorna dict con mode, emoji, n_sestinas, cost_eur, message.
+    Modula il numero di sestine in base all'EV.
+    Soglie realistiche per SuperEnalotto (EV tipico -0.35/-0.55).
     """
     ev_data = calculate_ev(jackpot)
     ev = ev_data["ev_total"]
 
-    if ev < -0.30:
+    if ev < -0.55:
         return {
             "mode": "SKIP",
             "emoji": "🚫",
             "n_sestinas": 0,
             "cost_eur": 0.0,
             "ev": ev,
-            "message": "EV molto negativo. Salta questo concorso e risparmia.",
+            "message": "EV molto negativo. Salta e risparmia.",
         }
-    elif ev < -0.15:
+    elif ev < -0.35:
         return {
             "mode": "MINIMO",
             "emoji": "🟢",
             "n_sestinas": 1,
             "cost_eur": 0.5,
             "ev": ev,
-            "message": "EV basso. 1 sestina simbolica.",
+            "message": "EV basso. 1 sestina.",
         }
-    elif ev < 0.05:
+    elif ev < -0.10:
         return {
             "mode": "NORMALE",
             "emoji": "🟡",
             "n_sestinas": 2,
             "cost_eur": 1.0,
             "ev": ev,
-            "message": "EV neutro. 2 sestine (budget base).",
+            "message": "EV neutro. 2 sestine.",
         }
-    elif ev < 0.15:
+    elif ev < 0.05:
         return {
             "mode": "ATTACK",
             "emoji": "🟠",
             "n_sestinas": 4,
             "cost_eur": 2.0,
             "ev": ev,
-            "message": "EV positivo. Attack mode: 4 sestine.",
+            "message": "EV positivo. Attack: 4 sestine.",
+        }
+    else:
+        return {
+            "mode": "ALL-IN",
+            "emoji": "🔥",
+            "n_sestinas": 6,
+            "cost_eur": 3.0,
+            "ev": ev,
+            "message": "EV molto positivo! 6 sestine.",
         }
     else:
         return {
