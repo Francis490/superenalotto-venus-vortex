@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-15T14:05:55",
+  "updated_at": "2026-09-15T14:15:15",
   "next_contest": {
     "number": 148,
     "date": "15/09/2026",
@@ -29,9 +29,9 @@
     "mode": "MINIMO",
     "emoji": "🟢",
     "n_sestinas": 1,
-    "cost_eur": 0.5,
+    "cost_eur": 1.0,
     "ev": -0.5404,
-    "message": "EV basso. 1 sestina."
+    "message": "EV basso. 1 sestina (1,00 €)."
   },
   "dodeca_pool": [
     5,
