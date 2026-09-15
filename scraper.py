@@ -24,6 +24,7 @@ try:
         vortex_signature,
         backtest,
         select_vortex_sestinas,
+        balance_pool,
     )
     VORTEX_ENGINE_AVAILABLE = True
     print("[+] Venus Vortex — Opportunity Engine: ATTIVO")
@@ -566,6 +567,14 @@ def main():
     raw_scores, delays, frequencies = calculate_raw_scores(history)
     adjusted_scores = apply_cooldown_factor(raw_scores, history)
     dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
+
+    # === BILANCIAMENTO POOL (Venus Vortex v3.2) ===
+    if VORTEX_ENGINE_AVAILABLE:
+        try:
+            dodeca_pool = balance_pool(dodeca_pool)
+            print(f"[+] Pool bilanciato (4/4/4): {dodeca_pool}")
+        except Exception as e:
+            print(f"[!] Errore bilanciamento pool: {e}")
 
     # === SELEZIONE SESTINE ===
     if VORTEX_ENGINE_AVAILABLE:
