@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-14T22:38:03",
+  "updated_at": "2026-09-15T08:50:24",
   "next_contest": {
     "number": 148,
     "date": "15/09/2026",
@@ -23,7 +23,7 @@
     "status": "🟠 PRUDENZA STATISTICA",
     "ev": -0.957,
     "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
-    "advice": "Mantenere puntata minima di 2 Sestine TITAN (Budget 2,00 €)."
+    "advice": "Mantenere puntata minima di 2 Sestine Vortex (Budget 2,00 €)."
   },
   "dodeca_pool": [
     5,
@@ -41,34 +41,63 @@
   ],
   "titan_predictions": [
     {
-      "id": "TITAN 1",
+      "id": "VORTEX 1",
       "numbers": [
         5,
-        35,
         43,
         48,
         77,
+        80,
         87
       ],
-      "sum": 295,
-      "z_score": 0.51,
-      "confidence": 22.45,
-      "ev_score": 1.0
+      "sum": 340,
+      "z_score": 1.54,
+      "confidence": 17.3,
+      "ev_score": 1.0,
+      "signature": "VX-2026-148-EFE205"
     },
     {
-      "id": "TITAN 2",
+      "id": "VORTEX 2",
       "numbers": [
-        5,
         9,
-        20,
         48,
+        53,
         54,
-        80
+        77,
+        82
       ],
-      "sum": 216,
-      "z_score": -1.31,
-      "confidence": 18.45,
-      "ev_score": 1.0
+      "sum": 323,
+      "z_score": 1.15,
+      "confidence": 19.25,
+      "ev_score": 1.0,
+      "signature": "VX-2026-148-184333"
     }
-  ]
+  ],
+  "vortex": {
+    "signature_1": "VX-2026-148-EFE205",
+    "signature_2": "VX-2026-148-184333",
+    "ev": {
+      "jackpot": 27300000,
+      "players_estimated": 25000000,
+      "expected_winners": 1.0,
+      "effective_jackpot": 68250000.0,
+      "ev_6_solo": 0.1096,
+      "ev_total": -0.5404,
+      "profitable": false,
+      "recommendation": "SALTA"
+    },
+    "rollover": {
+      "level": "NORMALE",
+      "emoji": "⚪",
+      "message": "EV negativo. Gioca il minimo o salta."
+    },
+    "backtest": {
+      "3_hits": 0,
+      "4_hits": 0,
+      "5_hits": 0,
+      "total": 30,
+      "hit_rate_3plus": 0.0,
+      "baseline_expected": 0.31
+    }
+  }
 }
