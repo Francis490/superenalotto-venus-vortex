@@ -45,12 +45,16 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scraper.py
 
+      - name: Generazione guida aggiornamento
+        run: python generate_update_guide.py
+        continue-on-error: true
+
       - name: Salvataggio automatico del Database e Grafico su GitHub
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          for file in venus_database.json vortex_chart.png venus_history.json venus_jackpot.json; do
+          for file in venus_database.json vortex_chart.png venus_history.json venus_jackpot.json UPDATE_HERE.md; do
             if [ -f "$file" ]; then
               git add "$file"
             fi
