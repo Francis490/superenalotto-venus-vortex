@@ -1,6 +1,7 @@
 """
 venus_track_record.py
 Gestisce il track record delle sestine generate.
+Include rilevamento vincite (3+, 4+, 5+, 6 punti).
 """
 import json
 import os
@@ -88,6 +89,103 @@ def update_with_result(concorso, real_numbers):
     if updated:
         save_track(track)
     return updated
+
+
+def detect_wins(concorso, real_numbers):
+    """
+    Rileva se ci sono state vincite significative (3+ punti).
+    Ritorna un dict con info dettagliate sulle vincite, o None se nessuna.
+    """
+    if not real_numbers or len(real_numbers) != 6:
+        return None
+
+    track = load_track()
+    records = track.get("records", [])
+    real_set = set(real_numbers)
+
+    for r in records:
+        if r.get("target_concorso") == concorso:
+            sestinas = r.get("sestinas", [])
+            mode = r.get("mode", "NORMALE")
+            generated_at = r.get("generated_at", "N/A")
+
+            # Analizza ogni sestina
+            wins = []
+            for i, s in enumerate(sestinas):
+                hits = len(set(s) & real_set)
+                if hits >= 3:
+                    wins.append({
+                        "index": i + 1,
+                        "sestina": list(s),
+                        "hits": hits,
+                    })
+
+            if wins:
+                return {
+                    "concorso": concorso,
+                    "real_numbers": real_numbers,
+                    "mode": mode,
+                    "generated_at": generated_at,
+                    "wins": wins,
+                    "total_sestinas": len(sestinas),
+                    "best_hits": max(w["hits"] for w in wins),
+                }
+
+    return None
+
+
+def format_win_notification(win_info):
+    """
+    Formatta una notifica di VINCITA in HTML per Telegram.
+    """
+    if not win_info:
+        return None
+
+    concorso = win_info["concorso"]
+    real_numbers = win_info["real_numbers"]
+    wins = win_info["wins"]
+    best = win_info["best_hits"]
+    mode = win_info["mode"]
+
+    # Emoji e messaggio in base al livello di vincita
+    if best == 6:
+        header = "🏆🏆🏆 JACKPOT! 🏆🏆🏆"
+        emoji = "💰💰💰"
+        msg = "SEI UN MILIONARIO!"
+    elif best == 5:
+        header = "🔥🔥🔥 VINCITA ECCEZIONALE! 🔥🔥🔥"
+        emoji = "🎉🎉🎉"
+        msg = "5 PUNTI — vincita importante!"
+    elif best == 4:
+        header = "🎉🎉 VINCITA! 🎉🎉"
+        emoji = "💸💸"
+        msg = "4 PUNTI — complimenti!"
+    else:  # 3
+        header = "🎯 VINCITA! 🎯"
+        emoji = "✨"
+        msg = "3 PUNTI — vincita!"
+
+    lines = []
+    lines.append(f"<b>{header}</b>")
+    lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    lines.append("")
+    lines.append(f"🎯 <b>Concorso N° {concorso}</b>")
+    lines.append(f"📊 Estrazione: <code>{' · '.join(str(n).zfill(2) for n in real_numbers)}</code>")
+    lines.append(f"🎛️ Modalità: {mode}")
+    lines.append("")
+    lines.append(f"<b>{emoji} {msg}</b>")
+    lines.append("")
+
+    for w in wins:
+        sestina_str = " · ".join(str(n).zfill(2) for n in w["sestina"])
+        lines.append(f"✨ Sestina #{w['index']}: <code>[{sestina_str}]</code>")
+        lines.append(f"   ➜ <b>{w['hits']} punti</b>")
+
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    lines.append("🌪️ <b>Venus Vortex — Cosmic Pattern Engine</b>")
+
+    return "\n".join(lines)
 
 
 def get_stats():
