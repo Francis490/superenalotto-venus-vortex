@@ -53,7 +53,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          for file in venus_database.json vortex_chart.png vortex_heatmap.png venus_history.json venus_jackpot.json venus_track_record.json UPDATE_HERE.md; do
+          for file in venus_database.json vortex_chart.png vortex_heatmap.png vortex_distribution.png venus_history.json venus_jackpot.json venus_track_record.json UPDATE_HERE.md; do
             if [ -f "$file" ]; then
               git add "$file"
             fi
@@ -71,14 +71,17 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/index.html
-          [ -f manifest.json ]        && cp manifest.json _site/manifest.json        || true
-          [ -f sw.js ]                && cp sw.js _site/sw.js                        || true
-          [ -f icon-192.png ]         && cp icon-192.png _site/icon-192.png          || true
-          [ -f icon-512.png ]         && cp icon-512.png _site/icon-512.png          || true
-          [ -f favicon.ico ]          && cp favicon.ico _site/favicon.ico            || true
-          [ -f vortex_chart.png ]     && cp vortex_chart.png _site/vortex_chart.png  || true
-          [ -f vortex_heatmap.png ]   && cp vortex_heatmap.png _site/vortex_heatmap.png || true
-          [ -f venus_database.json ]  && cp venus_database.json _site/venus_database.json || true
+          [ -f analysis.html ]           && cp analysis.html _site/analysis.html || true
+          [ -f manifest.json ]           && cp manifest.json _site/manifest.json || true
+          [ -f sw.js ]                   && cp sw.js _site/sw.js || true
+          [ -f icon-192.png ]            && cp icon-192.png _site/icon-192.png || true
+          [ -f icon-512.png ]            && cp icon-512.png _site/icon-512.png || true
+          [ -f favicon.ico ]             && cp favicon.ico _site/favicon.ico || true
+          [ -f vortex_chart.png ]        && cp vortex_chart.png _site/vortex_chart.png || true
+          [ -f vortex_heatmap.png ]      && cp vortex_heatmap.png _site/vortex_heatmap.png || true
+          [ -f vortex_distribution.png ] && cp vortex_distribution.png _site/vortex_distribution.png || true
+          [ -f venus_database.json ]     && cp venus_database.json _site/venus_database.json || true
+          [ -f venus_history.json ]      && cp venus_history.json _site/venus_history.json || true
           touch _site/.nojekyll
 
       - name: Upload artifact per GitHub Pages
