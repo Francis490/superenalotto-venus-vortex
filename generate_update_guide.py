@@ -3,6 +3,9 @@ generate_update_guide.py
 Genera il file UPDATE_HERE.md con istruzioni aggiornate per
 compilare venus_manual_override.json con i nuovi numeri.
 Eseguito automaticamente dal workflow ad ogni run.
+
+Versione robusta: costruzione del contenuto via lista di righe,
+nessun uso di triple-quote per evitare problemi di parsing.
 """
 import json
 import os
@@ -19,7 +22,7 @@ def main():
             with open(DATABASE_FILE, "r", encoding="utf-8") as f:
                 db = json.load(f)
         except Exception as e:
-            print(f"[!] Errore lettura {DATABASE_FILE}: {e}")
+            print("[!] Errore lettura " + DATABASE_FILE + ": " + str(e))
 
     next_c = db.get("next_contest", {}) or {}
     last_d = db.get("last_draw", {}) or {}
@@ -36,48 +39,117 @@ def main():
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    template_json = (
-        '{\n'
-        f'  "jackpot": {jackpot},\n'
-        '  "last_draw": {\n'
-        f'    "concorso": {next_num},\n'
-        f'    "data": "{next_date}",\n'
-        '    "combinazione": [0, 0, 0, 0, 0, 0],\n'
-        '    "jolly": 0,\n'
-        '    "superstar": 0\n'
-        '  },\n'
-        f'  "note": "Compila con i numeri reali del concorso {next_num}"\n'
-        '}'
-    )
+    # --- JSON template come stringa (costruito per concatenazione) ---
+    json_template_lines = [
+        "{",
+        '  "jackpot": ' + str(jackpot) + ",",
+        '  "last_draw": {',
+        '    "concorso": ' + str(next_num) + ",",
+        '    "data": "' + str(next_date) + '",',
+        '    "combinazione": [0, 0, 0, 0, 0, 0],',
+        '    "jolly": 0,',
+        '    "superstar": 0',
+        '  },',
+        '  "note": "Compila con i numeri reali del concorso ' + str(next_num) + '"',
+        "}",
+    ]
+    json_template = "\n".join(json_template_lines)
 
-    content = f"""# 📝 Aggiorna Venus Vortex — Concorso N° {next_num}
+    # --- Contenuto markdown costruito per righe ---
+    lines = []
 
-> Ultima generazione automatica: **{now}**
+    lines.append("# Aggiorna Venus Vortex - Concorso N. " + str(next_num))
+    lines.append("")
+    lines.append("> Ultima generazione automatica: **" + now + "**")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append("## Stato attuale")
+    lines.append("")
+    lines.append("| Campo | Valore |")
+    lines.append("|---|---|")
+    lines.append("| **Ultima estrazione** | Concorso N. " + str(last_num) + " del " + str(last_date) + " |")
+    lines.append("| **Combinazione** | `" + str(last_comb) + "` |")
+    lines.append("| **Jolly** | " + str(last_jolly) + " |")
+    lines.append("| **SuperStar** | " + str(last_superstar) + " |")
+    lines.append("| **Prossimo concorso** | N. " + str(next_num) + " del " + str(next_date) + " |")
+    lines.append("| **Jackpot attuale** | EUR " + format(jackpot, ",") + " |")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append("## Procedura aggiornamento (2 minuti)")
+    lines.append("")
+    lines.append("### STEP 1 - Trova i numeri veri del concorso " + str(next_num))
+    lines.append("")
+    lines.append("Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:")
+    lines.append("- 6 numeri vincenti")
+    lines.append("- Jolly")
+    lines.append("- SuperStar")
+    lines.append("")
+    lines.append("### STEP 2 - Apri il file di override")
+    lines.append("")
+    lines.append("Link diretto:")
+    lines.append("")
+    lines.append("```")
+    lines.append("https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_override.json")
+    lines.append("```")
+    lines.append("")
+    lines.append("### STEP 3 - Sostituisci il contenuto con questo template")
+    lines.append("")
+    lines.append("```json")
+    lines.append(json_template)
+    lines.append("```")
+    lines.append("")
+    lines.append("**Sostituisci:**")
+    lines.append("- `[0, 0, 0, 0, 0, 0]` con i 6 numeri veri (ordine crescente)")
+    lines.append("- `\"jolly\": 0` con il Jolly vero")
+    lines.append("- `\"superstar\": 0` con il SuperStar vero")
+    lines.append("- `\"jackpot\": " + str(jackpot) + "` con il nuovo jackpot (o lascia invariato)")
+    lines.append("")
+    lines.append("### STEP 4 - Commit changes")
+    lines.append("")
+    lines.append("In fondo alla pagina, clicca **Commit changes**.")
+    lines.append("")
+    lines.append("### STEP 5 - Lancia il workflow")
+    lines.append("")
+    lines.append("Link diretto:")
+    lines.append("")
+    lines.append("```")
+    lines.append("https://github.com/Francis490/superenalotto-venus-vortex/actions/workflows/venus_sync.yml")
+    lines.append("```")
+    lines.append("")
+    lines.append("Clicca **Run workflow** -> **main** -> **Run**.")
+    lines.append("")
+    lines.append("### STEP 6 - Fatto!")
+    lines.append("")
+    lines.append("Dopo ~60 secondi ricevi il report Telegram con i nuovi dati.")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append("## Orari estrazioni SuperEnalotto")
+    lines.append("")
+    lines.append("| Giorno | Ora |")
+    lines.append("|---|---|")
+    lines.append("| Martedi | 20:00 |")
+    lines.append("| Giovedi | 20:00 |")
+    lines.append("| Venerdi | 20:00 |")
+    lines.append("| Sabato | 20:00 |")
+    lines.append("")
+    lines.append("Aggiorna il file **dopo le 20:30**.")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append("*Generato automaticamente da Venus Vortex - Cosmic Pattern Engine*")
+    lines.append("")
 
----
+    content = "\n".join(lines)
 
-## 📊 Stato attuale
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(content)
 
-| Campo | Valore |
-|---|---|
-| **Ultima estrazione** | Concorso N° {last_num} del {last_date} |
-| **Combinazione** | `{last_comb}` |
-| **Jolly** | {last_jolly} |
-| **SuperStar** | {last_superstar} |
-| **Prossimo concorso** | N° {next_num} del {next_date} |
-| **Jackpot attuale** | € {jackpot:,} |
+    print("[+] Generato: " + OUTPUT_FILE)
+    print("[*] Concorso di riferimento: " + str(next_num) + " del " + str(next_date))
 
----
 
-## 🎯 Procedura aggiornamento (2 minuti)
-
-### STEP 1 — Trova i numeri veri del concorso {next_num}
-
-Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
-- 6 numeri vincenti
-- Jolly
-- SuperStar
-
-### STEP 2 — Apri il file di override
-
-👉 **LINK DIRETTO:**
+if __name__ == "__main__":
+    main()
