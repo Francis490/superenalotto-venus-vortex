@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venus Vortex — Analytics</title>
+    <meta name="theme-color" content="#0a0612">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --space: #0a0612;
+            --space-2: #150b1f;
+            --card: rgba(21, 11, 31, 0.75);
+            --venus: #c026d3;
+            --vortex: #06b6d4;
+            --solar: #fbbf24;
+            --nebula: #ec4899;
+            --cosmic: #10b981;
+            --text: #f1e8ff;
+            --text-dim: #a89bbd;
+            --border: rgba(192, 38, 211, 0.25);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            background: var(--space);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            padding: 1.5rem 1rem 3rem;
+            min-height: 100vh;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%; left: 50%;
+            width: 200vmax; height: 200vmax;
+            margin: -100vmax 0 0 -100vmax;
+            background: conic-gradient(
+                from 0deg,
+                rgba(192, 38, 211, 0.06),
+                rgba(6, 182, 212, 0.04),
+                rgba(236, 72, 153, 0.06),
+                rgba(192, 38, 211, 0.06)
+            );
+            animation: rotate 120s linear infinite;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            background: linear-gradient(90deg, var(--venus), var(--vortex), var(--venus));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        header .tagline {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+        .nav {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .nav a {
+            color: var(--vortex);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--vortex);
+            border-radius: 8px;
+            display: inline-block;
+            letter-spacing: 0.1em;
+        }
+        .nav a:hover { background: rgba(6, 182, 212, 0.1); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(500px, 100%), 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--venus), transparent);
+            opacity: 0.6;
+        }
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--vortex);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .card-title::before {
+            content: "";
+            width: 20px;
+            height: 1px;
+            background: var(--vortex);
+        }
+        .card-desc {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        canvas { max-height: 320px; }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-dim);
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(192, 38, 211, 0.1);
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-row strong { color: var(--text); }
+        .disclaimer {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-left: 4px solid var(--solar);
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--text);
+        }
+        .disclaimer strong { color: var(--solar); }
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+        .error {
+            color: #f87171;
+            text-align: center;
+            padding: 2rem;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            background: rgba(248, 113, 113, 0.08);
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>VENUS VORTEX</h1>
+        <div class="tagline">Statistical Analytics Dashboard</div>
+    </header>
+
+    <div class="nav">
+        <a href="index.html">← Torna alla Dashboard</a>
+    </div>
+
+    <div id="errorBox" class="error"></div>
+
+    <div class="grid">
+
+        <!-- 1. Andamento somme -->
+        <div class="card">
+            <div class="card-title">Andamento Somme</div>
+            <div class="card-desc">Evoluzione della somma dei 6 numeri da concorso 1 a 148. La linea tratteggiata è la media teorica (273).</div>
+            <canvas id="chartSums"></canvas>
+        </div>
+
+        <!-- 2. Distribuzione somme -->
+        <div class="card">
+            <div class="card-title">Distribuzione Somme</div>
+            <div class="card-desc">Istogramma delle somme raggruppate in 9 fasce. Deve seguire una curva gaussiana.</div>
+            <canvas id="chartDistribution"></canvas>
+        </div>
+
+        <!-- 3. Analisi decadi -->
+        <div class="card">
+            <div class="card-title">Analisi Decadi</div>
+            <div class="card-desc">Frequenza dei numeri per fascia decimale (1-9, 10-19, ..., 80-90). Ogni decade dovrebbe avere ~10% del totale.</div>
+            <canvas id="chartDecades"></canvas>
+        </div>
+
+        <!-- 4. Parità -->
+        <div class="card">
+            <div class="card-title">Analisi Parità</div>
+            <div class="card-desc">Distribuzione delle estrazioni per numero di pari (0-6). Le configurazioni 3/3, 2/4 e 4/2 dominano.</div>
+            <canvas id="chartParity"></canvas>
+        </div>
+
+        <!-- 5. Pattern -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-title">Pattern Analysis — Autocorrelazione</div>
+            <div class="card-desc">Verifica se le somme sono correlate tra concorsi consecutivi. Un valore vicino a 0 = indipendenza statistica.</div>
+            <canvas id="chartPattern"></canvas>
+            <div class="disclaimer">
+                <strong>⚠️ Nota di trasparenza</strong><br>
+                Questa analisi è <strong>descrittiva</strong>, non predittiva. Le estrazioni del SuperEnalotto sono <strong>fisicamente indipendenti</strong>: il passato <strong>non influenza</strong> il futuro. Nessun pattern è sfruttabile per predire i numeri. La matematica lo dimostra da decenni.
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p><span style="color: var(--venus); font-weight: 700; letter-spacing: 0.2em;">VENUS VORTEX</span> — Cosmic Pattern Engine</p>
+        <p style="margin-top: 0.5rem;">Analytics generato dai dati di <span id="totalDraws">—</span> concorsi reali</p>
+    </footer>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    const COLORS = {
+        venus: '#c026d3',
+        vortex: '#06b6d4',
+        solar: '#fbbf24',
+        nebula: '#ec4899',
+        cosmic: '#10b981',
+    };
+
+    Chart.defaults.color = '#a89bbd';
+    Chart.defaults.borderColor = 'rgba(192, 38, 211, 0.15)';
+    Chart.defaults.font.family = "'JetBrains Mono', monospace";
+
+    const $ = (id) => document.getElementById(id);
+    const showError = (msg) => {
+        const box = $("errorBox");
+        box.textContent = msg;
+        box.style.display = "block";
+    };
+
+    async function loadData() {
+        try {
+            const res = await fetch("venus_history.json?ts=" + Date.now(), { cache: "no-store" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return await res.json();
+        } catch (err) {
+            showError("Impossibile caricare venus_history.json: " + err.message);
+            return null;
+        }
+    }
+
+    function computeSums(history) {
+        return history
+            .filter(d => d.combinazione && d.combinazione.length === 6)
+            .sort((a, b) => a.concorso - b.concorso)
+            .map(d => ({
+                concorso: d.concorso,
+                somma: d.combinazione.reduce((a, b) => a + b, 0),
+                data: d.data,
+            }));
+    }
+
+    function computeDistribution(sums) {
+        const buckets = [
+            { label: "144-179", min: 144, max: 179, count: 0 },
+            { label: "180-209", min: 180, max: 209, count: 0 },
+            { label: "210-239", min: 210, max: 239, count: 0 },
+            { label: "240-269", min: 240, max: 269, count: 0 },
+            { label: "270-299", min: 270, max: 299, count: 0 },
+            { label: "300-329", min: 300, max: 329, count: 0 },
+            { label: "330-359", min: 330, max: 359, count: 0 },
+            { label: "360-389", min: 360, max: 389, count: 0 },
+            { label: "390-420", min: 390, max: 420, count: 0 },
+        ];
+        sums.forEach(s => {
+            for (const b of buckets) {
+                if (s.somma >= b.min && s.somma <= b.max) {
+                    b.count++;
+                    break;
+                }
+            }
+        });
+        return buckets;
+    }
+
+    function computeDecades(history) {
+        const dec = {};
+        for (let i = 0; i < 9; i++) dec[i] = 0;
+        history.forEach(d => {
+            (d.combinazione || []).forEach(n => {
+                const idx = Math.min(8, Math.floor((n - 1) / 10));
+                dec[idx]++;
+            });
+        });
+        return dec;
+    }
+
+    function computeParity(history) {
+        const parity = [0, 0, 0, 0, 0, 0, 0]; // index = numero di pari
+        history.forEach(d => {
+            const comb = d.combinazione || [];
+            if (comb.length !== 6) return;
+            const nPari = comb.filter(n => n % 2 === 0).length;
+            parity[nPari]++;
+        });
+        return parity;
+    }
+
+    function computeAutocorrelation(sums) {
+        const arr = sums.map(s => s.somma);
+        if (arr.length < 3) return { lags: [], values: [] };
+
+        const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+        const denom = arr.reduce((acc, x) => acc + (x - mean) ** 2, 0);
+
+        const lags = [];
+        const values = [];
+        for (let lag = 1; lag <= 15; lag++) {
+            let num = 0;
+            for (let i = 0; i < arr.length - lag; i++) {
+                num += (arr[i] - mean) * (arr[i + lag] - mean);
+            }
+            const ac = denom !== 0 ? num / denom : 0;
+            lags.push("Lag " + lag);
+            values.push(ac);
+        }
+        return { lags, values };
+    }
+
+    function renderSumsChart(sums) {
+        const ctx = $("chartSums").getContext("2d");
+        const labels = sums.map(s => s.concorso);
+
+        // Media mobile a 10
+        const window = 10;
+        const movingAvg = [];
+        for (let i = 0; i < sums.length; i++) {
+            if (i < window - 1) {
+                movingAvg.push(null);
+                continue;
+            }
+            let sum = 0;
+            for (let j = i - window + 1; j <= i; j++) sum += sums[j].somma;
+            movingAvg.push(sum / window);
+        }
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: "Somma",
+                        data: sums.map(s => s.somma),
+                        borderColor: COLORS.venus,
+                        backgroundColor: "rgba(192, 38, 211, 0.1)",
+                        borderWidth: 1,
+                        pointRadius: 2,
+                        pointBackgroundColor: COLORS.venus,
+                        tension: 0.1,
+                    },
+                    {
+                        label: "Media mobile (10)",
+                        data: movingAvg,
+                        borderColor: COLORS.vortex,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                    },
+                    {
+                        label: "Media teorica (273)",
+                        data: sums.map(() => 273),
+                        borderColor: COLORS.solar,
+                        borderWidth: 1,
+                        borderDash: [6, 6],
+                        pointRadius: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "top", labels: { boxWidth: 12, font: { size: 10 } } },
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 12, font: { size: 9 } } },
+                    y: { beginAtZero: false, font: { size: 9 } },
+                },
+            },
+        });
+    }
+
+    function renderDistributionChart(buckets) {
+        const ctx = $("chartDistribution").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: buckets.map(b => b.label),
+                datasets: [{
+                    label: "Frequenza",
+                    data: buckets.map(b => b.count),
+                    backgroundColor: buckets.map((_, i) => {
+                        const t = i / (buckets.length - 1);
+                        if (t < 0.3) return "rgba(6, 182, 212, 0.7)";
+                        if (t < 0.6) return "rgba(192, 38, 211, 0.7)";
+                        return "rgba(251, 191, 36, 0.7)";
+                    }),
+                    borderColor: COLORS.venus,
+                    borderWidth: 1,
+                    borderRadius: 6,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 9 } } },
+                    y: { beginAtZero: true, font: { size: 9 } },
+                },
+            },
+        });
+    }
+
+    function renderDecadesChart(dec) {
+        const ctx = $("chartDecades").getContext("2d");
+        const labels = Object.keys(dec).map(i => {
+            const start = parseInt(i) * 10 + 1;
+            const end = i === "8" ? 90 : start + 9;
+            return start + "-" + end;
+        });
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Occorrenze",
+                    data: Object.values(dec),
+                    backgroundColor: "rgba(6, 182, 212, 0.7)",
+                    borderColor: COLORS.vortex,
+                    borderWidth: 1,
+                    borderRadius: 6,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 9 } } },
+                    y: { beginAtZero: true, font: { size: 9 } },
+                },
+            },
+        });
+    }
+
+    function renderParityChart(parity) {
+        const ctx = $("chartParity").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: parity.map((_, i) => i + " pari / " + (6 - i) + " dispari"),
+                datasets: [{
+                    label: "Frequenza",
+                    data: parity,
+                    backgroundColor: parity.map((_, i) => {
+                        if (i === 3) return "rgba(16, 185, 129, 0.8)";
+                        if (i === 2 || i === 4) return "rgba(192, 38, 211, 0.7)";
+                        return "rgba(236, 72, 153, 0.5)";
+                    }),
+                    borderColor: COLORS.venus,
+                    borderWidth: 1,
+                    borderRadius: 6,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 9 } } },
+                    y: { beginAtZero: true, font: { size: 9 } },
+                },
+            },
+        });
+    }
+
+    function renderPatternChart(ac) {
+        const ctx = $("chartPattern").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ac.lags,
+                datasets: [{
+                    label: "Autocorrelazione",
+                    data: ac.values,
+                    backgroundColor: ac.values.map(v =>
+                        Math.abs(v) < 0.15
+                            ? "rgba(16, 185, 129, 0.6)"   // verde: indipendente
+                            : "rgba(236, 72, 153, 0.7)"   // rosa: attenzione
+                    ),
+                    borderColor: COLORS.vortex,
+                    borderWidth: 1,
+                    borderRadius: 6,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 9 } } },
+                    y: { min: -1, max: 1, font: { size: 9 } },
+                },
+            },
+        });
+    }
+
+    async function init() {
+        const history = await loadData();
+        if (!history) return;
+
+        const sums = computeSums(history);
+        const buckets = computeDistribution(sums);
+        const dec = computeDecades(history);
+        const parity = computeParity(history);
+        const ac = computeAutocorrelation(sums);
+
+        $("totalDraws").textContent = history.length;
+
+        renderSumsChart(sums);
+        renderDistributionChart(buckets);
+        renderDecadesChart(dec);
+        renderParityChart(parity);
+        renderPatternChart(ac);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+</body>
+</html>
