@@ -115,6 +115,9 @@ DEFAULT_JACKPOT = 26500000
 
 SUPERENALOTTO_WEEKDAYS = {1, 3, 4, 5}
 
+# Limite caption Telegram per sendPhoto
+TELEGRAM_CAPTION_LIMIT = 1000
+
 # ==========================================
 # 1. GESTIONE FILE JSON & NORMALIZZAZIONE
 # ==========================================
@@ -565,6 +568,10 @@ def send_telegram_photo(photo_path, caption=""):
         print(f"[!] File non trovato: {photo_path}")
         return
 
+    # Tronca caption se troppo lungo (limite Telegram 1024)
+    if caption and len(caption) > TELEGRAM_CAPTION_LIMIT:
+        caption = caption[:TELEGRAM_CAPTION_LIMIT - 3] + "..."
+
     url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
 
     try:
@@ -611,10 +618,6 @@ def send_telegram_photo(photo_path, caption=""):
         print(f"[!] Errore invio foto {photo_path}: {e}")
 
 
-def send_telegram_notification(caption_text, chart_path):
-    send_telegram_photo(chart_path, caption_text)
-
-
 def send_telegram_message(text):
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
@@ -623,6 +626,11 @@ def send_telegram_message(text):
         return
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+    # Telegram sendMessage accetta fino a 4096 caratteri.
+    # Se troppo lungo, taglia con "..." (non dovrebbe mai accadere)
+    if len(text) > 4000:
+        text = text[:3997] + "..."
 
     try:
         import urllib.parse
@@ -1052,7 +1060,9 @@ def main():
         f"🏠 <a href='{DASHBOARD_URL}'>Apri Dashboard Principale</a>"
     )
 
-    send_telegram_notification(report_text, CHART_FILE)
+    # === INVIA GRAFICO (senza caption) + REPORT (come messaggio) ===
+    send_telegram_photo(CHART_FILE, "")
+    send_telegram_message(report_text)
 
     # === INVIA HEATMAP ===
     if heatmap_path and os.path.exists(heatmap_path):
