@@ -74,6 +74,10 @@ DISTRIBUTION_FILE = "vortex_distribution.png"
 JACKPOT_FILE = "venus_jackpot.json"
 MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
 
+# URL pubblici
+DASHBOARD_URL = "https://francis490.github.io/superenalotto-venus-vortex/"
+ANALYTICS_URL = "https://francis490.github.io/superenalotto-venus-vortex/analysis.html"
+
 GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
@@ -325,7 +329,7 @@ def calculate_next_draw_date(last_date_str):
     return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
 
 # ==========================================
-# 4. GENERAZIONE GRAFICO PRINCIPALE (0-6 sestine)
+# 4. GENERAZIONE GRAFICO PRINCIPALE
 # ==========================================
 def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
     plt.rcParams['text.color'] = '#f1e8ff'
@@ -395,17 +399,12 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
     plt.close()
 
 # ==========================================
-# 4-bis. GRAFICO DISTRIBUZIONE SOMME / DECADI / PARITÀ
+# 4-bis. GRAFICO DISTRIBUZIONE
 # ==========================================
 def generate_distribution_chart(history):
-    """
-    Genera un grafico della distribuzione delle somme + analisi decadi + parità.
-    Salvato come vortex_distribution.png
-    """
     if not history or len(history) < 10:
         return None
 
-    # Calcola somme
     sums = []
     for d in history:
         comb = d.get("combinazione", [])
@@ -415,14 +414,12 @@ def generate_distribution_chart(history):
     if not sums:
         return None
 
-    # Analisi decadi
     decades = [0] * 9
     for d in history:
         for n in d.get("combinazione", []):
             if 1 <= n <= 90:
                 decades[min(8, (n - 1) // 10)] += 1
 
-    # Analisi parità
     parity = [0] * 7
     for d in history:
         comb = d.get("combinazione", [])
@@ -430,7 +427,6 @@ def generate_distribution_chart(history):
             n_pari = sum(1 for n in comb if n % 2 == 0)
             parity[n_pari] += 1
 
-    # Plot
     plt.rcParams['text.color'] = '#f1e8ff'
     plt.rcParams['axes.labelcolor'] = '#f1e8ff'
     plt.rcParams['xtick.color'] = '#a89bbd'
@@ -438,7 +434,6 @@ def generate_distribution_chart(history):
 
     fig = plt.figure(figsize=(14, 8), facecolor='#0a0612')
 
-    # --- 1. Distribuzione somme ---
     ax1 = fig.add_subplot(2, 2, 1, facecolor='#150b1f')
     ax1.hist(sums, bins=15, color='#c026d3',
              edgecolor='#150b1f', alpha=0.8)
@@ -453,7 +448,6 @@ def generate_distribution_chart(history):
     ax1.set_xlabel("Somma", fontsize=9)
     ax1.set_ylabel("Frequenza", fontsize=9)
 
-    # --- 2. Decadi ---
     ax2 = fig.add_subplot(2, 2, 2, facecolor='#150b1f')
     labels_dec = ["1-9", "10-19", "20-29", "30-39", "40-49",
                   "50-59", "60-69", "70-79", "80-90"]
@@ -467,7 +461,6 @@ def generate_distribution_chart(history):
     ax2.tick_params(axis='x', rotation=45)
     ax2.set_ylabel("Occorrenze", fontsize=9)
 
-    # --- 3. Parità ---
     ax3 = fig.add_subplot(2, 2, 3, facecolor='#150b1f')
     labels_par = [f"{i}P / {6-i}D" for i in range(7)]
     colors_par = ['#ec4899' if i in (2, 3, 4) else '#a855f7'
@@ -478,7 +471,6 @@ def generate_distribution_chart(history):
     ax3.tick_params(axis='x', rotation=45)
     ax3.set_ylabel("Occorrenze", fontsize=9)
 
-    # --- 4. Statistiche testuali ---
     ax4 = fig.add_subplot(2, 2, 4, facecolor='#150b1f')
     ax4.axis('off')
 
@@ -490,7 +482,6 @@ def generate_distribution_chart(history):
         mean_val = sum(sums) / len(sums) if sums else 0
         stdev_val = 0
 
-    # Chi-quadro uniformità decadi
     exp_dec = len(history) * 6 / 9
     chi2 = sum((obs - exp_dec) ** 2 / exp_dec for obs in decades) if exp_dec > 0 else 0
 
@@ -534,7 +525,9 @@ def generate_distribution_chart(history):
 # 5. NOTIFICA TELEGRAM
 # ==========================================
 def send_telegram_photo(photo_path, caption=""):
-    """Invia una foto generica al bot Telegram."""
+    """
+    Invia una foto al bot Telegram con caption HTML (link cliccabili).
+    """
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not bot_token or not chat_id:
@@ -560,11 +553,17 @@ def send_telegram_photo(photo_path, caption=""):
         body += f"{chat_id}\r\n".encode("utf-8")
 
         if caption:
+            # Caption HTML
             body += f"--{boundary}\r\n".encode("utf-8")
             body += b'Content-Disposition: form-data; name="caption"\r\n'
-            body += b"Content-Type: text/plain; charset=utf-8\r\n\r\n"
+            body += b"Content-Type: text/html; charset=utf-8\r\n\r\n"
             body += caption.encode("utf-8")
             body += b"\r\n"
+
+            # parse_mode HTML per rendere cliccabili i link
+            body += f"--{boundary}\r\n".encode("utf-8")
+            body += b'Content-Disposition: form-data; name="parse_mode"\r\n\r\n'
+            body += b"HTML\r\n"
 
         body += f"--{boundary}\r\n".encode("utf-8")
         body += (f'Content-Disposition: form-data; name="photo"; '
@@ -590,6 +589,37 @@ def send_telegram_photo(photo_path, caption=""):
 def send_telegram_notification(caption_text, chart_path):
     """Invia il report principale."""
     send_telegram_photo(chart_path, caption_text)
+
+
+def send_telegram_message(text):
+    """
+    Invia un messaggio di testo HTML al bot Telegram.
+    Usato per inviare link cliccabili.
+    """
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not bot_token or not chat_id:
+        print("[!] Token mancanti. Messaggio saltato.")
+        return
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+    try:
+        import urllib.parse
+        data = urllib.parse.urlencode({
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": "false",
+        }).encode("utf-8")
+
+        req = urllib.request.Request(url, data=data, method="POST")
+        req.add_header("Content-Type", "application/x-www-form-urlencoded")
+
+        with urllib.request.urlopen(req, timeout=30) as response:
+            print(f"[+] Messaggio Telegram inviato! ({response.status})")
+    except Exception as e:
+        print(f"[!] Errore invio messaggio: {e}")
 
 # ==========================================
 # 6. COSTRUZIONE DATABASE PER L'HTML
@@ -835,7 +865,7 @@ def main():
 
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
-    # === TRACK RECORD: registra sestine generate ===
+    # === TRACK RECORD ===
     if TRACK_AVAILABLE and all_sestinas:
         try:
             record_predictions(next_concorso, all_sestinas,
@@ -843,7 +873,6 @@ def main():
         except Exception as e:
             print(f"[!] Errore track record: {e}")
 
-    # === TRACK RECORD: aggiorna con ultima estrazione reale ===
     if TRACK_AVAILABLE and last_draw and last_draw.get("combinazione"):
         try:
             update_with_result(
@@ -859,17 +888,15 @@ def main():
     )
     save_json(DATABASE_FILE, payload)
 
-    # === GRAFICO PRINCIPALE ===
+    # === GRAFICI ===
     generate_vortex_chart(all_sestinas, dodeca_pool, adjusted_scores)
 
-    # === DISTRIBUZIONE SOMME ===
     dist_path = None
     try:
         dist_path = generate_distribution_chart(history)
     except Exception as e:
         print(f"[!] Errore grafico distribuzione: {e}")
 
-    # === HEATMAP ===
     heatmap_path = None
     if ANALYTICS_AVAILABLE:
         try:
@@ -877,7 +904,7 @@ def main():
         except Exception as e:
             print(f"[!] Errore heatmap: {e}")
 
-    # === TEST STATISTICI ===
+    # === STATISTICHE ===
     stats_block = "—"
     if ANALYTICS_AVAILABLE:
         try:
@@ -886,7 +913,6 @@ def main():
         except Exception as e:
             print(f"[!] Errore test statistici: {e}")
 
-    # === TRACK RECORD STATS ===
     track_block = "—"
     if TRACK_AVAILABLE:
         try:
@@ -968,7 +994,10 @@ def main():
         f"{dodeca_pool}\n\n"
         f"🔥 VORTEX SESTINE — Harmonic Filter:\n"
         f"{sestinas_block}\n\n"
-        f"🌌 Venus Vortex — Cosmic Pattern Engine"
+        f"🌌 Venus Vortex — Cosmic Pattern Engine\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📈 <a href='{ANALYTICS_URL}'>Apri Analytics Dashboard</a>\n"
+        f"🏠 <a href='{DASHBOARD_URL}'>Apri Dashboard Principale</a>"
     )
 
     send_telegram_notification(report_text, CHART_FILE)
@@ -980,6 +1009,17 @@ def main():
     # === INVIA GRAFICO DISTRIBUZIONE ===
     if dist_path and os.path.exists(dist_path):
         send_telegram_photo(dist_path, "📊 Analisi Distribuzione — Somme, Decadi, Parità")
+
+    # === INVIA MESSAGGIO LINK ===
+    links_msg = (
+        "📊 <b>ANALYTICS DASHBOARD</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🔗 <a href='{ANALYTICS_URL}'>Statistiche Complete</a>\n"
+        "Somme · Decadi · Parità · Pattern · Autocorrelazione\n\n"
+        f"🏠 <a href='{DASHBOARD_URL}'>Dashboard Principale</a>\n"
+        "Sestine · Grafici · Heatmap · Track Record"
+    )
+    send_telegram_message(links_msg)
 
     print("=== VENUS VORTEX — COMPLETATO ===")
 
