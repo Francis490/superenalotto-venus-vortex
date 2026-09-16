@@ -1,0 +1,75 @@
+name: Backtest End-to-End
+
+on:
+  workflow_dispatch:
+    inputs:
+      n_tests:
+        description: 'Numero concorsi da testare'
+        required: false
+        default: '10'
+      n_sestinas:
+        description: 'Sestine per concorso'
+        required: false
+        default: '2'
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dipendenze
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Esegui Backtest
+        run: |
+          python - <<'EOF'
+          from backtest_e2e import run_backtest, format_backtest_report
+          import json
+
+          n_tests = int("${{ github.event.inputs.n_tests }}" or "10")
+          n_sestinas = int("${{ github.event.inputs.n_sestinas }}" or "2")
+
+          stats = run_backtest(n_tests=n_tests, n_sestinas=n_sestinas)
+
+          if stats:
+              with open("backtest_results.json", "w", encoding="utf-8") as f:
+                  json.dump(stats, f, indent=2, ensure_ascii=False)
+
+              # Invia report Telegram
+              try:
+                  from scraper import send_telegram_message
+                  report = format_backtest_report(stats)
+                  send_telegram_message(report)
+                  print("[+] Report backtest inviato su Telegram")
+              except Exception as e:
+                  print(f"[!] Errore invio Telegram: {e}")
+          EOF
+
+      - name: Commit Risultati
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add backtest_results.json
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica."
+          else
+            git commit -m "Backtest results [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
