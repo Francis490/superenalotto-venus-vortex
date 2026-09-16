@@ -80,6 +80,20 @@ except ImportError as e:
     print(f"[!] true_mimic_generator non disponibile ({e})")
 
 # ==========================================
+# PERSONAL STATS (opzionale)
+# ==========================================
+try:
+    from personal_stats import (
+        analyze_played,
+        format_personal_report,
+    )
+    PERSONAL_AVAILABLE = True
+    print("[+] Venus Vortex — Personal Stats: ATTIVO")
+except ImportError as e:
+    PERSONAL_AVAILABLE = False
+    print(f"[!] personal_stats non disponibile ({e})")
+
+# ==========================================
 # COSTANTI E CONFIGURAZIONE DI SISTEMA
 # ==========================================
 HISTORY_FILE = "venus_history.json"
@@ -940,6 +954,16 @@ def main():
         except Exception as e:
             print(f"[!] Errore test statistici: {e}")
 
+    # === PERSONAL STATS ===
+    personal_block = "—"
+    if PERSONAL_AVAILABLE:
+        try:
+            personal_stats = analyze_played()
+            personal_block = format_personal_report(personal_stats)
+        except Exception as e:
+            print(f"[!] Errore personal stats: {e}")
+            personal_block = "📊 <b>STATISTICHE PERSONALI</b>\n\nErrore nel calcolo."
+
     track_block = "—"
     if TRACK_AVAILABLE:
         try:
@@ -1016,6 +1040,7 @@ def main():
         f"• Sestine: {bm_n} · Costo: {bm_cost:.2f} €\n"
         f"• {bm_msg}\n\n"
         f"📊 TRACK RECORD:\n{track_block}\n\n"
+        f"{personal_block}\n\n"
         f"🔬 STATISTICAL TESTS:\n{stats_block}\n\n"
         f"🔮 VORTEX NUMERICAL FIELD:\n"
         f"{dodeca_pool}\n\n"
