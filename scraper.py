@@ -54,6 +54,8 @@ try:
     from venus_track_record import (
         record_predictions,
         update_with_result,
+        detect_wins,
+        format_win_notification,
         get_stats as get_track_stats,
         format_stats_for_report as format_track_report,
     )
@@ -525,9 +527,6 @@ def generate_distribution_chart(history):
 # 5. NOTIFICA TELEGRAM
 # ==========================================
 def send_telegram_photo(photo_path, caption=""):
-    """
-    Invia una foto al bot Telegram con caption HTML (link cliccabili).
-    """
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not bot_token or not chat_id:
@@ -553,14 +552,12 @@ def send_telegram_photo(photo_path, caption=""):
         body += f"{chat_id}\r\n".encode("utf-8")
 
         if caption:
-            # Caption HTML
             body += f"--{boundary}\r\n".encode("utf-8")
             body += b'Content-Disposition: form-data; name="caption"\r\n'
             body += b"Content-Type: text/html; charset=utf-8\r\n\r\n"
             body += caption.encode("utf-8")
             body += b"\r\n"
 
-            # parse_mode HTML per rendere cliccabili i link
             body += f"--{boundary}\r\n".encode("utf-8")
             body += b'Content-Disposition: form-data; name="parse_mode"\r\n\r\n'
             body += b"HTML\r\n"
@@ -587,15 +584,10 @@ def send_telegram_photo(photo_path, caption=""):
 
 
 def send_telegram_notification(caption_text, chart_path):
-    """Invia il report principale."""
     send_telegram_photo(chart_path, caption_text)
 
 
 def send_telegram_message(text):
-    """
-    Invia un messaggio di testo HTML al bot Telegram.
-    Usato per inviare link cliccabili.
-    """
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not bot_token or not chat_id:
@@ -865,7 +857,7 @@ def main():
 
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
-    # === TRACK RECORD ===
+    # === TRACK RECORD: registra sestine generate ===
     if TRACK_AVAILABLE and all_sestinas:
         try:
             record_predictions(next_concorso, all_sestinas,
@@ -873,12 +865,21 @@ def main():
         except Exception as e:
             print(f"[!] Errore track record: {e}")
 
+    # === TRACK RECORD: aggiorna + rileva vincite ===
+    win_info = None
     if TRACK_AVAILABLE and last_draw and last_draw.get("combinazione"):
         try:
             update_with_result(
                 last_draw.get("concorso"),
                 last_draw.get("combinazione")
             )
+            win_info = detect_wins(
+                last_draw.get("concorso"),
+                last_draw.get("combinazione")
+            )
+            if win_info:
+                print(f"[!] VINCITA RILEVATA! Concorso {win_info['concorso']} "
+                      f"-> {win_info['best_hits']} punti")
         except Exception as e:
             print(f"[!] Errore update track: {e}")
 
@@ -1020,6 +1021,13 @@ def main():
         "Sestine · Grafici · Heatmap · Track Record"
     )
     send_telegram_message(links_msg)
+
+    # === NOTIFICA VINCITA (URGENTE) ===
+    if win_info:
+        win_msg = format_win_notification(win_info)
+        if win_msg:
+            send_telegram_message(win_msg)
+            print(f"[!] Notifica VINCITA inviata per concorso {win_info['concorso']}")
 
     print("=== VENUS VORTEX — COMPLETATO ===")
 
