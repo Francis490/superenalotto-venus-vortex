@@ -1,11 +1,9 @@
 import json
 import os
-import sys
 import math
 from datetime import datetime, timedelta
 import itertools
 import urllib.request
-import urllib.parse
 
 # Librerie di rendering grafico e analisi statistica
 import matplotlib
@@ -42,7 +40,6 @@ DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
 JACKPOT_FILE = "venus_jackpot.json"
 MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
-INDEX_FILE = "index.html"
 
 GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
@@ -455,6 +452,7 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
 
     # --- VORTEX OPPORTUNITY ANALYSIS ---
     vortex_data = {}
+    ev_data = {}
     if VORTEX_ENGINE_AVAILABLE and jackpot_value > 0:
         try:
             ev_data = calculate_ev(jackpot_value)
@@ -496,6 +494,9 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
             "signature": sig,
         })
 
+    # --- EV dinamico per il Risk Shield ---
+    ev_for_risk = ev_data.get("ev_total", -0.957) if ev_data else -0.957
+
     payload = {
         "updated_at": now_str,
         "next_contest": {
@@ -512,10 +513,9 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         },
         "risk": {
             "status": "🟠 PRUDENZA STATISTICA",
-            "ev": -0.957,
+            "ev": ev_for_risk,
             "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
-            "advice": ("Mantenere puntata minima di 2 Sestine Vortex "
-                       "(Budget 2,00 €)."),
+            "advice": budget_mode.get("message", "Budget base 2 sestine."),
         },
         "budget_mode": budget_mode,
         "dodeca_pool": dodeca_pool,
@@ -608,7 +608,7 @@ def main():
     # === DETERMINE BUDGET MODE ===
     budget_mode = {
         "mode": "NORMALE", "emoji": "🟡", "n_sestinas": 2,
-        "cost_eur": 1.0, "ev": 0.0,
+        "cost_eur": 2.0, "ev": 0.0,
         "message": "EV neutro. 2 sestine (budget base)."
     }
     if VORTEX_ENGINE_AVAILABLE:
@@ -619,7 +619,7 @@ def main():
         except Exception as e:
             print(f"[!] Errore budget mode: {e}")
 
-    # === FIX: SKIP = 0 SESTINE ===
+    # === SKIP MODE ===
     n_sestinas = int(budget_mode.get("n_sestinas", 2))
     skip_mode = (n_sestinas == 0)
 
@@ -703,7 +703,7 @@ def main():
     bm_emoji = bm.get("emoji", "🟡")
     bm_mode = bm.get("mode", "NORMALE")
     bm_n = bm.get("n_sestinas", len(all_sestinas))
-    bm_cost = bm.get("cost_eur", 1.0)
+    bm_cost = bm.get("cost_eur", 2.0)
     bm_msg = bm.get("message", "")
 
     # Blocco sestine
