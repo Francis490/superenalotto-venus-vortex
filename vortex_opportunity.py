@@ -296,12 +296,35 @@ def _build_candidates(dodeca_pool, adjusted_scores, history):
 
 
 def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestinas=2):
+    """
+    Genera N sestine STATISTICAMENTE INDISTINGUIBILI dalle estrazioni reali.
+    Usa true_mimic_generator per applicare 12 fingerprint.
+    """
     if n_sestinas <= 0:
         return []
 
+    # === TENTA MIMIC GENERATOR ===
+    try:
+        from true_mimic_generator import generate_true_mimic
+        sestinas, fp = generate_true_mimic(history, dodeca_pool, n_sestinas)
+
+        if sestinas and len(sestinas) >= n_sestinas:
+            print(f"[+] {len(sestinas)} sestine generate con TRUE MIMIC (12 fingerprint)")
+            return [
+                (tuple(s), _score_realistic(s, adjusted_scores),
+                 anti_crowd_score(s), _score_realistic(s, adjusted_scores))
+                for s in sestinas
+            ]
+        else:
+            print(f"[!] MIMIC: solo {len(sestinas)} sestine valide. Fallback.")
+    except ImportError:
+        print("[!] true_mimic_generator non disponibile. Uso selezione classica.")
+    except Exception as e:
+        print(f"[!] Errore MIMIC generator: {e}")
+
+    # === FALLBACK: selezione classica ===
     base_combos = _build_candidates(dodeca_pool, adjusted_scores, history)
 
-    # SESTINA 1: REALISTICA
     realistic = []
     for combo in base_combos:
         s = sorted(combo)
@@ -337,7 +360,6 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     if n_sestinas == 1:
         return [(tuple(s), sc, anti_crowd_score(s), sc) for s, sc in selected]
 
-    # SESTINA 2: ANTI-CROWD
     assassin = []
     for combo in base_combos:
         overlap_s1 = len(set(combo).intersection(selected_sets[0]))
@@ -370,7 +392,6 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     selected.append((sestina2, _score_assassin(sestina2, adjusted_scores)))
     selected_sets.append(set(sestina2))
 
-    # SESTINE 3+
     for _ in range(2, n_sestinas):
         pool_candidates = []
         for combo in base_combos:
