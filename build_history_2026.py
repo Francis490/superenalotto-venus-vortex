@@ -125,6 +125,8 @@ REAL_DRAWS = [
     {"concorso": 100, "data": "23/06/2026", "combinazione": [1, 12, 17, 27, 66, 84], "jolly": 61, "superstar": 4},
     {"concorso": 101, "data": "25/06/2026", "combinazione": [25, 27, 54, 72, 73, 76], "jolly": 31, "superstar": 80},
     {"concorso": 102, "data": "26/06/2026", "combinazione": [1, 22, 30, 45, 73, 76], "jolly": 64, "superstar": 49},
+    {"concorso": 103, "data": "27/06/2026", "combinazione": [15, 19, 36, 47, 85, 90], "jolly": 42, "superstar": 62},
+    {"concorso": 104, "data": "30/06/2026", "combinazione": [1, 7, 51, 64, 78, 83],   "jolly": 13, "superstar": 66},
 
     # --- LUGLIO 2026 ---
     {"concorso": 105, "data": "02/07/2026", "combinazione": [4, 17, 19, 23, 47, 59],  "jolly": 51, "superstar": 82},
@@ -142,6 +144,9 @@ REAL_DRAWS = [
     {"concorso": 117, "data": "23/07/2026", "combinazione": [2, 12, 22, 34, 70, 74],  "jolly": 41, "superstar": 8},
     {"concorso": 118, "data": "24/07/2026", "combinazione": [20, 40, 53, 61, 74, 79], "jolly": 11, "superstar": 30},
     {"concorso": 119, "data": "25/07/2026", "combinazione": [18, 19, 33, 34, 61, 85], "jolly": 15, "superstar": 59},
+    {"concorso": 120, "data": "28/07/2026", "combinazione": [1, 6, 9, 43, 54, 62],   "jolly": 87, "superstar": 69},
+    {"concorso": 121, "data": "30/07/2026", "combinazione": [20, 47, 75, 76, 78, 89], "jolly": 9, "superstar": 89},
+    {"concorso": 122, "data": "31/07/2026", "combinazione": [2, 6, 10, 31, 39, 83],  "jolly": 66, "superstar": 75},
 
     # --- AGOSTO 2026 ---
     {"concorso": 123, "data": "01/08/2026", "combinazione": [8, 11, 21, 24, 72, 88],  "jolly": 33, "superstar": 11},
@@ -159,6 +164,8 @@ REAL_DRAWS = [
     {"concorso": 135, "data": "22/08/2026", "combinazione": [2, 16, 23, 31, 72, 85],  "jolly": 82, "superstar": 14},
     {"concorso": 136, "data": "25/08/2026", "combinazione": [15, 36, 62, 67, 69, 70], "jolly": 32, "superstar": 15},
     {"concorso": 137, "data": "27/08/2026", "combinazione": [2, 27, 28, 50, 75, 84],  "jolly": 32, "superstar": 40},
+    {"concorso": 138, "data": "28/08/2026", "combinazione": [4, 8, 27, 62, 70, 79],   "jolly": 60, "superstar": 55},
+    {"concorso": 139, "data": "29/08/2026", "combinazione": [12, 17, 45, 59, 74, 77], "jolly": 62, "superstar": 62},
 
     # --- SETTEMBRE 2026 ---
     {"concorso": 140, "data": "01/09/2026", "combinazione": [42, 47, 59, 64, 67, 71], "jolly": 88, "superstar": 75},
