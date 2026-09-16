@@ -11,7 +11,15 @@
       89
     ],
     "jolly": 16,
-    "superstar": 7
+    "superstar": 7,
+    "sestina": [
+      29,
+      33,
+      47,
+      56,
+      69,
+      89
+    ]
   },
   {
     "concorso": 2,
@@ -25,7 +33,15 @@
       76
     ],
     "jolly": 36,
-    "superstar": 58
+    "superstar": 58,
+    "sestina": [
+      16,
+      30,
+      32,
+      43,
+      68,
+      76
+    ]
   },
   {
     "concorso": 3,
@@ -39,7 +55,15 @@
       84
     ],
     "jolly": 41,
-    "superstar": 13
+    "superstar": 13,
+    "sestina": [
+      11,
+      13,
+      17,
+      56,
+      80,
+      84
+    ]
   },
   {
     "concorso": 4,
@@ -53,7 +77,15 @@
       88
     ],
     "jolly": 66,
-    "superstar": 52
+    "superstar": 52,
+    "sestina": [
+      35,
+      42,
+      45,
+      53,
+      55,
+      88
+    ]
   },
   {
     "concorso": 5,
@@ -67,7 +99,15 @@
       72
     ],
     "jolly": 87,
-    "superstar": 18
+    "superstar": 18,
+    "sestina": [
+      31,
+      33,
+      61,
+      68,
+      71,
+      72
+    ]
   },
   {
     "concorso": 6,
@@ -81,7 +121,15 @@
       88
     ],
     "jolly": 58,
-    "superstar": 48
+    "superstar": 48,
+    "sestina": [
+      11,
+      19,
+      24,
+      66,
+      82,
+      88
+    ]
   },
   {
     "concorso": 7,
@@ -95,7 +143,15 @@
       81
     ],
     "jolly": 70,
-    "superstar": 22
+    "superstar": 22,
+    "sestina": [
+      1,
+      11,
+      40,
+      73,
+      75,
+      81
+    ]
   },
   {
     "concorso": 8,
@@ -109,7 +165,15 @@
       74
     ],
     "jolly": 35,
-    "superstar": 50
+    "superstar": 50,
+    "sestina": [
+      20,
+      29,
+      56,
+      68,
+      72,
+      74
+    ]
   },
   {
     "concorso": 9,
@@ -123,7 +187,15 @@
       85
     ],
     "jolly": 36,
-    "superstar": 1
+    "superstar": 1,
+    "sestina": [
+      44,
+      49,
+      60,
+      69,
+      73,
+      85
+    ]
   },
   {
     "concorso": 10,
@@ -137,7 +209,15 @@
       86
     ],
     "jolly": 57,
-    "superstar": 14
+    "superstar": 14,
+    "sestina": [
+      14,
+      21,
+      24,
+      52,
+      80,
+      86
+    ]
   },
   {
     "concorso": 11,
@@ -151,7 +231,15 @@
       83
     ],
     "jolly": 79,
-    "superstar": 82
+    "superstar": 82,
+    "sestina": [
+      3,
+      7,
+      41,
+      56,
+      65,
+      83
+    ]
   },
   {
     "concorso": 12,
@@ -165,7 +253,15 @@
       74
     ],
     "jolly": 78,
-    "superstar": 34
+    "superstar": 34,
+    "sestina": [
+      8,
+      13,
+      25,
+      60,
+      72,
+      74
+    ]
   },
   {
     "concorso": 13,
@@ -179,7 +275,15 @@
       78
     ],
     "jolly": 59,
-    "superstar": 25
+    "superstar": 25,
+    "sestina": [
+      2,
+      30,
+      52,
+      56,
+      57,
+      78
+    ]
   },
   {
     "concorso": 14,
@@ -193,7 +297,15 @@
       90
     ],
     "jolly": 69,
-    "superstar": 52
+    "superstar": 52,
+    "sestina": [
+      2,
+      6,
+      11,
+      19,
+      88,
+      90
+    ]
   },
   {
     "concorso": 15,
@@ -207,7 +319,15 @@
       71
     ],
     "jolly": 21,
-    "superstar": 18
+    "superstar": 18,
+    "sestina": [
+      22,
+      37,
+      55,
+      61,
+      68,
+      71
+    ]
   },
   {
     "concorso": 16,
@@ -221,7 +341,15 @@
       90
     ],
     "jolly": 3,
-    "superstar": 56
+    "superstar": 56,
+    "sestina": [
+      14,
+      27,
+      43,
+      74,
+      83,
+      90
+    ]
   },
   {
     "concorso": 17,
@@ -235,7 +363,15 @@
       72
     ],
     "jolly": 9,
-    "superstar": 18
+    "superstar": 18,
+    "sestina": [
+      6,
+      17,
+      21,
+      38,
+      58,
+      72
+    ]
   },
   {
     "concorso": 18,
@@ -249,7 +385,15 @@
       84
     ],
     "jolly": 69,
-    "superstar": 64
+    "superstar": 64,
+    "sestina": [
+      2,
+      20,
+      25,
+      33,
+      36,
+      84
+    ]
   },
   {
     "concorso": 19,
@@ -263,7 +407,15 @@
       84
     ],
     "jolly": 29,
-    "superstar": 45
+    "superstar": 45,
+    "sestina": [
+      16,
+      22,
+      39,
+      55,
+      63,
+      84
+    ]
   },
   {
     "concorso": 20,
@@ -277,7 +429,15 @@
       46
     ],
     "jolly": 70,
-    "superstar": 57
+    "superstar": 57,
+    "sestina": [
+      11,
+      16,
+      17,
+      41,
+      42,
+      46
+    ]
   },
   {
     "concorso": 21,
@@ -291,7 +451,15 @@
       90
     ],
     "jolly": 41,
-    "superstar": 30
+    "superstar": 30,
+    "sestina": [
+      6,
+      8,
+      26,
+      27,
+      57,
+      90
+    ]
   },
   {
     "concorso": 22,
@@ -305,7 +473,15 @@
       75
     ],
     "jolly": 90,
-    "superstar": 82
+    "superstar": 82,
+    "sestina": [
+      6,
+      8,
+      17,
+      31,
+      36,
+      75
+    ]
   },
   {
     "concorso": 23,
@@ -319,7 +495,15 @@
       81
     ],
     "jolly": 41,
-    "superstar": 67
+    "superstar": 67,
+    "sestina": [
+      4,
+      7,
+      12,
+      30,
+      69,
+      81
+    ]
   },
   {
     "concorso": 24,
@@ -333,7 +517,15 @@
       83
     ],
     "jolly": 73,
-    "superstar": 21
+    "superstar": 21,
+    "sestina": [
+      1,
+      15,
+      29,
+      39,
+      63,
+      83
+    ]
   },
   {
     "concorso": 25,
@@ -347,7 +539,15 @@
       85
     ],
     "jolly": 66,
-    "superstar": 29
+    "superstar": 29,
+    "sestina": [
+      5,
+      11,
+      35,
+      52,
+      80,
+      85
+    ]
   },
   {
     "concorso": 26,
@@ -361,7 +561,15 @@
       83
     ],
     "jolly": 37,
-    "superstar": 3
+    "superstar": 3,
+    "sestina": [
+      1,
+      52,
+      57,
+      71,
+      76,
+      83
+    ]
   },
   {
     "concorso": 27,
@@ -375,7 +583,15 @@
       85
     ],
     "jolly": 6,
-    "superstar": 47
+    "superstar": 47,
+    "sestina": [
+      5,
+      23,
+      40,
+      47,
+      80,
+      85
+    ]
   },
   {
     "concorso": 28,
@@ -389,7 +605,15 @@
       88
     ],
     "jolly": 58,
-    "superstar": 21
+    "superstar": 21,
+    "sestina": [
+      16,
+      21,
+      42,
+      45,
+      52,
+      88
+    ]
   },
   {
     "concorso": 29,
@@ -403,7 +627,15 @@
       90
     ],
     "jolly": 53,
-    "superstar": 53
+    "superstar": 53,
+    "sestina": [
+      20,
+      39,
+      40,
+      43,
+      76,
+      90
+    ]
   },
   {
     "concorso": 30,
@@ -417,7 +649,15 @@
       83
     ],
     "jolly": 64,
-    "superstar": 77
+    "superstar": 77,
+    "sestina": [
+      30,
+      34,
+      41,
+      42,
+      49,
+      83
+    ]
   },
   {
     "concorso": 31,
@@ -431,7 +671,15 @@
       81
     ],
     "jolly": 75,
-    "superstar": 58
+    "superstar": 58,
+    "sestina": [
+      49,
+      58,
+      60,
+      66,
+      68,
+      81
+    ]
   },
   {
     "concorso": 32,
@@ -445,7 +693,15 @@
       87
     ],
     "jolly": 82,
-    "superstar": 29
+    "superstar": 29,
+    "sestina": [
+      4,
+      18,
+      23,
+      26,
+      45,
+      87
+    ]
   },
   {
     "concorso": 33,
@@ -459,7 +715,15 @@
       72
     ],
     "jolly": 69,
-    "superstar": 47
+    "superstar": 47,
+    "sestina": [
+      18,
+      30,
+      36,
+      52,
+      67,
+      72
+    ]
   },
   {
     "concorso": 34,
@@ -473,7 +737,15 @@
       79
     ],
     "jolly": 80,
-    "superstar": 36
+    "superstar": 36,
+    "sestina": [
+      10,
+      14,
+      49,
+      55,
+      71,
+      79
+    ]
   },
   {
     "concorso": 35,
@@ -487,7 +759,15 @@
       72
     ],
     "jolly": 65,
-    "superstar": 22
+    "superstar": 22,
+    "sestina": [
+      15,
+      18,
+      33,
+      39,
+      40,
+      72
+    ]
   },
   {
     "concorso": 36,
@@ -501,7 +781,15 @@
       68
     ],
     "jolly": 26,
-    "superstar": 83
+    "superstar": 83,
+    "sestina": [
+      4,
+      16,
+      42,
+      48,
+      56,
+      68
+    ]
   },
   {
     "concorso": 37,
@@ -515,7 +803,15 @@
       78
     ],
     "jolly": 22,
-    "superstar": 35
+    "superstar": 35,
+    "sestina": [
+      7,
+      23,
+      39,
+      62,
+      63,
+      78
+    ]
   },
   {
     "concorso": 38,
@@ -529,7 +825,15 @@
       88
     ],
     "jolly": 20,
-    "superstar": 2
+    "superstar": 2,
+    "sestina": [
+      4,
+      17,
+      22,
+      37,
+      50,
+      88
+    ]
   },
   {
     "concorso": 39,
@@ -543,7 +847,15 @@
       69
     ],
     "jolly": 5,
-    "superstar": 49
+    "superstar": 49,
+    "sestina": [
+      3,
+      12,
+      18,
+      40,
+      45,
+      69
+    ]
   },
   {
     "concorso": 40,
@@ -557,7 +869,15 @@
       83
     ],
     "jolly": 4,
-    "superstar": 42
+    "superstar": 42,
+    "sestina": [
+      8,
+      34,
+      42,
+      47,
+      55,
+      83
+    ]
   },
   {
     "concorso": 41,
@@ -571,7 +891,15 @@
       64
     ],
     "jolly": 43,
-    "superstar": 54
+    "superstar": 54,
+    "sestina": [
+      8,
+      24,
+      25,
+      62,
+      63,
+      64
+    ]
   },
   {
     "concorso": 42,
@@ -585,7 +913,15 @@
       61
     ],
     "jolly": 88,
-    "superstar": 43
+    "superstar": 43,
+    "sestina": [
+      3,
+      11,
+      13,
+      20,
+      53,
+      61
+    ]
   },
   {
     "concorso": 43,
@@ -599,7 +935,15 @@
       89
     ],
     "jolly": 18,
-    "superstar": 87
+    "superstar": 87,
+    "sestina": [
+      3,
+      6,
+      33,
+      63,
+      88,
+      89
+    ]
   },
   {
     "concorso": 44,
@@ -613,7 +957,15 @@
       56
     ],
     "jolly": 60,
-    "superstar": 6
+    "superstar": 6,
+    "sestina": [
+      2,
+      13,
+      16,
+      41,
+      53,
+      56
+    ]
   },
   {
     "concorso": 45,
@@ -627,7 +979,15 @@
       89
     ],
     "jolly": 42,
-    "superstar": 45
+    "superstar": 45,
+    "sestina": [
+      19,
+      39,
+      45,
+      54,
+      62,
+      89
+    ]
   },
   {
     "concorso": 46,
@@ -641,7 +1001,15 @@
       87
     ],
     "jolly": 61,
-    "superstar": 50
+    "superstar": 50,
+    "sestina": [
+      14,
+      32,
+      45,
+      51,
+      54,
+      87
+    ]
   },
   {
     "concorso": 47,
@@ -655,7 +1023,15 @@
       55
     ],
     "jolly": 50,
-    "superstar": 4
+    "superstar": 4,
+    "sestina": [
+      9,
+      26,
+      33,
+      49,
+      51,
+      55
+    ]
   },
   {
     "concorso": 48,
@@ -669,7 +1045,15 @@
       87
     ],
     "jolly": 10,
-    "superstar": 65
+    "superstar": 65,
+    "sestina": [
+      6,
+      54,
+      60,
+      64,
+      74,
+      87
+    ]
   },
   {
     "concorso": 49,
@@ -683,7 +1067,15 @@
       80
     ],
     "jolly": 82,
-    "superstar": 3
+    "superstar": 3,
+    "sestina": [
+      24,
+      26,
+      39,
+      69,
+      77,
+      80
+    ]
   },
   {
     "concorso": 50,
@@ -697,7 +1089,15 @@
       64
     ],
     "jolly": 10,
-    "superstar": 74
+    "superstar": 74,
+    "sestina": [
+      6,
+      22,
+      27,
+      43,
+      58,
+      64
+    ]
   },
   {
     "concorso": 51,
@@ -711,7 +1111,15 @@
       43
     ],
     "jolly": 24,
-    "superstar": 50
+    "superstar": 50,
+    "sestina": [
+      2,
+      16,
+      19,
+      21,
+      39,
+      43
+    ]
   },
   {
     "concorso": 52,
@@ -725,7 +1133,15 @@
       83
     ],
     "jolly": 85,
-    "superstar": 78
+    "superstar": 78,
+    "sestina": [
+      9,
+      27,
+      69,
+      72,
+      79,
+      83
+    ]
   },
   {
     "concorso": 53,
@@ -739,7 +1155,15 @@
       63
     ],
     "jolly": 40,
-    "superstar": 80
+    "superstar": 80,
+    "sestina": [
+      18,
+      24,
+      25,
+      32,
+      36,
+      63
+    ]
   },
   {
     "concorso": 54,
@@ -753,7 +1177,15 @@
       72
     ],
     "jolly": 44,
-    "superstar": 6
+    "superstar": 6,
+    "sestina": [
+      28,
+      52,
+      53,
+      64,
+      66,
+      72
+    ]
   },
   {
     "concorso": 55,
@@ -767,7 +1199,15 @@
       81
     ],
     "jolly": 42,
-    "superstar": 80
+    "superstar": 80,
+    "sestina": [
+      8,
+      21,
+      29,
+      46,
+      60,
+      81
+    ]
   },
   {
     "concorso": 56,
@@ -781,7 +1221,15 @@
       59
     ],
     "jolly": 7,
-    "superstar": 60
+    "superstar": 60,
+    "sestina": [
+      10,
+      16,
+      18,
+      47,
+      50,
+      59
+    ]
   },
   {
     "concorso": 57,
@@ -795,7 +1243,15 @@
       84
     ],
     "jolly": 19,
-    "superstar": 82
+    "superstar": 82,
+    "sestina": [
+      2,
+      30,
+      38,
+      63,
+      74,
+      84
+    ]
   },
   {
     "concorso": 58,
@@ -809,7 +1265,15 @@
       90
     ],
     "jolly": 32,
-    "superstar": 7
+    "superstar": 7,
+    "sestina": [
+      3,
+      10,
+      13,
+      17,
+      58,
+      90
+    ]
   },
   {
     "concorso": 59,
@@ -823,7 +1287,15 @@
       85
     ],
     "jolly": 59,
-    "superstar": 57
+    "superstar": 57,
+    "sestina": [
+      19,
+      28,
+      38,
+      48,
+      77,
+      85
+    ]
   },
   {
     "concorso": 60,
@@ -837,7 +1309,15 @@
       66
     ],
     "jolly": 17,
-    "superstar": 6
+    "superstar": 6,
+    "sestina": [
+      3,
+      5,
+      20,
+      27,
+      35,
+      66
+    ]
   },
   {
     "concorso": 61,
@@ -851,7 +1331,15 @@
       54
     ],
     "jolly": 60,
-    "superstar": 39
+    "superstar": 39,
+    "sestina": [
+      9,
+      11,
+      12,
+      38,
+      44,
+      54
+    ]
   },
   {
     "concorso": 62,
@@ -865,7 +1353,15 @@
       84
     ],
     "jolly": 34,
-    "superstar": 63
+    "superstar": 63,
+    "sestina": [
+      13,
+      27,
+      45,
+      53,
+      57,
+      84
+    ]
   },
   {
     "concorso": 63,
@@ -879,7 +1375,15 @@
       77
     ],
     "jolly": 9,
-    "superstar": 70
+    "superstar": 70,
+    "sestina": [
+      11,
+      22,
+      28,
+      33,
+      68,
+      77
+    ]
   },
   {
     "concorso": 64,
@@ -893,7 +1397,15 @@
       77
     ],
     "jolly": 6,
-    "superstar": 65
+    "superstar": 65,
+    "sestina": [
+      18,
+      19,
+      40,
+      43,
+      56,
+      77
+    ]
   },
   {
     "concorso": 65,
@@ -907,7 +1419,15 @@
       58
     ],
     "jolly": 72,
-    "superstar": 57
+    "superstar": 57,
+    "sestina": [
+      18,
+      24,
+      28,
+      35,
+      56,
+      58
+    ]
   },
   {
     "concorso": 66,
@@ -921,7 +1441,15 @@
       82
     ],
     "jolly": 56,
-    "superstar": 20
+    "superstar": 20,
+    "sestina": [
+      6,
+      13,
+      33,
+      37,
+      68,
+      82
+    ]
   },
   {
     "concorso": 67,
@@ -935,7 +1463,15 @@
       87
     ],
     "jolly": 23,
-    "superstar": 56
+    "superstar": 56,
+    "sestina": [
+      40,
+      57,
+      62,
+      64,
+      85,
+      87
+    ]
   },
   {
     "concorso": 68,
@@ -949,7 +1485,15 @@
       66
     ],
     "jolly": 70,
-    "superstar": 53
+    "superstar": 53,
+    "sestina": [
+      20,
+      22,
+      25,
+      31,
+      39,
+      66
+    ]
   },
   {
     "concorso": 69,
@@ -963,7 +1507,15 @@
       85
     ],
     "jolly": 9,
-    "superstar": 17
+    "superstar": 17,
+    "sestina": [
+      4,
+      36,
+      39,
+      51,
+      53,
+      85
+    ]
   },
   {
     "concorso": 70,
@@ -977,7 +1529,15 @@
       86
     ],
     "jolly": 2,
-    "superstar": 19
+    "superstar": 19,
+    "sestina": [
+      7,
+      58,
+      60,
+      79,
+      84,
+      86
+    ]
   },
   {
     "concorso": 71,
@@ -991,7 +1551,15 @@
       63
     ],
     "jolly": 75,
-    "superstar": 24
+    "superstar": 24,
+    "sestina": [
+      3,
+      14,
+      31,
+      46,
+      61,
+      63
+    ]
   },
   {
     "concorso": 72,
@@ -1005,7 +1573,15 @@
       87
     ],
     "jolly": 23,
-    "superstar": 52
+    "superstar": 52,
+    "sestina": [
+      24,
+      34,
+      45,
+      55,
+      81,
+      87
+    ]
   },
   {
     "concorso": 73,
@@ -1019,7 +1595,15 @@
       73
     ],
     "jolly": 75,
-    "superstar": 58
+    "superstar": 58,
+    "sestina": [
+      1,
+      34,
+      48,
+      66,
+      69,
+      73
+    ]
   },
   {
     "concorso": 74,
@@ -1033,7 +1617,15 @@
       90
     ],
     "jolly": 82,
-    "superstar": 69
+    "superstar": 69,
+    "sestina": [
+      8,
+      16,
+      41,
+      47,
+      51,
+      90
+    ]
   },
   {
     "concorso": 75,
@@ -1047,7 +1639,15 @@
       62
     ],
     "jolly": 11,
-    "superstar": 11
+    "superstar": 11,
+    "sestina": [
+      9,
+      27,
+      30,
+      42,
+      43,
+      62
+    ]
   },
   {
     "concorso": 76,
@@ -1061,7 +1661,15 @@
       59
     ],
     "jolly": 5,
-    "superstar": 2
+    "superstar": 2,
+    "sestina": [
+      2,
+      28,
+      31,
+      57,
+      58,
+      59
+    ]
   },
   {
     "concorso": 77,
@@ -1075,7 +1683,15 @@
       85
     ],
     "jolly": 18,
-    "superstar": 34
+    "superstar": 34,
+    "sestina": [
+      31,
+      56,
+      72,
+      74,
+      84,
+      85
+    ]
   },
   {
     "concorso": 78,
@@ -1089,7 +1705,15 @@
       68
     ],
     "jolly": 42,
-    "superstar": 19
+    "superstar": 19,
+    "sestina": [
+      5,
+      13,
+      17,
+      28,
+      47,
+      68
+    ]
   },
   {
     "concorso": 79,
@@ -1103,7 +1727,15 @@
       90
     ],
     "jolly": 59,
-    "superstar": 36
+    "superstar": 36,
+    "sestina": [
+      7,
+      12,
+      60,
+      69,
+      89,
+      90
+    ]
   },
   {
     "concorso": 80,
@@ -1117,7 +1749,15 @@
       86
     ],
     "jolly": 8,
-    "superstar": 36
+    "superstar": 36,
+    "sestina": [
+      49,
+      57,
+      61,
+      73,
+      79,
+      86
+    ]
   },
   {
     "concorso": 81,
@@ -1131,7 +1771,15 @@
       81
     ],
     "jolly": 28,
-    "superstar": 50
+    "superstar": 50,
+    "sestina": [
+      1,
+      38,
+      57,
+      58,
+      64,
+      81
+    ]
   },
   {
     "concorso": 82,
@@ -1145,7 +1793,15 @@
       87
     ],
     "jolly": 50,
-    "superstar": 86
+    "superstar": 86,
+    "sestina": [
+      5,
+      17,
+      65,
+      71,
+      83,
+      87
+    ]
   },
   {
     "concorso": 83,
@@ -1159,7 +1815,15 @@
       69
     ],
     "jolly": 20,
-    "superstar": 16
+    "superstar": 16,
+    "sestina": [
+      14,
+      29,
+      34,
+      57,
+      59,
+      69
+    ]
   },
   {
     "concorso": 84,
@@ -1173,7 +1837,15 @@
       61
     ],
     "jolly": 2,
-    "superstar": 45
+    "superstar": 45,
+    "sestina": [
+      7,
+      10,
+      35,
+      41,
+      45,
+      61
+    ]
   },
   {
     "concorso": 85,
@@ -1187,7 +1859,15 @@
       88
     ],
     "jolly": 51,
-    "superstar": 8
+    "superstar": 8,
+    "sestina": [
+      4,
+      13,
+      26,
+      28,
+      71,
+      88
+    ]
   },
   {
     "concorso": 86,
@@ -1201,7 +1881,15 @@
       86
     ],
     "jolly": 78,
-    "superstar": 38
+    "superstar": 38,
+    "sestina": [
+      23,
+      30,
+      58,
+      76,
+      80,
+      86
+    ]
   },
   {
     "concorso": 87,
@@ -1215,7 +1903,15 @@
       84
     ],
     "jolly": 82,
-    "superstar": 22
+    "superstar": 22,
+    "sestina": [
+      17,
+      51,
+      56,
+      62,
+      71,
+      84
+    ]
   },
   {
     "concorso": 88,
@@ -1229,7 +1925,15 @@
       75
     ],
     "jolly": 70,
-    "superstar": 59
+    "superstar": 59,
+    "sestina": [
+      12,
+      33,
+      43,
+      55,
+      74,
+      75
+    ]
   },
   {
     "concorso": 89,
@@ -1243,7 +1947,15 @@
       89
     ],
     "jolly": 90,
-    "superstar": 40
+    "superstar": 40,
+    "sestina": [
+      9,
+      25,
+      51,
+      63,
+      73,
+      89
+    ]
   },
   {
     "concorso": 90,
@@ -1257,7 +1969,15 @@
       89
     ],
     "jolly": 57,
-    "superstar": 38
+    "superstar": 38,
+    "sestina": [
+      2,
+      7,
+      29,
+      68,
+      72,
+      89
+    ]
   },
   {
     "concorso": 91,
@@ -1271,7 +1991,15 @@
       87
     ],
     "jolly": 88,
-    "superstar": 87
+    "superstar": 87,
+    "sestina": [
+      28,
+      33,
+      51,
+      59,
+      82,
+      87
+    ]
   },
   {
     "concorso": 92,
@@ -1285,7 +2013,15 @@
       80
     ],
     "jolly": 90,
-    "superstar": 54
+    "superstar": 54,
+    "sestina": [
+      18,
+      36,
+      47,
+      55,
+      73,
+      80
+    ]
   },
   {
     "concorso": 93,
@@ -1299,7 +2035,15 @@
       87
     ],
     "jolly": 53,
-    "superstar": 83
+    "superstar": 83,
+    "sestina": [
+      7,
+      21,
+      22,
+      40,
+      44,
+      87
+    ]
   },
   {
     "concorso": 94,
@@ -1313,7 +2057,15 @@
       83
     ],
     "jolly": 26,
-    "superstar": 20
+    "superstar": 20,
+    "sestina": [
+      18,
+      24,
+      42,
+      68,
+      75,
+      83
+    ]
   },
   {
     "concorso": 95,
@@ -1327,7 +2079,15 @@
       90
     ],
     "jolly": 80,
-    "superstar": 54
+    "superstar": 54,
+    "sestina": [
+      13,
+      23,
+      34,
+      68,
+      87,
+      90
+    ]
   },
   {
     "concorso": 96,
@@ -1341,7 +2101,15 @@
       80
     ],
     "jolly": 48,
-    "superstar": 72
+    "superstar": 72,
+    "sestina": [
+      4,
+      28,
+      33,
+      35,
+      66,
+      80
+    ]
   },
   {
     "concorso": 97,
@@ -1355,7 +2123,15 @@
       87
     ],
     "jolly": 57,
-    "superstar": 57
+    "superstar": 57,
+    "sestina": [
+      4,
+      26,
+      39,
+      43,
+      70,
+      87
+    ]
   },
   {
     "concorso": 98,
@@ -1369,7 +2145,15 @@
       89
     ],
     "jolly": 11,
-    "superstar": 69
+    "superstar": 69,
+    "sestina": [
+      14,
+      18,
+      25,
+      69,
+      81,
+      89
+    ]
   },
   {
     "concorso": 99,
@@ -1383,7 +2167,15 @@
       89
     ],
     "jolly": 47,
-    "superstar": 3
+    "superstar": 3,
+    "sestina": [
+      14,
+      59,
+      69,
+      71,
+      82,
+      89
+    ]
   },
   {
     "concorso": 100,
@@ -1397,7 +2189,15 @@
       84
     ],
     "jolly": 61,
-    "superstar": 4
+    "superstar": 4,
+    "sestina": [
+      1,
+      12,
+      17,
+      27,
+      66,
+      84
+    ]
   },
   {
     "concorso": 101,
@@ -1411,7 +2211,15 @@
       76
     ],
     "jolly": 31,
-    "superstar": 80
+    "superstar": 80,
+    "sestina": [
+      25,
+      27,
+      54,
+      72,
+      73,
+      76
+    ]
   },
   {
     "concorso": 102,
@@ -1425,7 +2233,15 @@
       76
     ],
     "jolly": 64,
-    "superstar": 49
+    "superstar": 49,
+    "sestina": [
+      1,
+      22,
+      30,
+      45,
+      73,
+      76
+    ]
   },
   {
     "concorso": 105,
@@ -1439,7 +2255,15 @@
       59
     ],
     "jolly": 51,
-    "superstar": 82
+    "superstar": 82,
+    "sestina": [
+      4,
+      17,
+      19,
+      23,
+      47,
+      59
+    ]
   },
   {
     "concorso": 106,
@@ -1453,7 +2277,15 @@
       86
     ],
     "jolly": 72,
-    "superstar": 48
+    "superstar": 48,
+    "sestina": [
+      22,
+      26,
+      30,
+      40,
+      68,
+      86
+    ]
   },
   {
     "concorso": 107,
@@ -1467,7 +2299,15 @@
       76
     ],
     "jolly": 34,
-    "superstar": 75
+    "superstar": 75,
+    "sestina": [
+      2,
+      37,
+      55,
+      62,
+      72,
+      76
+    ]
   },
   {
     "concorso": 108,
@@ -1481,7 +2321,15 @@
       79
     ],
     "jolly": 84,
-    "superstar": 66
+    "superstar": 66,
+    "sestina": [
+      3,
+      16,
+      30,
+      53,
+      55,
+      79
+    ]
   },
   {
     "concorso": 109,
@@ -1495,7 +2343,15 @@
       79
     ],
     "jolly": 58,
-    "superstar": 47
+    "superstar": 47,
+    "sestina": [
+      9,
+      17,
+      20,
+      31,
+      40,
+      79
+    ]
   },
   {
     "concorso": 110,
@@ -1509,7 +2365,15 @@
       82
     ],
     "jolly": 76,
-    "superstar": 79
+    "superstar": 79,
+    "sestina": [
+      2,
+      3,
+      12,
+      28,
+      63,
+      82
+    ]
   },
   {
     "concorso": 111,
@@ -1523,7 +2387,15 @@
       61
     ],
     "jolly": 5,
-    "superstar": 62
+    "superstar": 62,
+    "sestina": [
+      6,
+      7,
+      10,
+      47,
+      49,
+      61
+    ]
   },
   {
     "concorso": 112,
@@ -1537,7 +2409,15 @@
       88
     ],
     "jolly": 30,
-    "superstar": 64
+    "superstar": 64,
+    "sestina": [
+      8,
+      44,
+      49,
+      80,
+      85,
+      88
+    ]
   },
   {
     "concorso": 113,
@@ -1551,7 +2431,15 @@
       67
     ],
     "jolly": 41,
-    "superstar": 76
+    "superstar": 76,
+    "sestina": [
+      1,
+      15,
+      21,
+      46,
+      52,
+      67
+    ]
   },
   {
     "concorso": 114,
@@ -1565,7 +2453,15 @@
       76
     ],
     "jolly": 46,
-    "superstar": 90
+    "superstar": 90,
+    "sestina": [
+      7,
+      34,
+      45,
+      64,
+      65,
+      76
+    ]
   },
   {
     "concorso": 115,
@@ -1579,7 +2475,15 @@
       86
     ],
     "jolly": 61,
-    "superstar": 31
+    "superstar": 31,
+    "sestina": [
+      1,
+      28,
+      52,
+      62,
+      79,
+      86
+    ]
   },
   {
     "concorso": 116,
@@ -1593,7 +2497,15 @@
       63
     ],
     "jolly": 24,
-    "superstar": 49
+    "superstar": 49,
+    "sestina": [
+      13,
+      14,
+      15,
+      29,
+      38,
+      63
+    ]
   },
   {
     "concorso": 117,
@@ -1607,7 +2519,15 @@
       74
     ],
     "jolly": 41,
-    "superstar": 8
+    "superstar": 8,
+    "sestina": [
+      2,
+      12,
+      22,
+      34,
+      70,
+      74
+    ]
   },
   {
     "concorso": 118,
@@ -1621,7 +2541,15 @@
       79
     ],
     "jolly": 11,
-    "superstar": 30
+    "superstar": 30,
+    "sestina": [
+      20,
+      40,
+      53,
+      61,
+      74,
+      79
+    ]
   },
   {
     "concorso": 119,
@@ -1635,7 +2563,15 @@
       85
     ],
     "jolly": 15,
-    "superstar": 59
+    "superstar": 59,
+    "sestina": [
+      18,
+      19,
+      33,
+      34,
+      61,
+      85
+    ]
   },
   {
     "concorso": 123,
@@ -1649,7 +2585,15 @@
       88
     ],
     "jolly": 33,
-    "superstar": 11
+    "superstar": 11,
+    "sestina": [
+      8,
+      11,
+      21,
+      24,
+      72,
+      88
+    ]
   },
   {
     "concorso": 124,
@@ -1663,7 +2607,15 @@
       78
     ],
     "jolly": 29,
-    "superstar": 16
+    "superstar": 16,
+    "sestina": [
+      49,
+      56,
+      58,
+      70,
+      76,
+      78
+    ]
   },
   {
     "concorso": 125,
@@ -1677,7 +2629,15 @@
       83
     ],
     "jolly": 15,
-    "superstar": 19
+    "superstar": 19,
+    "sestina": [
+      2,
+      11,
+      20,
+      33,
+      74,
+      83
+    ]
   },
   {
     "concorso": 126,
@@ -1691,7 +2651,15 @@
       63
     ],
     "jolly": 68,
-    "superstar": 37
+    "superstar": 37,
+    "sestina": [
+      1,
+      7,
+      29,
+      32,
+      60,
+      63
+    ]
   },
   {
     "concorso": 127,
@@ -1705,7 +2673,15 @@
       85
     ],
     "jolly": 71,
-    "superstar": 31
+    "superstar": 31,
+    "sestina": [
+      9,
+      12,
+      55,
+      61,
+      82,
+      85
+    ]
   },
   {
     "concorso": 128,
@@ -1719,7 +2695,15 @@
       79
     ],
     "jolly": 90,
-    "superstar": 49
+    "superstar": 49,
+    "sestina": [
+      8,
+      19,
+      38,
+      53,
+      66,
+      79
+    ]
   },
   {
     "concorso": 129,
@@ -1733,7 +2717,15 @@
       84
     ],
     "jolly": 18,
-    "superstar": 1
+    "superstar": 1,
+    "sestina": [
+      2,
+      7,
+      16,
+      29,
+      57,
+      84
+    ]
   },
   {
     "concorso": 130,
@@ -1747,7 +2739,15 @@
       90
     ],
     "jolly": 49,
-    "superstar": 23
+    "superstar": 23,
+    "sestina": [
+      9,
+      18,
+      20,
+      25,
+      53,
+      90
+    ]
   },
   {
     "concorso": 131,
@@ -1761,7 +2761,15 @@
       82
     ],
     "jolly": 29,
-    "superstar": 41
+    "superstar": 41,
+    "sestina": [
+      18,
+      24,
+      69,
+      71,
+      73,
+      82
+    ]
   },
   {
     "concorso": 132,
@@ -1775,7 +2783,15 @@
       66
     ],
     "jolly": 70,
-    "superstar": 6
+    "superstar": 6,
+    "sestina": [
+      10,
+      16,
+      24,
+      25,
+      39,
+      66
+    ]
   },
   {
     "concorso": 133,
@@ -1789,7 +2805,15 @@
       71
     ],
     "jolly": 77,
-    "superstar": 49
+    "superstar": 49,
+    "sestina": [
+      14,
+      18,
+      26,
+      51,
+      64,
+      71
+    ]
   },
   {
     "concorso": 134,
@@ -1803,7 +2827,15 @@
       57
     ],
     "jolly": 42,
-    "superstar": 13
+    "superstar": 13,
+    "sestina": [
+      12,
+      25,
+      27,
+      28,
+      39,
+      57
+    ]
   },
   {
     "concorso": 135,
@@ -1817,7 +2849,15 @@
       85
     ],
     "jolly": 82,
-    "superstar": 14
+    "superstar": 14,
+    "sestina": [
+      2,
+      16,
+      23,
+      31,
+      72,
+      85
+    ]
   },
   {
     "concorso": 136,
@@ -1831,7 +2871,15 @@
       70
     ],
     "jolly": 32,
-    "superstar": 15
+    "superstar": 15,
+    "sestina": [
+      15,
+      36,
+      62,
+      67,
+      69,
+      70
+    ]
   },
   {
     "concorso": 137,
@@ -1845,7 +2893,15 @@
       84
     ],
     "jolly": 32,
-    "superstar": 40
+    "superstar": 40,
+    "sestina": [
+      2,
+      27,
+      28,
+      50,
+      75,
+      84
+    ]
   },
   {
     "concorso": 140,
@@ -1859,7 +2915,15 @@
       71
     ],
     "jolly": 88,
-    "superstar": 75
+    "superstar": 75,
+    "sestina": [
+      42,
+      47,
+      59,
+      64,
+      67,
+      71
+    ]
   },
   {
     "concorso": 141,
@@ -1873,7 +2937,15 @@
       76
     ],
     "jolly": 9,
-    "superstar": 90
+    "superstar": 90,
+    "sestina": [
+      8,
+      11,
+      15,
+      60,
+      68,
+      76
+    ]
   },
   {
     "concorso": 142,
@@ -1887,7 +2959,15 @@
       89
     ],
     "jolly": 57,
-    "superstar": 42
+    "superstar": 42,
+    "sestina": [
+      8,
+      44,
+      60,
+      73,
+      86,
+      89
+    ]
   },
   {
     "concorso": 143,
@@ -1901,7 +2981,15 @@
       78
     ],
     "jolly": 40,
-    "superstar": 16
+    "superstar": 16,
+    "sestina": [
+      12,
+      24,
+      28,
+      32,
+      37,
+      78
+    ]
   },
   {
     "concorso": 144,
@@ -1915,7 +3003,15 @@
       85
     ],
     "jolly": 49,
-    "superstar": 47
+    "superstar": 47,
+    "sestina": [
+      23,
+      26,
+      41,
+      52,
+      59,
+      85
+    ]
   },
   {
     "concorso": 145,
@@ -1929,7 +3025,15 @@
       89
     ],
     "jolly": 62,
-    "superstar": 62
+    "superstar": 62,
+    "sestina": [
+      2,
+      17,
+      39,
+      59,
+      63,
+      89
+    ]
   },
   {
     "concorso": 146,
@@ -1943,7 +3047,15 @@
       70
     ],
     "jolly": 17,
-    "superstar": 21
+    "superstar": 21,
+    "sestina": [
+      8,
+      13,
+      16,
+      52,
+      64,
+      70
+    ]
   },
   {
     "concorso": 147,
@@ -1957,6 +3069,28 @@
       81
     ],
     "jolly": 1,
-    "superstar": 54
+    "superstar": 54,
+    "sestina": [
+      3,
+      7,
+      14,
+      40,
+      78,
+      81
+    ]
+  },
+  {
+    "concorso": 148,
+    "data": "15/09/2026",
+    "combinazione": [
+      3,
+      12,
+      18,
+      32,
+      47,
+      54
+    ],
+    "jolly": 69,
+    "superstar": 28
   }
 ]
