@@ -1,0 +1,19 @@
+{
+  "note": "Compila questo file con le sestine che giochi DAVVERO. Il bot analizzerà i tuoi risultati reali.",
+  "played": [
+    {
+      "concorso": 149,
+      "data": "17/09/2026",
+      "giocata_il": "16/09/2026",
+      "costo_eur": 1.00,
+      "sestine": [
+        [5, 35, 43, 48, 66, 80]
+      ],
+      "note": "Prima giocata con il bot"
+    }
+  ],
+  "config": {
+    "budget_mensile_eur": 20,
+    "budget_annuale_eur": 200
+  }
+}
