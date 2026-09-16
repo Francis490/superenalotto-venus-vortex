@@ -70,6 +70,7 @@ HISTORY_FILE = "venus_history.json"
 DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
 HEATMAP_FILE = "vortex_heatmap.png"
+DISTRIBUTION_FILE = "vortex_distribution.png"
 JACKPOT_FILE = "venus_jackpot.json"
 MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
 
@@ -324,7 +325,7 @@ def calculate_next_draw_date(last_date_str):
     return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
 
 # ==========================================
-# 4. GENERAZIONE GRAFICO (0-6 sestine)
+# 4. GENERAZIONE GRAFICO PRINCIPALE (0-6 sestine)
 # ==========================================
 def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
     plt.rcParams['text.color'] = '#f1e8ff'
@@ -392,6 +393,142 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
     plt.close()
+
+# ==========================================
+# 4-bis. GRAFICO DISTRIBUZIONE SOMME / DECADI / PARITÀ
+# ==========================================
+def generate_distribution_chart(history):
+    """
+    Genera un grafico della distribuzione delle somme + analisi decadi + parità.
+    Salvato come vortex_distribution.png
+    """
+    if not history or len(history) < 10:
+        return None
+
+    # Calcola somme
+    sums = []
+    for d in history:
+        comb = d.get("combinazione", [])
+        if len(comb) == 6:
+            sums.append(sum(comb))
+
+    if not sums:
+        return None
+
+    # Analisi decadi
+    decades = [0] * 9
+    for d in history:
+        for n in d.get("combinazione", []):
+            if 1 <= n <= 90:
+                decades[min(8, (n - 1) // 10)] += 1
+
+    # Analisi parità
+    parity = [0] * 7
+    for d in history:
+        comb = d.get("combinazione", [])
+        if len(comb) == 6:
+            n_pari = sum(1 for n in comb if n % 2 == 0)
+            parity[n_pari] += 1
+
+    # Plot
+    plt.rcParams['text.color'] = '#f1e8ff'
+    plt.rcParams['axes.labelcolor'] = '#f1e8ff'
+    plt.rcParams['xtick.color'] = '#a89bbd'
+    plt.rcParams['ytick.color'] = '#a89bbd'
+
+    fig = plt.figure(figsize=(14, 8), facecolor='#0a0612')
+
+    # --- 1. Distribuzione somme ---
+    ax1 = fig.add_subplot(2, 2, 1, facecolor='#150b1f')
+    ax1.hist(sums, bins=15, color='#c026d3',
+             edgecolor='#150b1f', alpha=0.8)
+    ax1.axvline(GAUSS_MEAN, color='#fbbf24', linestyle='--',
+                linewidth=2, label=f'Media teorica ({int(GAUSS_MEAN)})')
+    mean_obs = sum(sums) / len(sums)
+    ax1.axvline(mean_obs, color='#06b6d4', linestyle='-',
+                linewidth=2, label=f'Media oss. ({mean_obs:.1f})')
+    ax1.set_title("Distribuzione Somme", fontsize=11,
+                  fontweight='bold', color='#10b981')
+    ax1.legend(facecolor='#150b1f', edgecolor='#c026d3', fontsize=8)
+    ax1.set_xlabel("Somma", fontsize=9)
+    ax1.set_ylabel("Frequenza", fontsize=9)
+
+    # --- 2. Decadi ---
+    ax2 = fig.add_subplot(2, 2, 2, facecolor='#150b1f')
+    labels_dec = ["1-9", "10-19", "20-29", "30-39", "40-49",
+                  "50-59", "60-69", "70-79", "80-90"]
+    ax2.bar(labels_dec, decades, color='#06b6d4', edgecolor='#150b1f')
+    expected = len(history) * 6 / 9
+    ax2.axhline(expected, color='#fbbf24', linestyle='--',
+                linewidth=1.5, label=f'Attesa ({expected:.0f})')
+    ax2.set_title("Frequenza per Decade", fontsize=11,
+                  fontweight='bold', color='#10b981')
+    ax2.legend(facecolor='#150b1f', edgecolor='#c026d3', fontsize=8)
+    ax2.tick_params(axis='x', rotation=45)
+    ax2.set_ylabel("Occorrenze", fontsize=9)
+
+    # --- 3. Parità ---
+    ax3 = fig.add_subplot(2, 2, 3, facecolor='#150b1f')
+    labels_par = [f"{i}P / {6-i}D" for i in range(7)]
+    colors_par = ['#ec4899' if i in (2, 3, 4) else '#a855f7'
+                  for i in range(7)]
+    ax3.bar(labels_par, parity, color=colors_par, edgecolor='#150b1f')
+    ax3.set_title("Distribuzione Parità (Pari/Dispari)", fontsize=11,
+                  fontweight='bold', color='#10b981')
+    ax3.tick_params(axis='x', rotation=45)
+    ax3.set_ylabel("Occorrenze", fontsize=9)
+
+    # --- 4. Statistiche testuali ---
+    ax4 = fig.add_subplot(2, 2, 4, facecolor='#150b1f')
+    ax4.axis('off')
+
+    try:
+        import statistics
+        mean_val = statistics.mean(sums)
+        stdev_val = statistics.stdev(sums) if len(sums) > 1 else 0
+    except Exception:
+        mean_val = sum(sums) / len(sums) if sums else 0
+        stdev_val = 0
+
+    # Chi-quadro uniformità decadi
+    exp_dec = len(history) * 6 / 9
+    chi2 = sum((obs - exp_dec) ** 2 / exp_dec for obs in decades) if exp_dec > 0 else 0
+
+    stats_text = (
+        f"Concorsi analizzati:  {len(history)}\n"
+        f"Somme analizzate:     {len(sums)}\n"
+        f"Somma media (oss.):   {mean_val:.2f}\n"
+        f"Somma media (teor.):  273.00\n"
+        f"Dev. std (oss.):      {stdev_val:.2f}\n"
+        f"Dev. std (teor.):     43.50\n"
+        f"Somma min:            {min(sums)}\n"
+        f"Somma max:            {max(sums)}\n\n"
+        f"Chi² decadi:          {chi2:.2f}\n"
+        f"Chi² critico (df=8):  15.51\n"
+        f"{'✓ Uniforme' if chi2 < 15.51 else '⚠ Deviazione'}"
+    )
+
+    ax4.text(0.05, 0.95, stats_text,
+             transform=ax4.transAxes,
+             fontsize=11,
+             fontfamily='monospace',
+             verticalalignment='top',
+             color='#f1e8ff',
+             bbox=dict(boxstyle='round',
+                       facecolor='#0a0612',
+                       edgecolor='#c026d3',
+                       alpha=0.6))
+
+    ax4.set_title("Statistiche Descrittive", fontsize=11,
+                  fontweight='bold', color='#10b981')
+
+    plt.tight_layout()
+    plt.savefig(DISTRIBUTION_FILE, dpi=200,
+                facecolor=fig.get_facecolor(), edgecolor='none')
+    plt.close()
+
+    print(f"[+] Grafico distribuzione salvato: {DISTRIBUTION_FILE}")
+    return DISTRIBUTION_FILE
 
 # ==========================================
 # 5. NOTIFICA TELEGRAM
@@ -722,8 +859,15 @@ def main():
     )
     save_json(DATABASE_FILE, payload)
 
-    # === GRAFICO ===
+    # === GRAFICO PRINCIPALE ===
     generate_vortex_chart(all_sestinas, dodeca_pool, adjusted_scores)
+
+    # === DISTRIBUZIONE SOMME ===
+    dist_path = None
+    try:
+        dist_path = generate_distribution_chart(history)
+    except Exception as e:
+        print(f"[!] Errore grafico distribuzione: {e}")
 
     # === HEATMAP ===
     heatmap_path = None
@@ -832,6 +976,10 @@ def main():
     # === INVIA HEATMAP ===
     if heatmap_path and os.path.exists(heatmap_path):
         send_telegram_photo(heatmap_path, "🔥 Vortex Heatmap — Numeri caldi/freddi")
+
+    # === INVIA GRAFICO DISTRIBUZIONE ===
+    if dist_path and os.path.exists(dist_path):
+        send_telegram_photo(dist_path, "📊 Analisi Distribuzione — Somme, Decadi, Parità")
 
     print("=== VENUS VORTEX — COMPLETATO ===")
 
