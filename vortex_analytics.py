@@ -16,14 +16,10 @@ HEATMAP_FILE = "vortex_heatmap.png"
 
 
 def generate_heatmap(history, output_path=HEATMAP_FILE):
-    """
-    Genera una heatmap 9x10 con frequenza di ogni numero 1-90.
-    Blu = freddo, Rosso = caldo.
-    """
+    """Genera heatmap 9x10 con frequenza di ogni numero 1-90."""
     if not history:
         return None
 
-    # Conta frequenze
     freq = {i: 0 for i in range(1, 91)}
     for draw in history:
         for n in draw.get("combinazione", []):
@@ -32,15 +28,8 @@ def generate_heatmap(history, output_path=HEATMAP_FILE):
 
     total_draws = len(history)
     expected = total_draws * 6 / 90 if total_draws > 0 else 1
-
-    # Normalizza: ratio osservato/atteso
-    # 0 = mai uscito, 1 = esattamente atteso, >1 = caldo
     ratio = {n: freq[n] / expected for n in range(1, 91)}
 
-    # Prepara matrice 9x10 (numero n sta in posizione [riga, colonna])
-    # Numero 1 → riga 0, col 0
-    # Numero 10 → riga 0, col 9
-    # Numero 90 → riga 8, col 9
     matrix = np.zeros((9, 10))
     labels = np.zeros((9, 10), dtype=int)
     for n in range(1, 91):
@@ -49,34 +38,28 @@ def generate_heatmap(history, output_path=HEATMAP_FILE):
         matrix[row, col] = ratio[n]
         labels[row, col] = n
 
-    # Plot
     plt.rcParams['text.color'] = '#f1e8ff'
     plt.rcParams['axes.labelcolor'] = '#f1e8ff'
 
     fig, ax = plt.subplots(figsize=(14, 9), facecolor='#0a0612')
     ax.set_facecolor('#150b1f')
 
-    # Colormap: blu (freddo) → bianco (neutro) → rosso (caldo)
-    vmax = max(2.0, np.max(matrix))
+    vmax = max(2.0, float(np.max(matrix)))
     im = ax.imshow(matrix, cmap='RdYlBu_r', vmin=0, vmax=vmax, aspect='equal')
 
-    # Etichette: mostra il numero + frequenza
     for i in range(9):
         for j in range(10):
             n = labels[i, j]
             f = freq[n]
-            # Testo scuro se il colore è chiaro, chiaro se è scuro
             color = "black" if 0.4 < matrix[i, j] / vmax < 0.7 else "white"
-            ax.text(j, i, f"{n}\n{f}",
-                    ha="center", va="center",
+            ax.text(j, i, f"{n}\n{f}", ha="center", va="center",
                     color=color, fontsize=10, fontweight="bold")
 
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_title("VORTEX HEATMAP — Frequenze numeri 1-90",
+    ax.set_title("VORTEX HEATMAP - Frequenze numeri 1-90",
                  fontsize=14, fontweight='bold', color='#06b6d4', pad=15)
 
-    # Colorbar
     cbar = plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
     cbar.set_label("Caldo / Freddo", color='#f1e8ff', fontsize=10)
     cbar.ax.yaxis.set_tick_params(color='#f1e8ff')
@@ -92,16 +75,12 @@ def generate_heatmap(history, output_path=HEATMAP_FILE):
 
 
 def run_statistical_tests(history):
-    """
-    Esegue test statistici formali sullo storico estrazioni.
-    Ritorna un dizionario con i risultati.
-    """
+    """Esegue test statistici formali sullo storico estrazioni."""
     if not history or len(history) < 10:
         return None
 
     results = {}
 
-    # --- 1. Chi-quadro uniformità ---
     freq = {i: 0 for i in range(1, 91)}
     for draw in history:
         for n in draw.get("combinazione", []):
@@ -109,10 +88,10 @@ def run_statistical_tests(history):
                 freq[n] += 1
 
     observed = np.array([freq[n] for n in range(1, 91)])
-    expected = np.full(90, len(history) * 6 / 90)
+    expected_arr = np.full(90, len(history) * 6 / 90)
 
     try:
-        chi2, p_value = chisquare(observed, f_exp=expected)
+        chi2, p_value = chisquare(observed, f_exp=expected_arr)
         results["chi_square"] = {
             "value": round(float(chi2), 2),
             "p_value": round(float(p_value), 4),
@@ -121,7 +100,6 @@ def run_statistical_tests(history):
     except Exception as e:
         results["chi_square"] = {"error": str(e)}
 
-    # --- 2. Entropia di Shannon ---
     total = sum(freq.values())
     if total > 0:
         probs = np.array([freq[n] / total for n in range(1, 91)])
@@ -134,7 +112,6 @@ def run_statistical_tests(history):
             "ratio": round(float(entropy / max_entropy), 4),
         }
 
-    # --- 3. Autocorrelazione lag-1 delle somme ---
     sums = [sum(d.get("combinazione", [])) for d in history
             if d.get("combinazione")]
     if len(sums) > 3:
@@ -152,7 +129,6 @@ def run_statistical_tests(history):
             ),
         }
 
-    # --- 4. Distribuzione somme ---
     if sums:
         results["sums"] = {
             "mean": round(float(np.mean(sums)), 2),
