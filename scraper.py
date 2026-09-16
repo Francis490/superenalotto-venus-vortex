@@ -66,6 +66,20 @@ except ImportError as e:
     print(f"[!] venus_track_record non disponibile ({e})")
 
 # ==========================================
+# TRUE MIMIC GENERATOR (opzionale)
+# ==========================================
+try:
+    from true_mimic_generator import (
+        extract_fingerprints,
+        validate_sestina,
+    )
+    MIMIC_AVAILABLE = True
+    print("[+] Venus Vortex — True Mimic: ATTIVO")
+except ImportError as e:
+    MIMIC_AVAILABLE = False
+    print(f"[!] true_mimic_generator non disponibile ({e})")
+
+# ==========================================
 # COSTANTI E CONFIGURAZIONE DI SISTEMA
 # ==========================================
 HISTORY_FILE = "venus_history.json"
@@ -835,6 +849,18 @@ def main():
             t1, t2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
             all_sestinas = [t1, t2]
             print("[*] Sestine selezionate con TITAN classico (fallback)")
+
+    # === VALIDAZIONE FINGERPRINT ===
+    if MIMIC_AVAILABLE and all_sestinas:
+        try:
+            fp = extract_fingerprints(history)
+            for i, s in enumerate(all_sestinas, 1):
+                ok, score, checks = validate_sestina(s, fp)
+                status = "OK" if ok else "PARZIALE"
+                passed = int(round(score * 12))
+                print(f"[+] Sestina {i}: {status} - {passed}/12 fingerprint")
+        except Exception as e:
+            print(f"[!] Validazione fingerprint saltata: {e}")
 
     titan1 = all_sestinas[0] if all_sestinas else []
     titan2 = all_sestinas[1] if len(all_sestinas) > 1 else titan1
