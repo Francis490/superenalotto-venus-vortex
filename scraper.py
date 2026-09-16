@@ -33,11 +33,43 @@ except ImportError as e:
     print(f"[!] vortex_opportunity non disponibile ({e}). Fallback TITAN classico.")
 
 # ==========================================
+# VORTEX ANALYTICS (opzionale)
+# ==========================================
+try:
+    from vortex_analytics import (
+        generate_heatmap,
+        run_statistical_tests,
+        format_stats_for_report as format_stats_report,
+    )
+    ANALYTICS_AVAILABLE = True
+    print("[+] Venus Vortex — Analytics: ATTIVO")
+except ImportError as e:
+    ANALYTICS_AVAILABLE = False
+    print(f"[!] vortex_analytics non disponibile ({e})")
+
+# ==========================================
+# VENUS TRACK RECORD (opzionale)
+# ==========================================
+try:
+    from venus_track_record import (
+        record_predictions,
+        update_with_result,
+        get_stats as get_track_stats,
+        format_stats_for_report as format_track_report,
+    )
+    TRACK_AVAILABLE = True
+    print("[+] Venus Vortex — Track Record: ATTIVO")
+except ImportError as e:
+    TRACK_AVAILABLE = False
+    print(f"[!] venus_track_record non disponibile ({e})")
+
+# ==========================================
 # COSTANTI E CONFIGURAZIONE DI SISTEMA
 # ==========================================
 HISTORY_FILE = "venus_history.json"
 DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
+HEATMAP_FILE = "vortex_heatmap.png"
 JACKPOT_FILE = "venus_jackpot.json"
 MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
 
@@ -302,7 +334,6 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
 
     fig = plt.figure(figsize=(14, 8), facecolor='#0a0612')
 
-    # --- Gaussiana ---
     ax1 = fig.add_subplot(2, 2, (1, 3), facecolor='#150b1f')
     x = np.linspace(100, 440, 500)
     y = norm.pdf(x, GAUSS_MEAN, GAUSS_STD)
@@ -324,7 +355,6 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
                   fontsize=12, fontweight='bold', color='#10b981')
     ax1.legend(facecolor='#150b1f', edgecolor='#c026d3', fontsize=8)
 
-    # --- Ranking pool ---
     ax2 = fig.add_subplot(2, 2, 2, facecolor='#150b1f')
     dodeca_scores = [scores.get(n, 1.0) for n in dodeca_pool]
     ax2.bar([str(n) for n in dodeca_pool], dodeca_scores,
@@ -333,7 +363,6 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
                   fontsize=10, fontweight='bold')
     ax2.tick_params(axis='x', rotation=45)
 
-    # --- Matrice (solo se ci sono sestine) ---
     ax3 = fig.add_subplot(2, 2, 4, facecolor='#150b1f')
     if all_sestinas:
         n = len(all_sestinas)
@@ -367,32 +396,38 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
 # ==========================================
 # 5. NOTIFICA TELEGRAM
 # ==========================================
-def send_telegram_notification(caption_text, chart_path):
+def send_telegram_photo(photo_path, caption=""):
+    """Invia una foto generica al bot Telegram."""
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not bot_token or not chat_id:
-        print("[!] Token mancanti. Notifica saltata.")
+        print("[!] Token mancanti. Invio saltato.")
+        return
+
+    if not os.path.exists(photo_path):
+        print(f"[!] File non trovato: {photo_path}")
         return
 
     url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
 
     try:
-        with open(chart_path, "rb") as image_file:
+        with open(photo_path, "rb") as image_file:
             image_bytes = image_file.read()
 
         boundary = "----VenusVortexBoundary7MA4YWxkTrZu0gW"
-        filename = os.path.basename(chart_path)
+        filename = os.path.basename(photo_path)
 
         body = bytearray()
         body += f"--{boundary}\r\n".encode("utf-8")
         body += b'Content-Disposition: form-data; name="chat_id"\r\n\r\n'
         body += f"{chat_id}\r\n".encode("utf-8")
 
-        body += f"--{boundary}\r\n".encode("utf-8")
-        body += b'Content-Disposition: form-data; name="caption"\r\n'
-        body += b"Content-Type: text/plain; charset=utf-8\r\n\r\n"
-        body += caption_text.encode("utf-8")
-        body += b"\r\n"
+        if caption:
+            body += f"--{boundary}\r\n".encode("utf-8")
+            body += b'Content-Disposition: form-data; name="caption"\r\n'
+            body += b"Content-Type: text/plain; charset=utf-8\r\n\r\n"
+            body += caption.encode("utf-8")
+            body += b"\r\n"
 
         body += f"--{boundary}\r\n".encode("utf-8")
         body += (f'Content-Disposition: form-data; name="photo"; '
@@ -409,11 +444,15 @@ def send_telegram_notification(caption_text, chart_path):
         req.add_header("Content-Length", str(len(body)))
 
         with urllib.request.urlopen(req, timeout=30) as response:
-            resp_body = response.read().decode("utf-8", errors="ignore")
-            print(f"[+] Notifica Telegram inviata con successo! ({response.status})")
+            print(f"[+] Foto inviata: {filename} ({response.status})")
 
     except Exception as e:
-        print(f"[!] Errore Telegram: {e}")
+        print(f"[!] Errore invio foto {photo_path}: {e}")
+
+
+def send_telegram_notification(caption_text, chart_path):
+    """Invia il report principale."""
+    send_telegram_photo(chart_path, caption_text)
 
 # ==========================================
 # 6. COSTRUZIONE DATABASE PER L'HTML
@@ -429,7 +468,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
     last_jolly = last_draw.get("jolly", "N/A")
     last_superstar = last_draw.get("superstar", "N/A")
 
-    # --- JACKPOT ---
     jackpot_value = DEFAULT_JACKPOT
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
@@ -450,7 +488,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         except Exception as e:
             print(f"[!] Errore lettura {JACKPOT_FILE}: {e}. Uso DEFAULT.")
 
-    # --- VORTEX OPPORTUNITY ANALYSIS ---
     vortex_data = {}
     ev_data = {}
     if VORTEX_ENGINE_AVAILABLE and jackpot_value > 0:
@@ -472,7 +509,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         except Exception as e:
             print(f"[!] Errore VORTEX analysis: {e}")
 
-    # --- titan_predictions ---
     titan_predictions = []
     for i, sestina in enumerate(all_sestinas):
         s_sum = sum(sestina)
@@ -494,7 +530,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
             "signature": sig,
         })
 
-    # --- EV dinamico per il Risk Shield ---
     ev_for_risk = ev_data.get("ev_total", -0.957) if ev_data else -0.957
 
     payload = {
@@ -547,7 +582,6 @@ def main():
         ]
         save_json(HISTORY_FILE, history)
 
-    # Override manuale dell'ultima estrazione
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
             with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
@@ -586,7 +620,6 @@ def main():
     adjusted_scores = apply_cooldown_factor(raw_scores, history)
     dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history)
 
-    # === BILANCIAMENTO POOL ===
     if VORTEX_ENGINE_AVAILABLE:
         try:
             dodeca_pool = balance_pool(dodeca_pool)
@@ -594,7 +627,6 @@ def main():
         except Exception as e:
             print(f"[!] Errore bilanciamento pool: {e}")
 
-    # === LETTURA JACKPOT ===
     jackpot_for_mode = DEFAULT_JACKPOT
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
@@ -605,7 +637,6 @@ def main():
         except Exception:
             pass
 
-    # === DETERMINE BUDGET MODE ===
     budget_mode = {
         "mode": "NORMALE", "emoji": "🟡", "n_sestinas": 2,
         "cost_eur": 2.0, "ev": 0.0,
@@ -619,11 +650,9 @@ def main():
         except Exception as e:
             print(f"[!] Errore budget mode: {e}")
 
-    # === SKIP MODE ===
     n_sestinas = int(budget_mode.get("n_sestinas", 2))
     skip_mode = (n_sestinas == 0)
 
-    # === SELEZIONE SESTINE ===
     all_sestinas = []
 
     if skip_mode:
@@ -669,6 +698,24 @@ def main():
 
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
+    # === TRACK RECORD: registra sestine generate ===
+    if TRACK_AVAILABLE and all_sestinas:
+        try:
+            record_predictions(next_concorso, all_sestinas,
+                               budget_mode.get("mode", "NORMALE"))
+        except Exception as e:
+            print(f"[!] Errore track record: {e}")
+
+    # === TRACK RECORD: aggiorna con ultima estrazione reale ===
+    if TRACK_AVAILABLE and last_draw and last_draw.get("combinazione"):
+        try:
+            update_with_result(
+                last_draw.get("concorso"),
+                last_draw.get("combinazione")
+            )
+        except Exception as e:
+            print(f"[!] Errore update track: {e}")
+
     # === SCRITTURA DATABASE ===
     payload = build_database_payload(
         history, dodeca_pool, all_sestinas, next_concorso, budget_mode
@@ -677,6 +724,32 @@ def main():
 
     # === GRAFICO ===
     generate_vortex_chart(all_sestinas, dodeca_pool, adjusted_scores)
+
+    # === HEATMAP ===
+    heatmap_path = None
+    if ANALYTICS_AVAILABLE:
+        try:
+            heatmap_path = generate_heatmap(history)
+        except Exception as e:
+            print(f"[!] Errore heatmap: {e}")
+
+    # === TEST STATISTICI ===
+    stats_block = "—"
+    if ANALYTICS_AVAILABLE:
+        try:
+            stats_results = run_statistical_tests(history)
+            stats_block = format_stats_report(stats_results)
+        except Exception as e:
+            print(f"[!] Errore test statistici: {e}")
+
+    # === TRACK RECORD STATS ===
+    track_block = "—"
+    if TRACK_AVAILABLE:
+        try:
+            track_stats = get_track_stats()
+            track_block = format_track_report(track_stats)
+        except Exception as e:
+            print(f"[!] Errore track stats: {e}")
 
     # === REPORT TELEGRAM ===
     jackpot_for_report = payload.get("next_contest", {}).get("jackpot", DEFAULT_JACKPOT)
@@ -698,7 +771,6 @@ def main():
         bt_line = (f"{bt_data.get('hit_rate_3plus', 0)}% "
                    f"(baseline {bt_data.get('baseline_expected', 0)}%)")
 
-    # Budget mode
     bm = payload.get("budget_mode", {})
     bm_emoji = bm.get("emoji", "🟡")
     bm_mode = bm.get("mode", "NORMALE")
@@ -706,7 +778,6 @@ def main():
     bm_cost = bm.get("cost_eur", 2.0)
     bm_msg = bm.get("message", "")
 
-    # Blocco sestine
     sestinas_lines = []
     emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
     for i, sestina in enumerate(all_sestinas):
@@ -727,7 +798,7 @@ def main():
         )
 
     if skip_mode:
-        sestinas_block = "🚫 SKIP MODE — Nessuna sestina da giocare.\nRisparmia il budget per il prossimo concorso."
+        sestinas_block = "🚫 SKIP MODE — Nessuna sestina da giocare."
     else:
         sestinas_block = "\n".join(sestinas_lines) if sestinas_lines else "—"
 
@@ -747,6 +818,8 @@ def main():
         f"🎛️ BUDGET MODE: {bm_emoji} {bm_mode}\n"
         f"• Sestine: {bm_n} · Costo: {bm_cost:.2f} €\n"
         f"• {bm_msg}\n\n"
+        f"📊 TRACK RECORD:\n{track_block}\n\n"
+        f"🔬 STATISTICAL TESTS:\n{stats_block}\n\n"
         f"🔮 VORTEX NUMERICAL FIELD:\n"
         f"{dodeca_pool}\n\n"
         f"🔥 VORTEX SESTINE — Harmonic Filter:\n"
@@ -755,6 +828,11 @@ def main():
     )
 
     send_telegram_notification(report_text, CHART_FILE)
+
+    # === INVIA HEATMAP ===
+    if heatmap_path and os.path.exists(heatmap_path):
+        send_telegram_photo(heatmap_path, "🔥 Vortex Heatmap — Numeri caldi/freddi")
+
     print("=== VENUS VORTEX — COMPLETATO ===")
 
 if __name__ == "__main__":
