@@ -1,9 +1,6 @@
 """
 venus_track_record.py
-Gestisce il track record delle sestine generate:
-- Salva ogni predizione con metadata
-- Quando arriva una nuova estrazione, calcola i punti
-- Fornisce statistiche di performance
+Gestisce il track record delle sestine generate.
 """
 import json
 import os
@@ -32,20 +29,15 @@ def save_track(data):
 
 
 def record_predictions(target_concorso, sestinas, mode):
-    """
-    Salva le sestine generate per un concorso target.
-    Non duplica se già presenti.
-    """
+    """Salva le sestine generate per un concorso target."""
     if not sestinas:
         return
 
     track = load_track()
     records = track.get("records", [])
 
-    # Controlla se esiste già un record per questo concorso
     for r in records:
         if r.get("target_concorso") == target_concorso:
-            # Aggiorna se le sestine sono diverse
             existing = r.get("sestinas", [])
             if existing != sestinas:
                 r["sestinas"] = sestinas
@@ -55,7 +47,6 @@ def record_predictions(target_concorso, sestinas, mode):
                 print(f"[+] Track record aggiornato per concorso {target_concorso}")
             return
 
-    # Crea nuovo record
     records.append({
         "target_concorso": target_concorso,
         "generated_at": datetime.now().isoformat(),
@@ -70,10 +61,7 @@ def record_predictions(target_concorso, sestinas, mode):
 
 
 def update_with_result(concorso, real_numbers):
-    """
-    Quando arriva una nuova estrazione reale, calcola i punti
-    per le sestine che puntavano a quel concorso.
-    """
+    """Calcola i punti per le sestine che puntavano a un concorso."""
     if not real_numbers or len(real_numbers) != 6:
         return None
 
@@ -95,7 +83,7 @@ def update_with_result(concorso, real_numbers):
                 "checked_at": datetime.now().isoformat(),
             }
             updated = r
-            print(f"[+] Track: concorso {concorso} → miglior esito = {best} punti")
+            print(f"[+] Track: concorso {concorso} -> miglior esito = {best} punti")
 
     if updated:
         save_track(track)
@@ -103,12 +91,7 @@ def update_with_result(concorso, real_numbers):
 
 
 def get_stats():
-    """
-    Ritorna statistiche aggregate:
-    - numero di concorsi tracciati
-    - distribuzione dei punti (0, 1, 2, 3, 4, 5)
-    - hit rate 3+
-    """
+    """Ritorna statistiche aggregate del track record."""
     track = load_track()
     records = track.get("records", [])
 
