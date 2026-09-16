@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-16T08:30:04",
+  "updated_at": "2026-09-16T10:12:44",
   "next_contest": {
     "number": 149,
     "date": "17/09/2026",
@@ -21,9 +21,9 @@
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
-    "ev": -0.957,
+    "ev": -0.5372,
     "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
-    "advice": "Mantenere puntata minima di 2 Sestine Vortex (Budget 2,00 €)."
+    "advice": "EV basso. 1 sestina (1,00 €)."
   },
   "budget_mode": {
     "mode": "MINIMO",
