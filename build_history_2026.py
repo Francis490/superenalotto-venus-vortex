@@ -1,17 +1,20 @@
 """
-rebuild_history_2026.py
-Ricostruisce venus_history.json con TUTTI i dati reali 2026.
-Dati verificati con screenshot ufficiali + correzioni utente.
+build_history_2026.py
+Garantisce che venus_history.json contenga TUTTI i concorsi 2026 (1-148).
+Funziona in modalità MERGE: aggiunge solo i mancanti, non sovrascrive.
+
+Così non perde i dati 2025 importati con import_external_history.py.
 """
 import json
 import os
 
 HISTORY_FILE = "venus_history.json"
 
+
 # ==========================================
-# STORICO COMPLETO 2026 — Dati ufficiali verificati
+# STORICO COMPLETO 2026 (148 concorsi)
 # ==========================================
-REAL_DRAWS = [
+REAL_DRAWS_2026 = [
     # --- GENNAIO 2026 ---
     {"concorso": 1,  "data": "02/01/2026", "combinazione": [29, 33, 47, 56, 69, 89], "jolly": 16, "superstar": 7},
     {"concorso": 2,  "data": "03/01/2026", "combinazione": [16, 30, 32, 43, 68, 76], "jolly": 36, "superstar": 58},
@@ -180,36 +183,83 @@ REAL_DRAWS = [
 ]
 
 
-def main():
-    print("=== REBUILD HISTORY 2026 ===")
+def parse_date(date_str):
+    """Ritorna (YYYY, MM, DD) per ordinamento cronologico."""
+    from datetime import datetime
+    try:
+        dt = datetime.strptime(date_str, "%d/%m/%Y")
+        return (dt.year, dt.month, dt.day)
+    except Exception:
+        return (0, 0, 0)
 
-    # Backup del vecchio file
+
+def load_history():
     if os.path.exists(HISTORY_FILE):
-        os.rename(HISTORY_FILE, HISTORY_FILE + ".bak")
-        print(f"[+] Backup: {HISTORY_FILE}.bak")
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[!] Errore lettura: {e}")
+    return []
 
-    # Salva il nuovo file ordinato
-    REAL_DRAWS.sort(key=lambda x: x["concorso"])
 
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(REAL_DRAWS, f, indent=2, ensure_ascii=False)
+def save_history(data):
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        print(f"[+] Salvato: {HISTORY_FILE}")
+    except Exception as e:
+        print(f"[!] Errore salvataggio: {e}")
 
-    print(f"[+] File salvato: {HISTORY_FILE}")
-    print(f"[+] Totale concorsi: {len(REAL_DRAWS)}")
 
-    ids = [d["concorso"] for d in REAL_DRAWS]
-    print(f"[+] Range: {min(ids)} - {max(ids)}")
+def main():
+    print("=== BUILD HISTORY 2026 (MERGE MODE) ===")
 
-    # Verifica buchi
-    expected = set(range(min(ids), max(ids) + 1))
-    actual = set(ids)
-    missing = sorted(expected - actual)
+    # Leggi database esistente
+    existing = load_history()
+    print(f"[*] Database attuale: {len(existing)} concorsi")
 
-    if missing:
-        print(f"[!] Concorsi mancanti: {missing}")
+    existing_ids = {item.get("concorso") for item in existing
+                    if isinstance(item.get("concorso"), int)}
+
+    # Aggiungi SOLO i 2026 mancanti
+    to_add = [d for d in REAL_DRAWS_2026
+              if d["concorso"] not in existing_ids]
+
+    if not to_add:
+        print("[*] Nessun concorso 2026 da aggiungere (già presenti).")
+        print(f"[*] Totale: {len(existing)} concorsi")
+        print("=== COMPLETATO ===")
+        return
+
+    print(f"[+] Aggiungo {len(to_add)} concorsi 2026 mancanti:")
+    for d in to_add:
+        print(f"    • {d['concorso']} ({d['data']})")
+
+    # Merge
+    merged = existing + to_add
+    merged.sort(key=lambda x: parse_date(x.get("data", "")))
+
+    # Verifica finale
+    ids = [e["concorso"] for e in merged]
+    ids_2026 = [i for i in ids if 1 <= i <= 148]
+    ids_2025 = [i for i in ids if 1001 <= i <= 1208]
+
+    print(f"\n[*] Totale finale: {len(merged)} concorsi")
+    print(f"[*] Concorsi 2025: {len(set(ids_2025))} (atteso: 208)")
+    print(f"[*] Concorsi 2026: {len(set(ids_2026))} (atteso: 148)")
+
+    # Verifica buchi 2026
+    expected_2026 = set(range(1, 149))
+    actual_2026 = set(ids_2026)
+    missing_2026 = sorted(expected_2026 - actual_2026)
+
+    if missing_2026:
+        print(f"[!] ATTENZIONE - Concorsi 2026 ancora mancanti: {missing_2026}")
     else:
-        print("[OK] Nessun buco. Storico completo!")
+        print(f"[✓] 2026 completo!")
 
+    save_history(merged)
     print("=== COMPLETATO ===")
 
 
