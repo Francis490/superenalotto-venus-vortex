@@ -4,7 +4,7 @@ Analizza le sestine giocate DAVVERO dall'utente (da venus_played.json)
 confrontandole con le estrazioni reali.
 
 Calcola:
-- Vincite reali (3+ punti)
+- Vincite reali (2+ punti, perché il SuperEnalotto paga dal 2 in su)
 - Totale speso/incassato
 - ROI
 - Statistiche per periodo
@@ -17,14 +17,15 @@ from datetime import datetime
 PLAYED_FILE = "venus_played.json"
 HISTORY_FILE = "venus_history.json"
 
-# Valori approssimativi premi SuperEnalotto (in €)
-# Basati su medie storiche. Possono variare.
+# Valori ufficiali SuperEnalotto (2026)
+# Il SuperEnalotto paga dalla 5ª categoria (2 punti) in su.
 PRIZE_TABLE = {
-    3: 25,       # media ~25€
-    4: 300,      # media ~300€
-    5: 25000,    # media ~25.000€
-    "5+1": 500000,
-    6: "JACKPOT",
+    2: 5,          # 5ª categoria — quota fissa
+    3: 25,         # 4ª categoria — media tipica
+    4: 300,        # 3ª categoria — media tipica
+    5: 25000,      # 2ª categoria — media tipica
+    "5+1": 500000, # 1ª categoria
+    6: "JACKPOT",  # Jackpot
 }
 
 
@@ -105,10 +106,14 @@ def analyze_played():
         hits_list = [calculate_hits(s, real_numbers) for s in sestine]
         best_hits = max(hits_list) if hits_list else 0
 
-        # Premio stimato
-        prize = get_prize_for_hits(best_hits)
-        prize_value = prize if isinstance(prize, (int, float)) else 0
-        total_won += prize_value
+        # Premio stimato (somma dei premi di TUTTE le sestine che hanno vinto)
+        prize_total = 0
+        for hits in hits_list:
+            p = get_prize_for_hits(hits)
+            if isinstance(p, (int, float)):
+                prize_total += p
+
+        total_won += prize_total
 
         hits_distribution[best_hits] += 1
 
@@ -120,7 +125,7 @@ def analyze_played():
             "real_numbers": real_numbers,
             "hits_list": hits_list,
             "best_hits": best_hits,
-            "prize_estimated": prize,
+            "prize_estimated": prize_total,
             "cost": cost,
         })
 
@@ -129,6 +134,8 @@ def analyze_played():
     pending = [r for r in results if r.get("status") == "pending"]
 
     n_completed = len(completed)
+    # Vincite reali: contiamo i concorsi con almeno 2 punti (minimo premio)
+    hits_2plus = sum(1 for r in completed if r["best_hits"] >= 2)
     hits_3plus = sum(1 for r in completed if r["best_hits"] >= 3)
 
     roi = 0.0
@@ -144,7 +151,9 @@ def analyze_played():
         "roi_pct": roi,
         "balance": round(total_won - total_spent, 2),
         "hits_distribution": hits_distribution,
+        "hits_2plus": hits_2plus,
         "hits_3plus": hits_3plus,
+        "hit_rate_2plus": round(hits_2plus / n_completed * 100, 2) if n_completed > 0 else 0.0,
         "hit_rate_3plus": round(hits_3plus / n_completed * 100, 2) if n_completed > 0 else 0.0,
         "results": results,
     }
@@ -153,23 +162,28 @@ def analyze_played():
 def format_personal_report(stats):
     """Formatta il report personal stats per Telegram."""
     if not stats:
-        return "📊 <b>STATISTICHE PERSONALI</b>\n\nNessuna giocata registrata.\nCompila <code>venus_played.json</code> per iniziare a tracciare le tue giocate."
+        return ("📊 <b>STATISTICHE PERSONALI</b>\n\n"
+                "Nessuna giocata registrata.\n"
+                "Compila <code>venus_played.json</code> per iniziare a tracciare le tue giocate.")
 
     lines = []
     lines.append("💼 <b>STATISTICHE PERSONALI</b>")
     lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     lines.append("")
     lines.append(f"🎯 Giocate totali: <b>{stats['total_plays']}</b>")
-    lines.append(f"✅ Completate: <b>{stats['completed']}</b> · ⏳ In attesa: <b>{stats['pending']}</b>")
+    lines.append(f"✅ Completate: <b>{stats['completed']}</b> · "
+                 f"⏳ In attesa: <b>{stats['pending']}</b>")
     lines.append("")
     lines.append(f"💸 Speso: <b>€ {stats['total_spent']:.2f}</b>")
     lines.append(f"💰 Vinto: <b>€ {stats['total_won']:.2f}</b>")
 
     bal = stats["balance"]
-    if bal >= 0:
+    if bal > 0:
         lines.append(f"✅ Bilancio: <b>+€ {bal:.2f}</b>")
-    else:
+    elif bal < 0:
         lines.append(f"⚠️ Bilancio: <b>€ {bal:.2f}</b>")
+    else:
+        lines.append(f"⚪ Bilancio: <b>€ {bal:.2f}</b>")
 
     lines.append(f"📈 ROI: <b>{stats['roi_pct']:+.2f}%</b>")
     lines.append("")
@@ -177,15 +191,19 @@ def format_personal_report(stats):
     dist = stats["hits_distribution"]
     lines.append(f"  • 0 punti: {dist.get(0, 0)}")
     lines.append(f"  • 1 punto: {dist.get(1, 0)}")
-    lines.append(f"  • 2 punti: {dist.get(2, 0)}")
+    lines.append(f"  • <b>2 punti: {dist.get(2, 0)}</b>")
     lines.append(f"  • <b>3 punti: {dist.get(3, 0)}</b>")
     lines.append(f"  • <b>4 punti: {dist.get(4, 0)}</b>")
     lines.append(f"  • <b>5 punti: {dist.get(5, 0)}</b>")
     lines.append(f"  • <b>6 punti: {dist.get(6, 0)}</b>")
 
-    if stats["hits_3plus"] > 0:
+    if stats.get("hits_2plus", 0) > 0:
         lines.append("")
-        lines.append(f"✨ Hai fatto 3+ punti <b>{stats['hits_3plus']} volte</b> "
+        lines.append(f"✨ Hai fatto 2+ punti <b>{stats['hits_2plus']} volte</b> "
+                     f"({stats['hit_rate_2plus']}%)")
+
+    if stats.get("hits_3plus", 0) > 0:
+        lines.append(f"🔥 Hai fatto 3+ punti <b>{stats['hits_3plus']} volte</b> "
                      f"({stats['hit_rate_3plus']}%)")
 
     return "\n".join(lines)
@@ -194,6 +212,8 @@ def format_personal_report(stats):
 if __name__ == "__main__":
     stats = analyze_played()
     if stats:
-        print(format_personal_report(stats).replace("<b>", "").replace("</b>", "").replace("<code>", "").replace("</code>", ""))
+        out = format_personal_report(stats)
+        print(out.replace("<b>", "").replace("</b>", "")
+                 .replace("<code>", "").replace("</code>", ""))
     else:
         print("Nessuna giocata registrata.")
