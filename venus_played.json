@@ -4,12 +4,13 @@
     {
       "concorso": 149,
       "data": "17/09/2026",
-      "giocata_il": "16/09/2026",
-      "costo_eur": 1.00,
+      "giocata_il": "17/09/2026",
+      "costo_eur": 2.00,
       "sestine": [
-        [5, 35, 43, 48, 66, 80]
+        [5, 25, 30, 31, 46, 57],
+        [5, 35, 46, 48, 65, 80]
       ],
-      "note": "Prima giocata con il bot"
+      "note": "Concorso 149: 2 sestine (1 recuperata + 1 nuova MIMIC)"
     }
   ],
   "config": {
