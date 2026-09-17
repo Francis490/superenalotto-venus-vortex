@@ -362,6 +362,32 @@ def calculate_next_draw_date(last_date_str):
     return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
 
 # ==========================================
+# 3-bis. HELPER PER DATA E 2026 (FIX)
+# ==========================================
+def sort_history_by_date(history):
+    """Ordina lo storico per DATA (non per numero concorso)."""
+    def _key(item):
+        try:
+            dt = datetime.strptime(str(item.get("data", "")), "%d/%m/%Y")
+            return (dt.year, dt.month, dt.day)
+        except (ValueError, TypeError):
+            return (0, 0, 0)
+    return sorted(history, key=_key)
+
+
+def find_last_2026_draw(history):
+    """
+    Trova l'ultima estrazione del 2026 (concorso 1-999).
+    Ignora i concorsi 2025 che hanno offset +1000.
+    """
+    candidates = [h for h in history
+                  if isinstance(h.get("concorso"), int)
+                  and 1 <= h["concorso"] <= 999]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda x: x["concorso"])
+
+# ==========================================
 # 4. GENERAZIONE GRAFICO PRINCIPALE
 # ==========================================
 def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
@@ -568,7 +594,6 @@ def send_telegram_photo(photo_path, caption=""):
         print(f"[!] File non trovato: {photo_path}")
         return
 
-    # Tronca caption se troppo lungo (limite Telegram 1024)
     if caption and len(caption) > TELEGRAM_CAPTION_LIMIT:
         caption = caption[:TELEGRAM_CAPTION_LIMIT - 3] + "..."
 
@@ -627,8 +652,6 @@ def send_telegram_message(text):
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    # Telegram sendMessage accetta fino a 4096 caratteri.
-    # Se troppo lungo, taglia con "..." (non dovrebbe mai accadere)
     if len(text) > 4000:
         text = text[:3997] + "..."
 
@@ -656,7 +679,10 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
                            next_concorso, budget_mode):
     now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-    last_draw = history[-1] if history else {}
+    # FIX: usa l'ultima estrazione 2026 (non il concorso 1208 del 2025)
+    last_draw_2026 = find_last_2026_draw(history)
+    last_draw = last_draw_2026 if last_draw_2026 else (history[-1] if history else {})
+
     last_comb = last_draw.get("combinazione", []) or []
     last_concorso = last_draw.get("concorso", "N/A")
     last_date = last_draw.get("data", "N/A")
@@ -777,6 +803,7 @@ def main():
         ]
         save_json(HISTORY_FILE, history)
 
+    # === OVERRIDE MANUALE ===
     if os.path.exists(MANUAL_OVERRIDE_FILE):
         try:
             with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
@@ -801,7 +828,7 @@ def main():
                         "superstar": manual_draw.get("superstar"),
                     }
                     history.append(new_entry)
-                    history.sort(key=lambda x: x.get("concorso", 0))
+                    history = sort_history_by_date(history)
                     save_json(HISTORY_FILE, history)
                     print(f"[+] OVERRIDE: aggiunto concorso {manual_concorso}")
                 else:
@@ -810,6 +837,13 @@ def main():
                 print("[*] Override manuale: nessuna estrazione valida.")
         except Exception as e:
             print(f"[!] Errore override manuale: {e}")
+
+    # === ORDINA E IDENTIFICA ULTIMA 2026 ===
+    history = sort_history_by_date(history)
+    last_2026 = find_last_2026_draw(history)
+    if last_2026:
+        print(f"[+] Ultima estrazione 2026: concorso {last_2026['concorso']} "
+              f"del {last_2026.get('data', 'N/A')}")
 
     raw_scores, delays, frequencies = calculate_raw_scores(history)
     adjusted_scores = apply_cooldown_factor(raw_scores, history)
@@ -892,7 +926,8 @@ def main():
     z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2) if titan1 else 0
     z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2) if titan2 else 0
 
-    last_draw = history[-1] if history else {}
+    # === ULTIMA ESTRAZIONE 2026 (non 1208) ===
+    last_draw = last_2026 if last_2026 else (history[-1] if history else {})
     last_concorso = last_draw.get("concorso", "N/A")
     last_comb = last_draw.get("combinazione") or []
     last_jolly = last_draw.get("jolly", "N/A")
@@ -901,7 +936,7 @@ def main():
     try:
         next_concorso = int(last_concorso) + 1
     except (ValueError, TypeError):
-        next_concorso = 148
+        next_concorso = 150
 
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
