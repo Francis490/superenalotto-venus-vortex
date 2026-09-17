@@ -1,23 +1,23 @@
 {
-  "updated_at": "2026-09-17T21:34:01",
+  "updated_at": "2026-09-17T22:04:02",
   "next_contest": {
-    "number": 1209,
-    "date": "01/01/2026",
+    "number": 150,
+    "date": "18/09/2026",
     "jackpot": 28800000
   },
   "last_draw": {
-    "contest_number": 1208,
-    "date": "30/12/2025",
+    "contest_number": 149,
+    "date": "17/09/2026",
     "numbers": [
       6,
-      9,
-      17,
-      20,
-      60,
-      67
+      7,
+      16,
+      35,
+      46,
+      54
     ],
-    "jolly": 1,
-    "superstar": 73
+    "jolly": 21,
+    "superstar": 51
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
@@ -34,35 +34,35 @@
     "message": "EV basso. 1 sestina (1,00 €)."
   },
   "dodeca_pool": [
-    4,
-    10,
-    12,
-    13,
-    27,
-    39,
+    5,
+    25,
+    30,
+    31,
+    34,
+    43,
     48,
-    49,
     57,
-    59,
-    66,
-    68
+    65,
+    72,
+    80,
+    87
   ],
   "titan_predictions": [
     {
       "id": "VORTEX 1",
       "numbers": [
-        4,
-        27,
-        49,
-        57,
-        66,
-        68
+        5,
+        30,
+        34,
+        48,
+        65,
+        87
       ],
-      "sum": 271,
-      "z_score": -0.05,
-      "confidence": 24.75,
+      "sum": 269,
+      "z_score": -0.09,
+      "confidence": 24.55,
       "ev_score": 1.0,
-      "signature": "VX-2026-1209-C2CC87"
+      "signature": "VX-2026-150-9D1CEE"
     }
   ],
   "vortex": {

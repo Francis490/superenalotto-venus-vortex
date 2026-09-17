@@ -1,6 +1,6 @@
-# Aggiorna Venus Vortex - Concorso N. 1209
+# Aggiorna Venus Vortex - Concorso N. 150
 
-> Ultima generazione automatica: **2026-09-17 21:34:06**
+> Ultima generazione automatica: **2026-09-17 22:04:09**
 
 ---
 
@@ -8,18 +8,18 @@
 
 | Campo | Valore |
 |---|---|
-| **Ultima estrazione** | Concorso N. 1208 del 30/12/2025 |
-| **Combinazione** | `[6, 9, 17, 20, 60, 67]` |
-| **Jolly** | 1 |
-| **SuperStar** | 73 |
-| **Prossimo concorso** | N. 1209 del 01/01/2026 |
+| **Ultima estrazione** | Concorso N. 149 del 17/09/2026 |
+| **Combinazione** | `[6, 7, 16, 35, 46, 54]` |
+| **Jolly** | 21 |
+| **SuperStar** | 51 |
+| **Prossimo concorso** | N. 150 del 18/09/2026 |
 | **Jackpot attuale** | EUR 28,800,000 |
 
 ---
 
 ## Procedura aggiornamento (2 minuti)
 
-### STEP 1 - Trova i numeri veri del concorso 1209
+### STEP 1 - Trova i numeri veri del concorso 150
 
 Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
 - 6 numeri vincenti
@@ -40,13 +40,13 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 {
   "jackpot": 28800000,
   "last_draw": {
-    "concorso": 1209,
-    "data": "01/01/2026",
+    "concorso": 150,
+    "data": "18/09/2026",
     "combinazione": [0, 0, 0, 0, 0, 0],
     "jolly": 0,
     "superstar": 0
   },
-  "note": "Compila con i numeri reali del concorso 1209"
+  "note": "Compila con i numeri reali del concorso 150"
 }
 ```
 
