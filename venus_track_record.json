@@ -2,16 +2,16 @@
   "records": [
     {
       "target_concorso": 149,
-      "generated_at": "2026-09-16T21:11:14.053981",
+      "generated_at": "2026-09-17T14:32:20.452581",
       "mode": "MINIMO",
       "sestinas": [
         [
           5,
-          10,
-          35,
-          43,
-          45,
-          66
+          25,
+          30,
+          31,
+          46,
+          57
         ]
       ],
       "result": null
