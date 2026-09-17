@@ -1,6 +1,10 @@
 """
 vortex_opportunity.py
-VENUS VORTEX — Opportunity Engine v3.3
+VENUS VORTEX — Opportunity Engine v3.3.1
+
+Novità v3.3.1:
+- Filtro somma 240-310 anche sull'output del TRUE MIMIC generator
+  (prima passava sestine con somma 194, ora no)
 
 Novità v3.3:
 - determine_budget_mode: modula n° sestine in base all'EV (soglie realistiche)
@@ -279,7 +283,7 @@ def _score_assassin(combo, adjusted_scores):
 
 
 # ==========================================
-# 8. SELEZIONE MULTI-SESTINA (v3.3)
+# 8. SELEZIONE MULTI-SESTINA (v3.3.1)
 # ==========================================
 def _build_candidates(dodeca_pool, adjusted_scores, history):
     all_combos = list(itertools.combinations(dodeca_pool, 6))
@@ -299,6 +303,7 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     """
     Genera N sestine STATISTICAMENTE INDISTINGUIBILI dalle estrazioni reali.
     Usa true_mimic_generator per applicare 12 fingerprint.
+    FIX v3.3.1: filtra l'output MIMIC con somma 240-310.
     """
     if n_sestinas <= 0:
         return []
@@ -308,15 +313,19 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
         from true_mimic_generator import generate_true_mimic
         sestinas, fp = generate_true_mimic(history, dodeca_pool, n_sestinas)
 
-        if sestinas and len(sestinas) >= n_sestinas:
-            print(f"[+] {len(sestinas)} sestine generate con TRUE MIMIC (12 fingerprint)")
+        # FIX v3.3.1: filtro somma 240-310 sulle sestine MIMIC
+        filtered = [s for s in sestinas if 240 <= sum(s) <= 310]
+
+        if len(filtered) >= n_sestinas:
+            print(f"[+] {len(filtered)} sestine MIMIC con somma 240-310")
             return [
                 (tuple(s), _score_realistic(s, adjusted_scores),
                  anti_crowd_score(s), _score_realistic(s, adjusted_scores))
-                for s in sestinas
+                for s in filtered[:n_sestinas]
             ]
         else:
-            print(f"[!] MIMIC: solo {len(sestinas)} sestine valide. Fallback.")
+            print(f"[!] MIMIC: {len(filtered)}/{len(sestinas)} sestine "
+                  f"nel range 240-310. Fallback a selezione classica.")
     except ImportError:
         print("[!] true_mimic_generator non disponibile. Uso selezione classica.")
     except Exception as e:
