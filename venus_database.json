@@ -1,27 +1,27 @@
 {
-  "updated_at": "2026-09-17T20:25:31",
+  "updated_at": "2026-09-17T21:15:16",
   "next_contest": {
-    "number": 149,
-    "date": "17/09/2026",
-    "jackpot": 28100000
+    "number": 1209,
+    "date": "01/01/2026",
+    "jackpot": 28800000
   },
   "last_draw": {
-    "contest_number": 148,
-    "date": "15/09/2026",
+    "contest_number": 1208,
+    "date": "30/12/2025",
     "numbers": [
-      3,
-      12,
-      18,
-      32,
-      47,
-      54
+      6,
+      9,
+      17,
+      20,
+      60,
+      67
     ],
-    "jolly": 69,
-    "superstar": 28
+    "jolly": 1,
+    "superstar": 73
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
-    "ev": -0.5372,
+    "ev": -0.5344,
     "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
     "advice": "EV basso. 1 sestina (1,00 €)."
   },
@@ -30,49 +30,49 @@
     "emoji": "🟢",
     "n_sestinas": 1,
     "cost_eur": 1.0,
-    "ev": -0.5372,
+    "ev": -0.5344,
     "message": "EV basso. 1 sestina (1,00 €)."
   },
   "dodeca_pool": [
-    5,
-    25,
-    30,
-    31,
-    35,
-    46,
+    4,
+    10,
+    12,
+    13,
+    27,
+    39,
     48,
-    51,
+    49,
     57,
-    65,
-    80,
-    87
+    59,
+    66,
+    68
   ],
   "titan_predictions": [
     {
       "id": "VORTEX 1",
       "numbers": [
-        5,
-        35,
-        46,
-        48,
-        65,
-        80
+        4,
+        27,
+        49,
+        57,
+        66,
+        68
       ],
-      "sum": 279,
-      "z_score": 0.14,
-      "confidence": 24.3,
+      "sum": 271,
+      "z_score": -0.05,
+      "confidence": 24.75,
       "ev_score": 1.0,
-      "signature": "VX-2026-149-B4771E"
+      "signature": "VX-2026-1209-C2CC87"
     }
   ],
   "vortex": {
     "ev": {
-      "jackpot": 28100000,
+      "jackpot": 28800000,
       "players_estimated": 25000000,
       "expected_winners": 1.0,
-      "effective_jackpot": 70250000.0,
-      "ev_6_solo": 0.1128,
-      "ev_total": -0.5372,
+      "effective_jackpot": 72000000.0,
+      "ev_6_solo": 0.1156,
+      "ev_total": -0.5344,
       "profitable": false,
       "recommendation": "SALTA"
     },

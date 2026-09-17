@@ -1,2917 +1,5 @@
 [
   {
-    "concorso": 1001,
-    "data": "02/01/2025",
-    "combinazione": [
-      19,
-      21,
-      29,
-      74,
-      77,
-      88
-    ],
-    "jolly": 7,
-    "superstar": 56
-  },
-  {
-    "concorso": 1002,
-    "data": "03/01/2025",
-    "combinazione": [
-      13,
-      30,
-      43,
-      49,
-      74,
-      89
-    ],
-    "jolly": 4,
-    "superstar": 32
-  },
-  {
-    "concorso": 1003,
-    "data": "04/01/2025",
-    "combinazione": [
-      31,
-      42,
-      43,
-      63,
-      83,
-      86
-    ],
-    "jolly": 37,
-    "superstar": 86
-  },
-  {
-    "concorso": 1004,
-    "data": "07/01/2025",
-    "combinazione": [
-      7,
-      10,
-      11,
-      29,
-      32,
-      87
-    ],
-    "jolly": 34,
-    "superstar": 51
-  },
-  {
-    "concorso": 1005,
-    "data": "09/01/2025",
-    "combinazione": [
-      15,
-      33,
-      40,
-      71,
-      74,
-      82
-    ],
-    "jolly": 89,
-    "superstar": 15
-  },
-  {
-    "concorso": 1006,
-    "data": "10/01/2025",
-    "combinazione": [
-      19,
-      25,
-      33,
-      49,
-      57,
-      72
-    ],
-    "jolly": 46,
-    "superstar": 38
-  },
-  {
-    "concorso": 1007,
-    "data": "11/01/2025",
-    "combinazione": [
-      5,
-      6,
-      11,
-      22,
-      35,
-      85
-    ],
-    "jolly": 30,
-    "superstar": 53
-  },
-  {
-    "concorso": 1008,
-    "data": "14/01/2025",
-    "combinazione": [
-      4,
-      15,
-      17,
-      40,
-      64,
-      75
-    ],
-    "jolly": 23,
-    "superstar": 80
-  },
-  {
-    "concorso": 1009,
-    "data": "16/01/2025",
-    "combinazione": [
-      31,
-      38,
-      59,
-      69,
-      72,
-      88
-    ],
-    "jolly": 64,
-    "superstar": 73
-  },
-  {
-    "concorso": 1010,
-    "data": "17/01/2025",
-    "combinazione": [
-      8,
-      12,
-      15,
-      40,
-      66,
-      89
-    ],
-    "jolly": 7,
-    "superstar": 15
-  },
-  {
-    "concorso": 1011,
-    "data": "18/01/2025",
-    "combinazione": [
-      2,
-      10,
-      21,
-      29,
-      46,
-      70
-    ],
-    "jolly": 31,
-    "superstar": 59
-  },
-  {
-    "concorso": 1012,
-    "data": "21/01/2025",
-    "combinazione": [
-      3,
-      18,
-      41,
-      58,
-      62,
-      73
-    ],
-    "jolly": 64,
-    "superstar": 20
-  },
-  {
-    "concorso": 1013,
-    "data": "23/01/2025",
-    "combinazione": [
-      1,
-      7,
-      34,
-      46,
-      69,
-      80
-    ],
-    "jolly": 64,
-    "superstar": 42
-  },
-  {
-    "concorso": 1014,
-    "data": "24/01/2025",
-    "combinazione": [
-      14,
-      20,
-      46,
-      62,
-      84,
-      85
-    ],
-    "jolly": 1,
-    "superstar": 78
-  },
-  {
-    "concorso": 1015,
-    "data": "25/01/2025",
-    "combinazione": [
-      5,
-      6,
-      24,
-      44,
-      45,
-      76
-    ],
-    "jolly": 58,
-    "superstar": 64
-  },
-  {
-    "concorso": 1016,
-    "data": "28/01/2025",
-    "combinazione": [
-      48,
-      63,
-      65,
-      72,
-      77,
-      82
-    ],
-    "jolly": 85,
-    "superstar": 47
-  },
-  {
-    "concorso": 1017,
-    "data": "30/01/2025",
-    "combinazione": [
-      23,
-      32,
-      34,
-      35,
-      41,
-      47
-    ],
-    "jolly": 65,
-    "superstar": 2
-  },
-  {
-    "concorso": 1018,
-    "data": "31/01/2025",
-    "combinazione": [
-      7,
-      18,
-      22,
-      25,
-      30,
-      72
-    ],
-    "jolly": 76,
-    "superstar": 51
-  },
-  {
-    "concorso": 1019,
-    "data": "01/02/2025",
-    "combinazione": [
-      21,
-      25,
-      26,
-      45,
-      49,
-      59
-    ],
-    "jolly": 68,
-    "superstar": 82
-  },
-  {
-    "concorso": 1020,
-    "data": "04/02/2025",
-    "combinazione": [
-      10,
-      29,
-      41,
-      77,
-      83,
-      85
-    ],
-    "jolly": 56,
-    "superstar": 80
-  },
-  {
-    "concorso": 1021,
-    "data": "06/02/2025",
-    "combinazione": [
-      4,
-      11,
-      41,
-      72,
-      83,
-      86
-    ],
-    "jolly": 30,
-    "superstar": 30
-  },
-  {
-    "concorso": 1022,
-    "data": "07/02/2025",
-    "combinazione": [
-      16,
-      29,
-      30,
-      47,
-      52,
-      84
-    ],
-    "jolly": 10,
-    "superstar": 17
-  },
-  {
-    "concorso": 1023,
-    "data": "08/02/2025",
-    "combinazione": [
-      29,
-      46,
-      57,
-      66,
-      72,
-      86
-    ],
-    "jolly": 64,
-    "superstar": 40
-  },
-  {
-    "concorso": 1024,
-    "data": "11/02/2025",
-    "combinazione": [
-      9,
-      39,
-      55,
-      75,
-      79,
-      86
-    ],
-    "jolly": 2,
-    "superstar": 56
-  },
-  {
-    "concorso": 1025,
-    "data": "13/02/2025",
-    "combinazione": [
-      31,
-      41,
-      62,
-      64,
-      74,
-      87
-    ],
-    "jolly": 84,
-    "superstar": 68
-  },
-  {
-    "concorso": 1026,
-    "data": "14/02/2025",
-    "combinazione": [
-      18,
-      30,
-      40,
-      52,
-      60,
-      71
-    ],
-    "jolly": 65,
-    "superstar": 70
-  },
-  {
-    "concorso": 1027,
-    "data": "15/02/2025",
-    "combinazione": [
-      22,
-      37,
-      48,
-      72,
-      77,
-      85
-    ],
-    "jolly": 39,
-    "superstar": 72
-  },
-  {
-    "concorso": 1028,
-    "data": "18/02/2025",
-    "combinazione": [
-      3,
-      5,
-      7,
-      54,
-      76,
-      85
-    ],
-    "jolly": 89,
-    "superstar": 64
-  },
-  {
-    "concorso": 1029,
-    "data": "20/02/2025",
-    "combinazione": [
-      6,
-      19,
-      27,
-      63,
-      71,
-      77
-    ],
-    "jolly": 13,
-    "superstar": 70
-  },
-  {
-    "concorso": 1030,
-    "data": "21/02/2025",
-    "combinazione": [
-      21,
-      45,
-      48,
-      72,
-      79,
-      87
-    ],
-    "jolly": 73,
-    "superstar": 89
-  },
-  {
-    "concorso": 1031,
-    "data": "22/02/2025",
-    "combinazione": [
-      35,
-      40,
-      48,
-      49,
-      52,
-      89
-    ],
-    "jolly": 24,
-    "superstar": 32
-  },
-  {
-    "concorso": 1032,
-    "data": "25/02/2025",
-    "combinazione": [
-      6,
-      58,
-      68,
-      83,
-      89,
-      90
-    ],
-    "jolly": 73,
-    "superstar": 50
-  },
-  {
-    "concorso": 1033,
-    "data": "27/02/2025",
-    "combinazione": [
-      29,
-      31,
-      33,
-      42,
-      51,
-      72
-    ],
-    "jolly": 34,
-    "superstar": 62
-  },
-  {
-    "concorso": 1034,
-    "data": "28/02/2025",
-    "combinazione": [
-      4,
-      12,
-      37,
-      59,
-      63,
-      90
-    ],
-    "jolly": 70,
-    "superstar": 15
-  },
-  {
-    "concorso": 1035,
-    "data": "01/03/2025",
-    "combinazione": [
-      1,
-      12,
-      33,
-      40,
-      41,
-      83
-    ],
-    "jolly": 6,
-    "superstar": 67
-  },
-  {
-    "concorso": 1036,
-    "data": "04/03/2025",
-    "combinazione": [
-      9,
-      28,
-      52,
-      63,
-      77,
-      79
-    ],
-    "jolly": 11,
-    "superstar": 39
-  },
-  {
-    "concorso": 1037,
-    "data": "06/03/2025",
-    "combinazione": [
-      1,
-      10,
-      18,
-      19,
-      32,
-      36
-    ],
-    "jolly": 20,
-    "superstar": 53
-  },
-  {
-    "concorso": 1038,
-    "data": "07/03/2025",
-    "combinazione": [
-      11,
-      24,
-      25,
-      30,
-      43,
-      47
-    ],
-    "jolly": 28,
-    "superstar": 5
-  },
-  {
-    "concorso": 1039,
-    "data": "08/03/2025",
-    "combinazione": [
-      11,
-      16,
-      35,
-      59,
-      65,
-      87
-    ],
-    "jolly": 9,
-    "superstar": 52
-  },
-  {
-    "concorso": 1040,
-    "data": "11/03/2025",
-    "combinazione": [
-      22,
-      27,
-      48,
-      55,
-      58,
-      90
-    ],
-    "jolly": 63,
-    "superstar": 11
-  },
-  {
-    "concorso": 1041,
-    "data": "13/03/2025",
-    "combinazione": [
-      7,
-      25,
-      33,
-      51,
-      58,
-      70
-    ],
-    "jolly": 79,
-    "superstar": 31
-  },
-  {
-    "concorso": 1042,
-    "data": "14/03/2025",
-    "combinazione": [
-      3,
-      10,
-      20,
-      36,
-      37,
-      49
-    ],
-    "jolly": 21,
-    "superstar": 14
-  },
-  {
-    "concorso": 1043,
-    "data": "15/03/2025",
-    "combinazione": [
-      2,
-      8,
-      50,
-      77,
-      79,
-      82
-    ],
-    "jolly": 85,
-    "superstar": 36
-  },
-  {
-    "concorso": 1044,
-    "data": "18/03/2025",
-    "combinazione": [
-      1,
-      64,
-      73,
-      79,
-      80,
-      86
-    ],
-    "jolly": 39,
-    "superstar": 68
-  },
-  {
-    "concorso": 1045,
-    "data": "20/03/2025",
-    "combinazione": [
-      36,
-      40,
-      49,
-      54,
-      66,
-      83
-    ],
-    "jolly": 14,
-    "superstar": 44
-  },
-  {
-    "concorso": 1046,
-    "data": "21/03/2025",
-    "combinazione": [
-      7,
-      15,
-      48,
-      49,
-      65,
-      80
-    ],
-    "jolly": 67,
-    "superstar": 39
-  },
-  {
-    "concorso": 1047,
-    "data": "22/03/2025",
-    "combinazione": [
-      15,
-      28,
-      45,
-      46,
-      66,
-      76
-    ],
-    "jolly": 44,
-    "superstar": 43
-  },
-  {
-    "concorso": 1048,
-    "data": "25/03/2025",
-    "combinazione": [
-      27,
-      29,
-      31,
-      60,
-      74,
-      88
-    ],
-    "jolly": 71,
-    "superstar": 23
-  },
-  {
-    "concorso": 1049,
-    "data": "27/03/2025",
-    "combinazione": [
-      28,
-      35,
-      43,
-      45,
-      64,
-      85
-    ],
-    "jolly": 13,
-    "superstar": 35
-  },
-  {
-    "concorso": 1050,
-    "data": "28/03/2025",
-    "combinazione": [
-      17,
-      26,
-      46,
-      56,
-      71,
-      90
-    ],
-    "jolly": 6,
-    "superstar": 22
-  },
-  {
-    "concorso": 1051,
-    "data": "29/03/2025",
-    "combinazione": [
-      9,
-      45,
-      66,
-      68,
-      71,
-      85
-    ],
-    "jolly": 31,
-    "superstar": 44
-  },
-  {
-    "concorso": 1052,
-    "data": "01/04/2025",
-    "combinazione": [
-      4,
-      19,
-      32,
-      47,
-      74,
-      81
-    ],
-    "jolly": 10,
-    "superstar": 90
-  },
-  {
-    "concorso": 1053,
-    "data": "03/04/2025",
-    "combinazione": [
-      29,
-      30,
-      31,
-      32,
-      35,
-      57
-    ],
-    "jolly": 28,
-    "superstar": 6
-  },
-  {
-    "concorso": 1054,
-    "data": "04/04/2025",
-    "combinazione": [
-      42,
-      51,
-      71,
-      77,
-      80,
-      82
-    ],
-    "jolly": 72,
-    "superstar": 5
-  },
-  {
-    "concorso": 1055,
-    "data": "05/04/2025",
-    "combinazione": [
-      5,
-      8,
-      22,
-      41,
-      60,
-      73
-    ],
-    "jolly": 18,
-    "superstar": 54
-  },
-  {
-    "concorso": 1056,
-    "data": "08/04/2025",
-    "combinazione": [
-      11,
-      20,
-      34,
-      46,
-      48,
-      90
-    ],
-    "jolly": 68,
-    "superstar": 81
-  },
-  {
-    "concorso": 1057,
-    "data": "10/04/2025",
-    "combinazione": [
-      11,
-      24,
-      32,
-      40,
-      44,
-      85
-    ],
-    "jolly": 27,
-    "superstar": 36
-  },
-  {
-    "concorso": 1058,
-    "data": "11/04/2025",
-    "combinazione": [
-      9,
-      20,
-      43,
-      49,
-      52,
-      57
-    ],
-    "jolly": 61,
-    "superstar": 8
-  },
-  {
-    "concorso": 1059,
-    "data": "12/04/2025",
-    "combinazione": [
-      16,
-      38,
-      60,
-      79,
-      83,
-      85
-    ],
-    "jolly": 27,
-    "superstar": 36
-  },
-  {
-    "concorso": 1060,
-    "data": "15/04/2025",
-    "combinazione": [
-      40,
-      57,
-      60,
-      66,
-      80,
-      81
-    ],
-    "jolly": 36,
-    "superstar": 9
-  },
-  {
-    "concorso": 1061,
-    "data": "17/04/2025",
-    "combinazione": [
-      8,
-      20,
-      40,
-      44,
-      46,
-      49
-    ],
-    "jolly": 63,
-    "superstar": 48
-  },
-  {
-    "concorso": 1062,
-    "data": "18/04/2025",
-    "combinazione": [
-      4,
-      11,
-      18,
-      23,
-      83,
-      88
-    ],
-    "jolly": 89,
-    "superstar": 70
-  },
-  {
-    "concorso": 1063,
-    "data": "19/04/2025",
-    "combinazione": [
-      8,
-      32,
-      51,
-      54,
-      62,
-      69
-    ],
-    "jolly": 18,
-    "superstar": 30
-  },
-  {
-    "concorso": 1064,
-    "data": "22/04/2025",
-    "combinazione": [
-      10,
-      59,
-      61,
-      62,
-      68,
-      74
-    ],
-    "jolly": 43,
-    "superstar": 31
-  },
-  {
-    "concorso": 1065,
-    "data": "24/04/2025",
-    "combinazione": [
-      13,
-      14,
-      20,
-      31,
-      55,
-      60
-    ],
-    "jolly": 89,
-    "superstar": 25
-  },
-  {
-    "concorso": 1066,
-    "data": "26/04/2025",
-    "combinazione": [
-      10,
-      21,
-      24,
-      48,
-      63,
-      67
-    ],
-    "jolly": 34,
-    "superstar": 45
-  },
-  {
-    "concorso": 1067,
-    "data": "28/04/2025",
-    "combinazione": [
-      13,
-      18,
-      30,
-      44,
-      51,
-      81
-    ],
-    "jolly": 38,
-    "superstar": 52
-  },
-  {
-    "concorso": 1068,
-    "data": "29/04/2025",
-    "combinazione": [
-      20,
-      31,
-      39,
-      59,
-      60,
-      82
-    ],
-    "jolly": 57,
-    "superstar": 10
-  },
-  {
-    "concorso": 1069,
-    "data": "02/05/2025",
-    "combinazione": [
-      54,
-      55,
-      67,
-      76,
-      80,
-      85
-    ],
-    "jolly": 82,
-    "superstar": 52
-  },
-  {
-    "concorso": 1070,
-    "data": "03/05/2025",
-    "combinazione": [
-      1,
-      4,
-      22,
-      44,
-      70,
-      72
-    ],
-    "jolly": 18,
-    "superstar": 53
-  },
-  {
-    "concorso": 1071,
-    "data": "05/05/2025",
-    "combinazione": [
-      6,
-      18,
-      37,
-      63,
-      72,
-      73
-    ],
-    "jolly": 36,
-    "superstar": 28
-  },
-  {
-    "concorso": 1072,
-    "data": "06/05/2025",
-    "combinazione": [
-      2,
-      35,
-      51,
-      58,
-      63,
-      88
-    ],
-    "jolly": 8,
-    "superstar": 51
-  },
-  {
-    "concorso": 1073,
-    "data": "08/05/2025",
-    "combinazione": [
-      1,
-      23,
-      27,
-      54,
-      67,
-      83
-    ],
-    "jolly": 65,
-    "superstar": 30
-  },
-  {
-    "concorso": 1074,
-    "data": "09/05/2025",
-    "combinazione": [
-      3,
-      47,
-      51,
-      77,
-      85,
-      88
-    ],
-    "jolly": 52,
-    "superstar": 39
-  },
-  {
-    "concorso": 1075,
-    "data": "10/05/2025",
-    "combinazione": [
-      8,
-      14,
-      17,
-      39,
-      49,
-      55
-    ],
-    "jolly": 2,
-    "superstar": 80
-  },
-  {
-    "concorso": 1076,
-    "data": "13/05/2025",
-    "combinazione": [
-      2,
-      15,
-      25,
-      62,
-      76,
-      81
-    ],
-    "jolly": 89,
-    "superstar": 5
-  },
-  {
-    "concorso": 1077,
-    "data": "15/05/2025",
-    "combinazione": [
-      10,
-      28,
-      35,
-      37,
-      73,
-      75
-    ],
-    "jolly": 42,
-    "superstar": 27
-  },
-  {
-    "concorso": 1078,
-    "data": "16/05/2025",
-    "combinazione": [
-      15,
-      21,
-      30,
-      31,
-      42,
-      80
-    ],
-    "jolly": 69,
-    "superstar": 42
-  },
-  {
-    "concorso": 1079,
-    "data": "17/05/2025",
-    "combinazione": [
-      10,
-      11,
-      19,
-      22,
-      39,
-      88
-    ],
-    "jolly": 29,
-    "superstar": 73
-  },
-  {
-    "concorso": 1080,
-    "data": "20/05/2025",
-    "combinazione": [
-      5,
-      19,
-      21,
-      30,
-      33,
-      48
-    ],
-    "jolly": 74,
-    "superstar": 39
-  },
-  {
-    "concorso": 1081,
-    "data": "22/05/2025",
-    "combinazione": [
-      2,
-      19,
-      23,
-      46,
-      49,
-      72
-    ],
-    "jolly": 71,
-    "superstar": 88
-  },
-  {
-    "concorso": 1082,
-    "data": "23/05/2025",
-    "combinazione": [
-      2,
-      8,
-      10,
-      18,
-      20,
-      79
-    ],
-    "jolly": 13,
-    "superstar": 10
-  },
-  {
-    "concorso": 1083,
-    "data": "24/05/2025",
-    "combinazione": [
-      1,
-      3,
-      5,
-      53,
-      62,
-      71
-    ],
-    "jolly": 32,
-    "superstar": 53
-  },
-  {
-    "concorso": 1084,
-    "data": "27/05/2025",
-    "combinazione": [
-      7,
-      10,
-      35,
-      40,
-      53,
-      75
-    ],
-    "jolly": 60,
-    "superstar": 33
-  },
-  {
-    "concorso": 1085,
-    "data": "29/05/2025",
-    "combinazione": [
-      27,
-      32,
-      51,
-      67,
-      71,
-      81
-    ],
-    "jolly": 35,
-    "superstar": 90
-  },
-  {
-    "concorso": 1086,
-    "data": "30/05/2025",
-    "combinazione": [
-      31,
-      34,
-      62,
-      63,
-      82,
-      87
-    ],
-    "jolly": 81,
-    "superstar": 77
-  },
-  {
-    "concorso": 1087,
-    "data": "31/05/2025",
-    "combinazione": [
-      4,
-      8,
-      47,
-      48,
-      63,
-      90
-    ],
-    "jolly": 77,
-    "superstar": 12
-  },
-  {
-    "concorso": 1088,
-    "data": "03/06/2025",
-    "combinazione": [
-      1,
-      6,
-      31,
-      37,
-      47,
-      71
-    ],
-    "jolly": 26,
-    "superstar": 72
-  },
-  {
-    "concorso": 1089,
-    "data": "05/06/2025",
-    "combinazione": [
-      10,
-      17,
-      19,
-      21,
-      63,
-      74
-    ],
-    "jolly": 4,
-    "superstar": 60
-  },
-  {
-    "concorso": 1090,
-    "data": "06/06/2025",
-    "combinazione": [
-      2,
-      10,
-      33,
-      55,
-      73,
-      74
-    ],
-    "jolly": 80,
-    "superstar": 49
-  },
-  {
-    "concorso": 1091,
-    "data": "07/06/2025",
-    "combinazione": [
-      5,
-      28,
-      46,
-      49,
-      52,
-      78
-    ],
-    "jolly": 83,
-    "superstar": 21
-  },
-  {
-    "concorso": 1092,
-    "data": "10/06/2025",
-    "combinazione": [
-      14,
-      45,
-      55,
-      62,
-      76,
-      80
-    ],
-    "jolly": 51,
-    "superstar": 17
-  },
-  {
-    "concorso": 1093,
-    "data": "12/06/2025",
-    "combinazione": [
-      21,
-      61,
-      69,
-      76,
-      79,
-      81
-    ],
-    "jolly": 77,
-    "superstar": 76
-  },
-  {
-    "concorso": 1094,
-    "data": "13/06/2025",
-    "combinazione": [
-      8,
-      23,
-      25,
-      48,
-      78,
-      83
-    ],
-    "jolly": 80,
-    "superstar": 39
-  },
-  {
-    "concorso": 1095,
-    "data": "14/06/2025",
-    "combinazione": [
-      10,
-      18,
-      44,
-      56,
-      73,
-      86
-    ],
-    "jolly": 48,
-    "superstar": 55
-  },
-  {
-    "concorso": 1096,
-    "data": "17/06/2025",
-    "combinazione": [
-      17,
-      48,
-      52,
-      58,
-      86,
-      87
-    ],
-    "jolly": 74,
-    "superstar": 49
-  },
-  {
-    "concorso": 1097,
-    "data": "19/06/2025",
-    "combinazione": [
-      4,
-      6,
-      11,
-      31,
-      69,
-      73
-    ],
-    "jolly": 9,
-    "superstar": 26
-  },
-  {
-    "concorso": 1098,
-    "data": "20/06/2025",
-    "combinazione": [
-      34,
-      67,
-      76,
-      77,
-      86,
-      90
-    ],
-    "jolly": 40,
-    "superstar": 43
-  },
-  {
-    "concorso": 1099,
-    "data": "21/06/2025",
-    "combinazione": [
-      4,
-      17,
-      28,
-      36,
-      42,
-      50
-    ],
-    "jolly": 5,
-    "superstar": 71
-  },
-  {
-    "concorso": 1100,
-    "data": "24/06/2025",
-    "combinazione": [
-      2,
-      23,
-      32,
-      36,
-      63,
-      64
-    ],
-    "jolly": 37,
-    "superstar": 76
-  },
-  {
-    "concorso": 1101,
-    "data": "26/06/2025",
-    "combinazione": [
-      10,
-      56,
-      69,
-      70,
-      79,
-      81
-    ],
-    "jolly": 53,
-    "superstar": 45
-  },
-  {
-    "concorso": 1102,
-    "data": "27/06/2025",
-    "combinazione": [
-      25,
-      49,
-      54,
-      55,
-      62,
-      73
-    ],
-    "jolly": 4,
-    "superstar": 86
-  },
-  {
-    "concorso": 1103,
-    "data": "28/06/2025",
-    "combinazione": [
-      10,
-      35,
-      38,
-      41,
-      51,
-      56
-    ],
-    "jolly": 3,
-    "superstar": 51
-  },
-  {
-    "concorso": 1104,
-    "data": "01/07/2025",
-    "combinazione": [
-      6,
-      9,
-      25,
-      28,
-      75,
-      79
-    ],
-    "jolly": 83,
-    "superstar": 20
-  },
-  {
-    "concorso": 1105,
-    "data": "03/07/2025",
-    "combinazione": [
-      37,
-      42,
-      49,
-      53,
-      57,
-      65
-    ],
-    "jolly": 62,
-    "superstar": 8
-  },
-  {
-    "concorso": 1106,
-    "data": "04/07/2025",
-    "combinazione": [
-      26,
-      45,
-      58,
-      65,
-      70,
-      82
-    ],
-    "jolly": 27,
-    "superstar": 73
-  },
-  {
-    "concorso": 1107,
-    "data": "05/07/2025",
-    "combinazione": [
-      16,
-      46,
-      61,
-      71,
-      75,
-      85
-    ],
-    "jolly": 64,
-    "superstar": 12
-  },
-  {
-    "concorso": 1108,
-    "data": "08/07/2025",
-    "combinazione": [
-      1,
-      33,
-      40,
-      61,
-      64,
-      73
-    ],
-    "jolly": 15,
-    "superstar": 48
-  },
-  {
-    "concorso": 1109,
-    "data": "10/07/2025",
-    "combinazione": [
-      5,
-      15,
-      20,
-      32,
-      65,
-      75
-    ],
-    "jolly": 12,
-    "superstar": 24
-  },
-  {
-    "concorso": 1110,
-    "data": "11/07/2025",
-    "combinazione": [
-      1,
-      31,
-      40,
-      62,
-      64,
-      74
-    ],
-    "jolly": 81,
-    "superstar": 11
-  },
-  {
-    "concorso": 1111,
-    "data": "12/07/2025",
-    "combinazione": [
-      16,
-      24,
-      25,
-      43,
-      64,
-      78
-    ],
-    "jolly": 54,
-    "superstar": 12
-  },
-  {
-    "concorso": 1112,
-    "data": "15/07/2025",
-    "combinazione": [
-      4,
-      10,
-      14,
-      48,
-      58,
-      83
-    ],
-    "jolly": 47,
-    "superstar": 63
-  },
-  {
-    "concorso": 1113,
-    "data": "17/07/2025",
-    "combinazione": [
-      16,
-      35,
-      37,
-      42,
-      43,
-      68
-    ],
-    "jolly": 58,
-    "superstar": 8
-  },
-  {
-    "concorso": 1114,
-    "data": "18/07/2025",
-    "combinazione": [
-      20,
-      37,
-      50,
-      70,
-      75,
-      88
-    ],
-    "jolly": 46,
-    "superstar": 16
-  },
-  {
-    "concorso": 1115,
-    "data": "19/07/2025",
-    "combinazione": [
-      5,
-      43,
-      46,
-      56,
-      58,
-      90
-    ],
-    "jolly": 23,
-    "superstar": 54
-  },
-  {
-    "concorso": 1116,
-    "data": "22/07/2025",
-    "combinazione": [
-      3,
-      8,
-      44,
-      52,
-      69,
-      85
-    ],
-    "jolly": 11,
-    "superstar": 67
-  },
-  {
-    "concorso": 1117,
-    "data": "24/07/2025",
-    "combinazione": [
-      10,
-      14,
-      37,
-      66,
-      88,
-      89
-    ],
-    "jolly": 34,
-    "superstar": 88
-  },
-  {
-    "concorso": 1118,
-    "data": "25/07/2025",
-    "combinazione": [
-      15,
-      16,
-      17,
-      36,
-      62,
-      83
-    ],
-    "jolly": 7,
-    "superstar": 31
-  },
-  {
-    "concorso": 1119,
-    "data": "26/07/2025",
-    "combinazione": [
-      1,
-      9,
-      19,
-      49,
-      53,
-      88
-    ],
-    "jolly": 77,
-    "superstar": 44
-  },
-  {
-    "concorso": 1120,
-    "data": "29/07/2025",
-    "combinazione": [
-      13,
-      27,
-      31,
-      60,
-      65,
-      75
-    ],
-    "jolly": 39,
-    "superstar": 69
-  },
-  {
-    "concorso": 1121,
-    "data": "31/07/2025",
-    "combinazione": [
-      14,
-      55,
-      56,
-      57,
-      58,
-      66
-    ],
-    "jolly": 46,
-    "superstar": 65
-  },
-  {
-    "concorso": 1122,
-    "data": "01/08/2025",
-    "combinazione": [
-      9,
-      25,
-      27,
-      36,
-      54,
-      86
-    ],
-    "jolly": 45,
-    "superstar": 31
-  },
-  {
-    "concorso": 1123,
-    "data": "02/08/2025",
-    "combinazione": [
-      42,
-      54,
-      66,
-      78,
-      80,
-      88
-    ],
-    "jolly": 60,
-    "superstar": 14
-  },
-  {
-    "concorso": 1124,
-    "data": "05/08/2025",
-    "combinazione": [
-      6,
-      31,
-      57,
-      60,
-      65,
-      80
-    ],
-    "jolly": 12,
-    "superstar": 71
-  },
-  {
-    "concorso": 1125,
-    "data": "07/08/2025",
-    "combinazione": [
-      43,
-      55,
-      70,
-      79,
-      83,
-      85
-    ],
-    "jolly": 24,
-    "superstar": 4
-  },
-  {
-    "concorso": 1126,
-    "data": "08/08/2025",
-    "combinazione": [
-      8,
-      34,
-      38,
-      53,
-      78,
-      79
-    ],
-    "jolly": 58,
-    "superstar": 37
-  },
-  {
-    "concorso": 1127,
-    "data": "09/08/2025",
-    "combinazione": [
-      6,
-      18,
-      40,
-      41,
-      45,
-      88
-    ],
-    "jolly": 37,
-    "superstar": 12
-  },
-  {
-    "concorso": 1128,
-    "data": "12/08/2025",
-    "combinazione": [
-      7,
-      11,
-      26,
-      59,
-      82,
-      83
-    ],
-    "jolly": 24,
-    "superstar": 54
-  },
-  {
-    "concorso": 1129,
-    "data": "14/08/2025",
-    "combinazione": [
-      3,
-      19,
-      30,
-      47,
-      49,
-      75
-    ],
-    "jolly": 35,
-    "superstar": 14
-  },
-  {
-    "concorso": 1130,
-    "data": "16/08/2025",
-    "combinazione": [
-      6,
-      15,
-      25,
-      31,
-      72,
-      79
-    ],
-    "jolly": 54,
-    "superstar": 31
-  },
-  {
-    "concorso": 1131,
-    "data": "18/08/2025",
-    "combinazione": [
-      5,
-      19,
-      58,
-      59,
-      83,
-      87
-    ],
-    "jolly": 10,
-    "superstar": 32
-  },
-  {
-    "concorso": 1132,
-    "data": "19/08/2025",
-    "combinazione": [
-      5,
-      10,
-      51,
-      62,
-      77,
-      81
-    ],
-    "jolly": 74,
-    "superstar": 58
-  },
-  {
-    "concorso": 1133,
-    "data": "21/08/2025",
-    "combinazione": [
-      49,
-      56,
-      57,
-      61,
-      62,
-      86
-    ],
-    "jolly": 16,
-    "superstar": 53
-  },
-  {
-    "concorso": 1134,
-    "data": "22/08/2025",
-    "combinazione": [
-      7,
-      25,
-      38,
-      39,
-      66,
-      69
-    ],
-    "jolly": 17,
-    "superstar": 24
-  },
-  {
-    "concorso": 1135,
-    "data": "23/08/2025",
-    "combinazione": [
-      5,
-      29,
-      40,
-      47,
-      52,
-      80
-    ],
-    "jolly": 4,
-    "superstar": 61
-  },
-  {
-    "concorso": 1136,
-    "data": "26/08/2025",
-    "combinazione": [
-      12,
-      23,
-      25,
-      34,
-      41,
-      63
-    ],
-    "jolly": 21,
-    "superstar": 20
-  },
-  {
-    "concorso": 1137,
-    "data": "28/08/2025",
-    "combinazione": [
-      56,
-      59,
-      64,
-      67,
-      72,
-      78
-    ],
-    "jolly": 51,
-    "superstar": 86
-  },
-  {
-    "concorso": 1138,
-    "data": "29/08/2025",
-    "combinazione": [
-      18,
-      22,
-      32,
-      34,
-      52,
-      56
-    ],
-    "jolly": 62,
-    "superstar": 45
-  },
-  {
-    "concorso": 1139,
-    "data": "30/08/2025",
-    "combinazione": [
-      30,
-      43,
-      46,
-      62,
-      73,
-      90
-    ],
-    "jolly": 35,
-    "superstar": 73
-  },
-  {
-    "concorso": 1140,
-    "data": "02/09/2025",
-    "combinazione": [
-      16,
-      19,
-      28,
-      44,
-      60,
-      78
-    ],
-    "jolly": 9,
-    "superstar": 73
-  },
-  {
-    "concorso": 1141,
-    "data": "04/09/2025",
-    "combinazione": [
-      5,
-      16,
-      38,
-      45,
-      63,
-      83
-    ],
-    "jolly": 46,
-    "superstar": 83
-  },
-  {
-    "concorso": 1142,
-    "data": "05/09/2025",
-    "combinazione": [
-      9,
-      39,
-      47,
-      52,
-      71,
-      82
-    ],
-    "jolly": 83,
-    "superstar": 52
-  },
-  {
-    "concorso": 1143,
-    "data": "06/09/2025",
-    "combinazione": [
-      59,
-      73,
-      75,
-      76,
-      78,
-      88
-    ],
-    "jolly": 57,
-    "superstar": 5
-  },
-  {
-    "concorso": 1144,
-    "data": "09/09/2025",
-    "combinazione": [
-      34,
-      47,
-      71,
-      73,
-      82,
-      90
-    ],
-    "jolly": 49,
-    "superstar": 52
-  },
-  {
-    "concorso": 1145,
-    "data": "11/09/2025",
-    "combinazione": [
-      3,
-      9,
-      11,
-      35,
-      65,
-      74
-    ],
-    "jolly": 26,
-    "superstar": 29
-  },
-  {
-    "concorso": 1146,
-    "data": "12/09/2025",
-    "combinazione": [
-      29,
-      33,
-      44,
-      52,
-      63,
-      65
-    ],
-    "jolly": 19,
-    "superstar": 84
-  },
-  {
-    "concorso": 1147,
-    "data": "13/09/2025",
-    "combinazione": [
-      26,
-      28,
-      31,
-      35,
-      37,
-      65
-    ],
-    "jolly": 30,
-    "superstar": 5
-  },
-  {
-    "concorso": 1148,
-    "data": "16/09/2025",
-    "combinazione": [
-      1,
-      12,
-      26,
-      44,
-      51,
-      90
-    ],
-    "jolly": 72,
-    "superstar": 45
-  },
-  {
-    "concorso": 1149,
-    "data": "18/09/2025",
-    "combinazione": [
-      12,
-      38,
-      46,
-      49,
-      60,
-      65
-    ],
-    "jolly": 2,
-    "superstar": 46
-  },
-  {
-    "concorso": 1150,
-    "data": "19/09/2025",
-    "combinazione": [
-      11,
-      16,
-      23,
-      31,
-      49,
-      78
-    ],
-    "jolly": 63,
-    "superstar": 13
-  },
-  {
-    "concorso": 1151,
-    "data": "20/09/2025",
-    "combinazione": [
-      2,
-      12,
-      15,
-      31,
-      63,
-      71
-    ],
-    "jolly": 50,
-    "superstar": 57
-  },
-  {
-    "concorso": 1152,
-    "data": "23/09/2025",
-    "combinazione": [
-      1,
-      6,
-      20,
-      43,
-      59,
-      73
-    ],
-    "jolly": 58,
-    "superstar": 89
-  },
-  {
-    "concorso": 1153,
-    "data": "25/09/2025",
-    "combinazione": [
-      11,
-      19,
-      36,
-      41,
-      65,
-      82
-    ],
-    "jolly": 17,
-    "superstar": 15
-  },
-  {
-    "concorso": 1154,
-    "data": "26/09/2025",
-    "combinazione": [
-      2,
-      17,
-      23,
-      39,
-      58,
-      82
-    ],
-    "jolly": 75,
-    "superstar": 6
-  },
-  {
-    "concorso": 1155,
-    "data": "27/09/2025",
-    "combinazione": [
-      9,
-      10,
-      21,
-      25,
-      27,
-      68
-    ],
-    "jolly": 54,
-    "superstar": 6
-  },
-  {
-    "concorso": 1156,
-    "data": "30/09/2025",
-    "combinazione": [
-      5,
-      8,
-      71,
-      74,
-      77,
-      81
-    ],
-    "jolly": 34,
-    "superstar": 70
-  },
-  {
-    "concorso": 1157,
-    "data": "02/10/2025",
-    "combinazione": [
-      1,
-      21,
-      39,
-      42,
-      52,
-      89
-    ],
-    "jolly": 6,
-    "superstar": 17
-  },
-  {
-    "concorso": 1158,
-    "data": "03/10/2025",
-    "combinazione": [
-      2,
-      4,
-      69,
-      75,
-      79,
-      88
-    ],
-    "jolly": 12,
-    "superstar": 7
-  },
-  {
-    "concorso": 1159,
-    "data": "04/10/2025",
-    "combinazione": [
-      48,
-      54,
-      61,
-      68,
-      79,
-      87
-    ],
-    "jolly": 80,
-    "superstar": 45
-  },
-  {
-    "concorso": 1160,
-    "data": "07/10/2025",
-    "combinazione": [
-      17,
-      21,
-      40,
-      56,
-      61,
-      79
-    ],
-    "jolly": 87,
-    "superstar": 85
-  },
-  {
-    "concorso": 1161,
-    "data": "09/10/2025",
-    "combinazione": [
-      38,
-      49,
-      50,
-      54,
-      78,
-      82
-    ],
-    "jolly": 90,
-    "superstar": 43
-  },
-  {
-    "concorso": 1162,
-    "data": "10/10/2025",
-    "combinazione": [
-      20,
-      38,
-      42,
-      61,
-      81,
-      82
-    ],
-    "jolly": 16,
-    "superstar": 80
-  },
-  {
-    "concorso": 1163,
-    "data": "11/10/2025",
-    "combinazione": [
-      28,
-      51,
-      55,
-      62,
-      80,
-      90
-    ],
-    "jolly": 68,
-    "superstar": 90
-  },
-  {
-    "concorso": 1164,
-    "data": "14/10/2025",
-    "combinazione": [
-      9,
-      31,
-      44,
-      59,
-      70,
-      86
-    ],
-    "jolly": 37,
-    "superstar": 81
-  },
-  {
-    "concorso": 1165,
-    "data": "16/10/2025",
-    "combinazione": [
-      7,
-      44,
-      45,
-      58,
-      76,
-      80
-    ],
-    "jolly": 77,
-    "superstar": 13
-  },
-  {
-    "concorso": 1166,
-    "data": "17/10/2025",
-    "combinazione": [
-      2,
-      9,
-      10,
-      32,
-      66,
-      77
-    ],
-    "jolly": 72,
-    "superstar": 44
-  },
-  {
-    "concorso": 1167,
-    "data": "18/10/2025",
-    "combinazione": [
-      12,
-      13,
-      19,
-      26,
-      75,
-      82
-    ],
-    "jolly": 50,
-    "superstar": 54
-  },
-  {
-    "concorso": 1168,
-    "data": "21/10/2025",
-    "combinazione": [
-      4,
-      9,
-      14,
-      33,
-      36,
-      77
-    ],
-    "jolly": 66,
-    "superstar": 15
-  },
-  {
-    "concorso": 1169,
-    "data": "23/10/2025",
-    "combinazione": [
-      7,
-      29,
-      42,
-      62,
-      68,
-      73
-    ],
-    "jolly": 26,
-    "superstar": 21
-  },
-  {
-    "concorso": 1170,
-    "data": "24/10/2025",
-    "combinazione": [
-      5,
-      12,
-      23,
-      31,
-      84,
-      90
-    ],
-    "jolly": 68,
-    "superstar": 77
-  },
-  {
-    "concorso": 1171,
-    "data": "25/10/2025",
-    "combinazione": [
-      16,
-      18,
-      33,
-      53,
-      58,
-      89
-    ],
-    "jolly": 81,
-    "superstar": 59
-  },
-  {
-    "concorso": 1172,
-    "data": "28/10/2025",
-    "combinazione": [
-      8,
-      25,
-      40,
-      54,
-      58,
-      63
-    ],
-    "jolly": 50,
-    "superstar": 63
-  },
-  {
-    "concorso": 1173,
-    "data": "30/10/2025",
-    "combinazione": [
-      15,
-      30,
-      37,
-      39,
-      58,
-      74
-    ],
-    "jolly": 43,
-    "superstar": 47
-  },
-  {
-    "concorso": 1174,
-    "data": "31/10/2025",
-    "combinazione": [
-      8,
-      30,
-      32,
-      61,
-      67,
-      85
-    ],
-    "jolly": 22,
-    "superstar": 9
-  },
-  {
-    "concorso": 1175,
-    "data": "03/11/2025",
-    "combinazione": [
-      30,
-      56,
-      80,
-      81,
-      85,
-      87
-    ],
-    "jolly": 67,
-    "superstar": 2
-  },
-  {
-    "concorso": 1176,
-    "data": "04/11/2025",
-    "combinazione": [
-      5,
-      18,
-      28,
-      38,
-      44,
-      76
-    ],
-    "jolly": 23,
-    "superstar": 89
-  },
-  {
-    "concorso": 1177,
-    "data": "06/11/2025",
-    "combinazione": [
-      9,
-      48,
-      51,
-      53,
-      73,
-      88
-    ],
-    "jolly": 19,
-    "superstar": 43
-  },
-  {
-    "concorso": 1178,
-    "data": "07/11/2025",
-    "combinazione": [
-      5,
-      24,
-      32,
-      67,
-      82,
-      88
-    ],
-    "jolly": 43,
-    "superstar": 89
-  },
-  {
-    "concorso": 1179,
-    "data": "08/11/2025",
-    "combinazione": [
-      17,
-      18,
-      19,
-      33,
-      35,
-      62
-    ],
-    "jolly": 80,
-    "superstar": 58
-  },
-  {
-    "concorso": 1180,
-    "data": "11/11/2025",
-    "combinazione": [
-      3,
-      37,
-      42,
-      59,
-      63,
-      84
-    ],
-    "jolly": 49,
-    "superstar": 64
-  },
-  {
-    "concorso": 1181,
-    "data": "13/11/2025",
-    "combinazione": [
-      7,
-      9,
-      17,
-      54,
-      73,
-      90
-    ],
-    "jolly": 89,
-    "superstar": 3
-  },
-  {
-    "concorso": 1182,
-    "data": "14/11/2025",
-    "combinazione": [
-      26,
-      38,
-      43,
-      46,
-      72,
-      73
-    ],
-    "jolly": 45,
-    "superstar": 45
-  },
-  {
-    "concorso": 1183,
-    "data": "15/11/2025",
-    "combinazione": [
-      20,
-      23,
-      40,
-      51,
-      55,
-      85
-    ],
-    "jolly": 5,
-    "superstar": 80
-  },
-  {
-    "concorso": 1184,
-    "data": "18/11/2025",
-    "combinazione": [
-      18,
-      40,
-      54,
-      83,
-      85,
-      89
-    ],
-    "jolly": 4,
-    "superstar": 57
-  },
-  {
-    "concorso": 1185,
-    "data": "20/11/2025",
-    "combinazione": [
-      5,
-      9,
-      15,
-      17,
-      48,
-      74
-    ],
-    "jolly": 65,
-    "superstar": 75
-  },
-  {
-    "concorso": 1186,
-    "data": "21/11/2025",
-    "combinazione": [
-      12,
-      14,
-      18,
-      53,
-      84,
-      86
-    ],
-    "jolly": 72,
-    "superstar": 35
-  },
-  {
-    "concorso": 1187,
-    "data": "22/11/2025",
-    "combinazione": [
-      2,
-      8,
-      29,
-      47,
-      59,
-      65
-    ],
-    "jolly": 86,
-    "superstar": 26
-  },
-  {
-    "concorso": 1188,
-    "data": "25/11/2025",
-    "combinazione": [
-      18,
-      20,
-      21,
-      23,
-      40,
-      43
-    ],
-    "jolly": 52,
-    "superstar": 10
-  },
-  {
-    "concorso": 1189,
-    "data": "27/11/2025",
-    "combinazione": [
-      9,
-      28,
-      43,
-      50,
-      61,
-      88
-    ],
-    "jolly": 83,
-    "superstar": 62
-  },
-  {
-    "concorso": 1190,
-    "data": "28/11/2025",
-    "combinazione": [
-      1,
-      12,
-      20,
-      21,
-      42,
-      58
-    ],
-    "jolly": 84,
-    "superstar": 34
-  },
-  {
-    "concorso": 1191,
-    "data": "29/11/2025",
-    "combinazione": [
-      8,
-      16,
-      29,
-      61,
-      65,
-      69
-    ],
-    "jolly": 17,
-    "superstar": 85
-  },
-  {
-    "concorso": 1192,
-    "data": "02/12/2025",
-    "combinazione": [
-      5,
-      17,
-      28,
-      59,
-      70,
-      90
-    ],
-    "jolly": 27,
-    "superstar": 66
-  },
-  {
-    "concorso": 1193,
-    "data": "04/12/2025",
-    "combinazione": [
-      12,
-      30,
-      45,
-      48,
-      59,
-      60
-    ],
-    "jolly": 40,
-    "superstar": 90
-  },
-  {
-    "concorso": 1194,
-    "data": "05/12/2025",
-    "combinazione": [
-      10,
-      19,
-      29,
-      30,
-      56,
-      71
-    ],
-    "jolly": 76,
-    "superstar": 13
-  },
-  {
-    "concorso": 1195,
-    "data": "06/12/2025",
-    "combinazione": [
-      1,
-      38,
-      42,
-      78,
-      82,
-      84
-    ],
-    "jolly": 24,
-    "superstar": 71
-  },
-  {
-    "concorso": 1196,
-    "data": "09/12/2025",
-    "combinazione": [
-      8,
-      31,
-      51,
-      65,
-      78,
-      79
-    ],
-    "jolly": 26,
-    "superstar": 77
-  },
-  {
-    "concorso": 1197,
-    "data": "11/12/2025",
-    "combinazione": [
-      14,
-      44,
-      72,
-      81,
-      85,
-      86
-    ],
-    "jolly": 80,
-    "superstar": 47
-  },
-  {
-    "concorso": 1198,
-    "data": "12/12/2025",
-    "combinazione": [
-      7,
-      21,
-      35,
-      38,
-      64,
-      80
-    ],
-    "jolly": 29,
-    "superstar": 87
-  },
-  {
-    "concorso": 1199,
-    "data": "13/12/2025",
-    "combinazione": [
-      2,
-      5,
-      7,
-      36,
-      58,
-      64
-    ],
-    "jolly": 14,
-    "superstar": 62
-  },
-  {
-    "concorso": 1200,
-    "data": "16/12/2025",
-    "combinazione": [
-      2,
-      18,
-      24,
-      35,
-      41,
-      84
-    ],
-    "jolly": 44,
-    "superstar": 20
-  },
-  {
-    "concorso": 1201,
-    "data": "18/12/2025",
-    "combinazione": [
-      7,
-      28,
-      63,
-      69,
-      73,
-      77
-    ],
-    "jolly": 64,
-    "superstar": 14
-  },
-  {
-    "concorso": 1202,
-    "data": "19/12/2025",
-    "combinazione": [
-      16,
-      52,
-      60,
-      75,
-      81,
-      88
-    ],
-    "jolly": 40,
-    "superstar": 49
-  },
-  {
-    "concorso": 1203,
-    "data": "20/12/2025",
-    "combinazione": [
-      11,
-      24,
-      42,
-      50,
-      89,
-      90
-    ],
-    "jolly": 36,
-    "superstar": 44
-  },
-  {
-    "concorso": 1204,
-    "data": "22/12/2025",
-    "combinazione": [
-      2,
-      14,
-      28,
-      36,
-      78,
-      85
-    ],
-    "jolly": 17,
-    "superstar": 11
-  },
-  {
-    "concorso": 1205,
-    "data": "23/12/2025",
-    "combinazione": [
-      16,
-      18,
-      22,
-      24,
-      34,
-      80
-    ],
-    "jolly": 62,
-    "superstar": 53
-  },
-  {
-    "concorso": 1206,
-    "data": "27/12/2025",
-    "combinazione": [
-      8,
-      19,
-      20,
-      41,
-      74,
-      84
-    ],
-    "jolly": 45,
-    "superstar": 74
-  },
-  {
-    "concorso": 1207,
-    "data": "29/12/2025",
-    "combinazione": [
-      36,
-      38,
-      45,
-      61,
-      79,
-      83
-    ],
-    "jolly": 12,
-    "superstar": 52
-  },
-  {
-    "concorso": 1208,
-    "data": "30/12/2025",
-    "combinazione": [
-      6,
-      9,
-      17,
-      20,
-      60,
-      67
-    ],
-    "jolly": 1,
-    "superstar": 73
-  },
-  {
     "concorso": 1,
     "data": "02/01/2026",
     "combinazione": [
@@ -5167,7 +2255,15 @@
       90
     ],
     "jolly": 42,
-    "superstar": 62
+    "superstar": 62,
+    "sestina": [
+      15,
+      19,
+      36,
+      47,
+      85,
+      90
+    ]
   },
   {
     "concorso": 104,
@@ -5181,7 +2277,15 @@
       83
     ],
     "jolly": 13,
-    "superstar": 66
+    "superstar": 66,
+    "sestina": [
+      1,
+      7,
+      51,
+      64,
+      78,
+      83
+    ]
   },
   {
     "concorso": 105,
@@ -5525,7 +2629,15 @@
       62
     ],
     "jolly": 87,
-    "superstar": 69
+    "superstar": 69,
+    "sestina": [
+      1,
+      6,
+      9,
+      43,
+      54,
+      62
+    ]
   },
   {
     "concorso": 121,
@@ -5539,7 +2651,15 @@
       89
     ],
     "jolly": 9,
-    "superstar": 89
+    "superstar": 89,
+    "sestina": [
+      20,
+      47,
+      75,
+      76,
+      78,
+      89
+    ]
   },
   {
     "concorso": 122,
@@ -5553,7 +2673,15 @@
       83
     ],
     "jolly": 66,
-    "superstar": 75
+    "superstar": 75,
+    "sestina": [
+      2,
+      6,
+      10,
+      31,
+      39,
+      83
+    ]
   },
   {
     "concorso": 123,
@@ -5897,7 +3025,15 @@
       79
     ],
     "jolly": 60,
-    "superstar": 55
+    "superstar": 55,
+    "sestina": [
+      4,
+      8,
+      27,
+      62,
+      70,
+      79
+    ]
   },
   {
     "concorso": 139,
@@ -5911,7 +3047,15 @@
       77
     ],
     "jolly": 62,
-    "superstar": 62
+    "superstar": 62,
+    "sestina": [
+      12,
+      17,
+      45,
+      59,
+      74,
+      77
+    ]
   },
   {
     "concorso": 140,
@@ -6101,6 +3245,4604 @@
       54
     ],
     "jolly": 69,
-    "superstar": 28
+    "superstar": 28,
+    "sestina": [
+      3,
+      12,
+      18,
+      32,
+      47,
+      54
+    ]
+  },
+  {
+    "concorso": 149,
+    "data": "17/09/2026",
+    "combinazione": [
+      6,
+      7,
+      16,
+      35,
+      46,
+      54
+    ],
+    "jolly": 21,
+    "superstar": 51
+  },
+  {
+    "concorso": 1001,
+    "data": "02/01/2025",
+    "combinazione": [
+      19,
+      21,
+      29,
+      74,
+      77,
+      88
+    ],
+    "jolly": 7,
+    "superstar": 56,
+    "sestina": [
+      19,
+      21,
+      29,
+      74,
+      77,
+      88
+    ]
+  },
+  {
+    "concorso": 1002,
+    "data": "03/01/2025",
+    "combinazione": [
+      13,
+      30,
+      43,
+      49,
+      74,
+      89
+    ],
+    "jolly": 4,
+    "superstar": 32,
+    "sestina": [
+      13,
+      30,
+      43,
+      49,
+      74,
+      89
+    ]
+  },
+  {
+    "concorso": 1003,
+    "data": "04/01/2025",
+    "combinazione": [
+      31,
+      42,
+      43,
+      63,
+      83,
+      86
+    ],
+    "jolly": 37,
+    "superstar": 86,
+    "sestina": [
+      31,
+      42,
+      43,
+      63,
+      83,
+      86
+    ]
+  },
+  {
+    "concorso": 1004,
+    "data": "07/01/2025",
+    "combinazione": [
+      7,
+      10,
+      11,
+      29,
+      32,
+      87
+    ],
+    "jolly": 34,
+    "superstar": 51,
+    "sestina": [
+      7,
+      10,
+      11,
+      29,
+      32,
+      87
+    ]
+  },
+  {
+    "concorso": 1005,
+    "data": "09/01/2025",
+    "combinazione": [
+      15,
+      33,
+      40,
+      71,
+      74,
+      82
+    ],
+    "jolly": 89,
+    "superstar": 15,
+    "sestina": [
+      15,
+      33,
+      40,
+      71,
+      74,
+      82
+    ]
+  },
+  {
+    "concorso": 1006,
+    "data": "10/01/2025",
+    "combinazione": [
+      19,
+      25,
+      33,
+      49,
+      57,
+      72
+    ],
+    "jolly": 46,
+    "superstar": 38,
+    "sestina": [
+      19,
+      25,
+      33,
+      49,
+      57,
+      72
+    ]
+  },
+  {
+    "concorso": 1007,
+    "data": "11/01/2025",
+    "combinazione": [
+      5,
+      6,
+      11,
+      22,
+      35,
+      85
+    ],
+    "jolly": 30,
+    "superstar": 53,
+    "sestina": [
+      5,
+      6,
+      11,
+      22,
+      35,
+      85
+    ]
+  },
+  {
+    "concorso": 1008,
+    "data": "14/01/2025",
+    "combinazione": [
+      4,
+      15,
+      17,
+      40,
+      64,
+      75
+    ],
+    "jolly": 23,
+    "superstar": 80,
+    "sestina": [
+      4,
+      15,
+      17,
+      40,
+      64,
+      75
+    ]
+  },
+  {
+    "concorso": 1009,
+    "data": "16/01/2025",
+    "combinazione": [
+      31,
+      38,
+      59,
+      69,
+      72,
+      88
+    ],
+    "jolly": 64,
+    "superstar": 73,
+    "sestina": [
+      31,
+      38,
+      59,
+      69,
+      72,
+      88
+    ]
+  },
+  {
+    "concorso": 1010,
+    "data": "17/01/2025",
+    "combinazione": [
+      8,
+      12,
+      15,
+      40,
+      66,
+      89
+    ],
+    "jolly": 7,
+    "superstar": 15,
+    "sestina": [
+      8,
+      12,
+      15,
+      40,
+      66,
+      89
+    ]
+  },
+  {
+    "concorso": 1011,
+    "data": "18/01/2025",
+    "combinazione": [
+      2,
+      10,
+      21,
+      29,
+      46,
+      70
+    ],
+    "jolly": 31,
+    "superstar": 59,
+    "sestina": [
+      2,
+      10,
+      21,
+      29,
+      46,
+      70
+    ]
+  },
+  {
+    "concorso": 1012,
+    "data": "21/01/2025",
+    "combinazione": [
+      3,
+      18,
+      41,
+      58,
+      62,
+      73
+    ],
+    "jolly": 64,
+    "superstar": 20,
+    "sestina": [
+      3,
+      18,
+      41,
+      58,
+      62,
+      73
+    ]
+  },
+  {
+    "concorso": 1013,
+    "data": "23/01/2025",
+    "combinazione": [
+      1,
+      7,
+      34,
+      46,
+      69,
+      80
+    ],
+    "jolly": 64,
+    "superstar": 42,
+    "sestina": [
+      1,
+      7,
+      34,
+      46,
+      69,
+      80
+    ]
+  },
+  {
+    "concorso": 1014,
+    "data": "24/01/2025",
+    "combinazione": [
+      14,
+      20,
+      46,
+      62,
+      84,
+      85
+    ],
+    "jolly": 1,
+    "superstar": 78,
+    "sestina": [
+      14,
+      20,
+      46,
+      62,
+      84,
+      85
+    ]
+  },
+  {
+    "concorso": 1015,
+    "data": "25/01/2025",
+    "combinazione": [
+      5,
+      6,
+      24,
+      44,
+      45,
+      76
+    ],
+    "jolly": 58,
+    "superstar": 64,
+    "sestina": [
+      5,
+      6,
+      24,
+      44,
+      45,
+      76
+    ]
+  },
+  {
+    "concorso": 1016,
+    "data": "28/01/2025",
+    "combinazione": [
+      48,
+      63,
+      65,
+      72,
+      77,
+      82
+    ],
+    "jolly": 85,
+    "superstar": 47,
+    "sestina": [
+      48,
+      63,
+      65,
+      72,
+      77,
+      82
+    ]
+  },
+  {
+    "concorso": 1017,
+    "data": "30/01/2025",
+    "combinazione": [
+      23,
+      32,
+      34,
+      35,
+      41,
+      47
+    ],
+    "jolly": 65,
+    "superstar": 2,
+    "sestina": [
+      23,
+      32,
+      34,
+      35,
+      41,
+      47
+    ]
+  },
+  {
+    "concorso": 1018,
+    "data": "31/01/2025",
+    "combinazione": [
+      7,
+      18,
+      22,
+      25,
+      30,
+      72
+    ],
+    "jolly": 76,
+    "superstar": 51,
+    "sestina": [
+      7,
+      18,
+      22,
+      25,
+      30,
+      72
+    ]
+  },
+  {
+    "concorso": 1019,
+    "data": "01/02/2025",
+    "combinazione": [
+      21,
+      25,
+      26,
+      45,
+      49,
+      59
+    ],
+    "jolly": 68,
+    "superstar": 82,
+    "sestina": [
+      21,
+      25,
+      26,
+      45,
+      49,
+      59
+    ]
+  },
+  {
+    "concorso": 1020,
+    "data": "04/02/2025",
+    "combinazione": [
+      10,
+      29,
+      41,
+      77,
+      83,
+      85
+    ],
+    "jolly": 56,
+    "superstar": 80,
+    "sestina": [
+      10,
+      29,
+      41,
+      77,
+      83,
+      85
+    ]
+  },
+  {
+    "concorso": 1021,
+    "data": "06/02/2025",
+    "combinazione": [
+      4,
+      11,
+      41,
+      72,
+      83,
+      86
+    ],
+    "jolly": 30,
+    "superstar": 30,
+    "sestina": [
+      4,
+      11,
+      41,
+      72,
+      83,
+      86
+    ]
+  },
+  {
+    "concorso": 1022,
+    "data": "07/02/2025",
+    "combinazione": [
+      16,
+      29,
+      30,
+      47,
+      52,
+      84
+    ],
+    "jolly": 10,
+    "superstar": 17,
+    "sestina": [
+      16,
+      29,
+      30,
+      47,
+      52,
+      84
+    ]
+  },
+  {
+    "concorso": 1023,
+    "data": "08/02/2025",
+    "combinazione": [
+      29,
+      46,
+      57,
+      66,
+      72,
+      86
+    ],
+    "jolly": 64,
+    "superstar": 40,
+    "sestina": [
+      29,
+      46,
+      57,
+      66,
+      72,
+      86
+    ]
+  },
+  {
+    "concorso": 1024,
+    "data": "11/02/2025",
+    "combinazione": [
+      9,
+      39,
+      55,
+      75,
+      79,
+      86
+    ],
+    "jolly": 2,
+    "superstar": 56,
+    "sestina": [
+      9,
+      39,
+      55,
+      75,
+      79,
+      86
+    ]
+  },
+  {
+    "concorso": 1025,
+    "data": "13/02/2025",
+    "combinazione": [
+      31,
+      41,
+      62,
+      64,
+      74,
+      87
+    ],
+    "jolly": 84,
+    "superstar": 68,
+    "sestina": [
+      31,
+      41,
+      62,
+      64,
+      74,
+      87
+    ]
+  },
+  {
+    "concorso": 1026,
+    "data": "14/02/2025",
+    "combinazione": [
+      18,
+      30,
+      40,
+      52,
+      60,
+      71
+    ],
+    "jolly": 65,
+    "superstar": 70,
+    "sestina": [
+      18,
+      30,
+      40,
+      52,
+      60,
+      71
+    ]
+  },
+  {
+    "concorso": 1027,
+    "data": "15/02/2025",
+    "combinazione": [
+      22,
+      37,
+      48,
+      72,
+      77,
+      85
+    ],
+    "jolly": 39,
+    "superstar": 72,
+    "sestina": [
+      22,
+      37,
+      48,
+      72,
+      77,
+      85
+    ]
+  },
+  {
+    "concorso": 1028,
+    "data": "18/02/2025",
+    "combinazione": [
+      3,
+      5,
+      7,
+      54,
+      76,
+      85
+    ],
+    "jolly": 89,
+    "superstar": 64,
+    "sestina": [
+      3,
+      5,
+      7,
+      54,
+      76,
+      85
+    ]
+  },
+  {
+    "concorso": 1029,
+    "data": "20/02/2025",
+    "combinazione": [
+      6,
+      19,
+      27,
+      63,
+      71,
+      77
+    ],
+    "jolly": 13,
+    "superstar": 70,
+    "sestina": [
+      6,
+      19,
+      27,
+      63,
+      71,
+      77
+    ]
+  },
+  {
+    "concorso": 1030,
+    "data": "21/02/2025",
+    "combinazione": [
+      21,
+      45,
+      48,
+      72,
+      79,
+      87
+    ],
+    "jolly": 73,
+    "superstar": 89,
+    "sestina": [
+      21,
+      45,
+      48,
+      72,
+      79,
+      87
+    ]
+  },
+  {
+    "concorso": 1031,
+    "data": "22/02/2025",
+    "combinazione": [
+      35,
+      40,
+      48,
+      49,
+      52,
+      89
+    ],
+    "jolly": 24,
+    "superstar": 32,
+    "sestina": [
+      35,
+      40,
+      48,
+      49,
+      52,
+      89
+    ]
+  },
+  {
+    "concorso": 1032,
+    "data": "25/02/2025",
+    "combinazione": [
+      6,
+      58,
+      68,
+      83,
+      89,
+      90
+    ],
+    "jolly": 73,
+    "superstar": 50,
+    "sestina": [
+      6,
+      58,
+      68,
+      83,
+      89,
+      90
+    ]
+  },
+  {
+    "concorso": 1033,
+    "data": "27/02/2025",
+    "combinazione": [
+      29,
+      31,
+      33,
+      42,
+      51,
+      72
+    ],
+    "jolly": 34,
+    "superstar": 62,
+    "sestina": [
+      29,
+      31,
+      33,
+      42,
+      51,
+      72
+    ]
+  },
+  {
+    "concorso": 1034,
+    "data": "28/02/2025",
+    "combinazione": [
+      4,
+      12,
+      37,
+      59,
+      63,
+      90
+    ],
+    "jolly": 70,
+    "superstar": 15,
+    "sestina": [
+      4,
+      12,
+      37,
+      59,
+      63,
+      90
+    ]
+  },
+  {
+    "concorso": 1035,
+    "data": "01/03/2025",
+    "combinazione": [
+      1,
+      12,
+      33,
+      40,
+      41,
+      83
+    ],
+    "jolly": 6,
+    "superstar": 67,
+    "sestina": [
+      1,
+      12,
+      33,
+      40,
+      41,
+      83
+    ]
+  },
+  {
+    "concorso": 1036,
+    "data": "04/03/2025",
+    "combinazione": [
+      9,
+      28,
+      52,
+      63,
+      77,
+      79
+    ],
+    "jolly": 11,
+    "superstar": 39,
+    "sestina": [
+      9,
+      28,
+      52,
+      63,
+      77,
+      79
+    ]
+  },
+  {
+    "concorso": 1037,
+    "data": "06/03/2025",
+    "combinazione": [
+      1,
+      10,
+      18,
+      19,
+      32,
+      36
+    ],
+    "jolly": 20,
+    "superstar": 53,
+    "sestina": [
+      1,
+      10,
+      18,
+      19,
+      32,
+      36
+    ]
+  },
+  {
+    "concorso": 1038,
+    "data": "07/03/2025",
+    "combinazione": [
+      11,
+      24,
+      25,
+      30,
+      43,
+      47
+    ],
+    "jolly": 28,
+    "superstar": 5,
+    "sestina": [
+      11,
+      24,
+      25,
+      30,
+      43,
+      47
+    ]
+  },
+  {
+    "concorso": 1039,
+    "data": "08/03/2025",
+    "combinazione": [
+      11,
+      16,
+      35,
+      59,
+      65,
+      87
+    ],
+    "jolly": 9,
+    "superstar": 52,
+    "sestina": [
+      11,
+      16,
+      35,
+      59,
+      65,
+      87
+    ]
+  },
+  {
+    "concorso": 1040,
+    "data": "11/03/2025",
+    "combinazione": [
+      22,
+      27,
+      48,
+      55,
+      58,
+      90
+    ],
+    "jolly": 63,
+    "superstar": 11,
+    "sestina": [
+      22,
+      27,
+      48,
+      55,
+      58,
+      90
+    ]
+  },
+  {
+    "concorso": 1041,
+    "data": "13/03/2025",
+    "combinazione": [
+      7,
+      25,
+      33,
+      51,
+      58,
+      70
+    ],
+    "jolly": 79,
+    "superstar": 31,
+    "sestina": [
+      7,
+      25,
+      33,
+      51,
+      58,
+      70
+    ]
+  },
+  {
+    "concorso": 1042,
+    "data": "14/03/2025",
+    "combinazione": [
+      3,
+      10,
+      20,
+      36,
+      37,
+      49
+    ],
+    "jolly": 21,
+    "superstar": 14,
+    "sestina": [
+      3,
+      10,
+      20,
+      36,
+      37,
+      49
+    ]
+  },
+  {
+    "concorso": 1043,
+    "data": "15/03/2025",
+    "combinazione": [
+      2,
+      8,
+      50,
+      77,
+      79,
+      82
+    ],
+    "jolly": 85,
+    "superstar": 36,
+    "sestina": [
+      2,
+      8,
+      50,
+      77,
+      79,
+      82
+    ]
+  },
+  {
+    "concorso": 1044,
+    "data": "18/03/2025",
+    "combinazione": [
+      1,
+      64,
+      73,
+      79,
+      80,
+      86
+    ],
+    "jolly": 39,
+    "superstar": 68,
+    "sestina": [
+      1,
+      64,
+      73,
+      79,
+      80,
+      86
+    ]
+  },
+  {
+    "concorso": 1045,
+    "data": "20/03/2025",
+    "combinazione": [
+      36,
+      40,
+      49,
+      54,
+      66,
+      83
+    ],
+    "jolly": 14,
+    "superstar": 44,
+    "sestina": [
+      36,
+      40,
+      49,
+      54,
+      66,
+      83
+    ]
+  },
+  {
+    "concorso": 1046,
+    "data": "21/03/2025",
+    "combinazione": [
+      7,
+      15,
+      48,
+      49,
+      65,
+      80
+    ],
+    "jolly": 67,
+    "superstar": 39,
+    "sestina": [
+      7,
+      15,
+      48,
+      49,
+      65,
+      80
+    ]
+  },
+  {
+    "concorso": 1047,
+    "data": "22/03/2025",
+    "combinazione": [
+      15,
+      28,
+      45,
+      46,
+      66,
+      76
+    ],
+    "jolly": 44,
+    "superstar": 43,
+    "sestina": [
+      15,
+      28,
+      45,
+      46,
+      66,
+      76
+    ]
+  },
+  {
+    "concorso": 1048,
+    "data": "25/03/2025",
+    "combinazione": [
+      27,
+      29,
+      31,
+      60,
+      74,
+      88
+    ],
+    "jolly": 71,
+    "superstar": 23,
+    "sestina": [
+      27,
+      29,
+      31,
+      60,
+      74,
+      88
+    ]
+  },
+  {
+    "concorso": 1049,
+    "data": "27/03/2025",
+    "combinazione": [
+      28,
+      35,
+      43,
+      45,
+      64,
+      85
+    ],
+    "jolly": 13,
+    "superstar": 35,
+    "sestina": [
+      28,
+      35,
+      43,
+      45,
+      64,
+      85
+    ]
+  },
+  {
+    "concorso": 1050,
+    "data": "28/03/2025",
+    "combinazione": [
+      17,
+      26,
+      46,
+      56,
+      71,
+      90
+    ],
+    "jolly": 6,
+    "superstar": 22,
+    "sestina": [
+      17,
+      26,
+      46,
+      56,
+      71,
+      90
+    ]
+  },
+  {
+    "concorso": 1051,
+    "data": "29/03/2025",
+    "combinazione": [
+      9,
+      45,
+      66,
+      68,
+      71,
+      85
+    ],
+    "jolly": 31,
+    "superstar": 44,
+    "sestina": [
+      9,
+      45,
+      66,
+      68,
+      71,
+      85
+    ]
+  },
+  {
+    "concorso": 1052,
+    "data": "01/04/2025",
+    "combinazione": [
+      4,
+      19,
+      32,
+      47,
+      74,
+      81
+    ],
+    "jolly": 10,
+    "superstar": 90,
+    "sestina": [
+      4,
+      19,
+      32,
+      47,
+      74,
+      81
+    ]
+  },
+  {
+    "concorso": 1053,
+    "data": "03/04/2025",
+    "combinazione": [
+      29,
+      30,
+      31,
+      32,
+      35,
+      57
+    ],
+    "jolly": 28,
+    "superstar": 6,
+    "sestina": [
+      29,
+      30,
+      31,
+      32,
+      35,
+      57
+    ]
+  },
+  {
+    "concorso": 1054,
+    "data": "04/04/2025",
+    "combinazione": [
+      42,
+      51,
+      71,
+      77,
+      80,
+      82
+    ],
+    "jolly": 72,
+    "superstar": 5,
+    "sestina": [
+      42,
+      51,
+      71,
+      77,
+      80,
+      82
+    ]
+  },
+  {
+    "concorso": 1055,
+    "data": "05/04/2025",
+    "combinazione": [
+      5,
+      8,
+      22,
+      41,
+      60,
+      73
+    ],
+    "jolly": 18,
+    "superstar": 54,
+    "sestina": [
+      5,
+      8,
+      22,
+      41,
+      60,
+      73
+    ]
+  },
+  {
+    "concorso": 1056,
+    "data": "08/04/2025",
+    "combinazione": [
+      11,
+      20,
+      34,
+      46,
+      48,
+      90
+    ],
+    "jolly": 68,
+    "superstar": 81,
+    "sestina": [
+      11,
+      20,
+      34,
+      46,
+      48,
+      90
+    ]
+  },
+  {
+    "concorso": 1057,
+    "data": "10/04/2025",
+    "combinazione": [
+      11,
+      24,
+      32,
+      40,
+      44,
+      85
+    ],
+    "jolly": 27,
+    "superstar": 36,
+    "sestina": [
+      11,
+      24,
+      32,
+      40,
+      44,
+      85
+    ]
+  },
+  {
+    "concorso": 1058,
+    "data": "11/04/2025",
+    "combinazione": [
+      9,
+      20,
+      43,
+      49,
+      52,
+      57
+    ],
+    "jolly": 61,
+    "superstar": 8,
+    "sestina": [
+      9,
+      20,
+      43,
+      49,
+      52,
+      57
+    ]
+  },
+  {
+    "concorso": 1059,
+    "data": "12/04/2025",
+    "combinazione": [
+      16,
+      38,
+      60,
+      79,
+      83,
+      85
+    ],
+    "jolly": 27,
+    "superstar": 36,
+    "sestina": [
+      16,
+      38,
+      60,
+      79,
+      83,
+      85
+    ]
+  },
+  {
+    "concorso": 1060,
+    "data": "15/04/2025",
+    "combinazione": [
+      40,
+      57,
+      60,
+      66,
+      80,
+      81
+    ],
+    "jolly": 36,
+    "superstar": 9,
+    "sestina": [
+      40,
+      57,
+      60,
+      66,
+      80,
+      81
+    ]
+  },
+  {
+    "concorso": 1061,
+    "data": "17/04/2025",
+    "combinazione": [
+      8,
+      20,
+      40,
+      44,
+      46,
+      49
+    ],
+    "jolly": 63,
+    "superstar": 48,
+    "sestina": [
+      8,
+      20,
+      40,
+      44,
+      46,
+      49
+    ]
+  },
+  {
+    "concorso": 1062,
+    "data": "18/04/2025",
+    "combinazione": [
+      4,
+      11,
+      18,
+      23,
+      83,
+      88
+    ],
+    "jolly": 89,
+    "superstar": 70,
+    "sestina": [
+      4,
+      11,
+      18,
+      23,
+      83,
+      88
+    ]
+  },
+  {
+    "concorso": 1063,
+    "data": "19/04/2025",
+    "combinazione": [
+      8,
+      32,
+      51,
+      54,
+      62,
+      69
+    ],
+    "jolly": 18,
+    "superstar": 30,
+    "sestina": [
+      8,
+      32,
+      51,
+      54,
+      62,
+      69
+    ]
+  },
+  {
+    "concorso": 1064,
+    "data": "22/04/2025",
+    "combinazione": [
+      10,
+      59,
+      61,
+      62,
+      68,
+      74
+    ],
+    "jolly": 43,
+    "superstar": 31,
+    "sestina": [
+      10,
+      59,
+      61,
+      62,
+      68,
+      74
+    ]
+  },
+  {
+    "concorso": 1065,
+    "data": "24/04/2025",
+    "combinazione": [
+      13,
+      14,
+      20,
+      31,
+      55,
+      60
+    ],
+    "jolly": 89,
+    "superstar": 25,
+    "sestina": [
+      13,
+      14,
+      20,
+      31,
+      55,
+      60
+    ]
+  },
+  {
+    "concorso": 1066,
+    "data": "26/04/2025",
+    "combinazione": [
+      10,
+      21,
+      24,
+      48,
+      63,
+      67
+    ],
+    "jolly": 34,
+    "superstar": 45,
+    "sestina": [
+      10,
+      21,
+      24,
+      48,
+      63,
+      67
+    ]
+  },
+  {
+    "concorso": 1067,
+    "data": "28/04/2025",
+    "combinazione": [
+      13,
+      18,
+      30,
+      44,
+      51,
+      81
+    ],
+    "jolly": 38,
+    "superstar": 52,
+    "sestina": [
+      13,
+      18,
+      30,
+      44,
+      51,
+      81
+    ]
+  },
+  {
+    "concorso": 1068,
+    "data": "29/04/2025",
+    "combinazione": [
+      20,
+      31,
+      39,
+      59,
+      60,
+      82
+    ],
+    "jolly": 57,
+    "superstar": 10,
+    "sestina": [
+      20,
+      31,
+      39,
+      59,
+      60,
+      82
+    ]
+  },
+  {
+    "concorso": 1069,
+    "data": "02/05/2025",
+    "combinazione": [
+      54,
+      55,
+      67,
+      76,
+      80,
+      85
+    ],
+    "jolly": 82,
+    "superstar": 52,
+    "sestina": [
+      54,
+      55,
+      67,
+      76,
+      80,
+      85
+    ]
+  },
+  {
+    "concorso": 1070,
+    "data": "03/05/2025",
+    "combinazione": [
+      1,
+      4,
+      22,
+      44,
+      70,
+      72
+    ],
+    "jolly": 18,
+    "superstar": 53,
+    "sestina": [
+      1,
+      4,
+      22,
+      44,
+      70,
+      72
+    ]
+  },
+  {
+    "concorso": 1071,
+    "data": "05/05/2025",
+    "combinazione": [
+      6,
+      18,
+      37,
+      63,
+      72,
+      73
+    ],
+    "jolly": 36,
+    "superstar": 28,
+    "sestina": [
+      6,
+      18,
+      37,
+      63,
+      72,
+      73
+    ]
+  },
+  {
+    "concorso": 1072,
+    "data": "06/05/2025",
+    "combinazione": [
+      2,
+      35,
+      51,
+      58,
+      63,
+      88
+    ],
+    "jolly": 8,
+    "superstar": 51,
+    "sestina": [
+      2,
+      35,
+      51,
+      58,
+      63,
+      88
+    ]
+  },
+  {
+    "concorso": 1073,
+    "data": "08/05/2025",
+    "combinazione": [
+      1,
+      23,
+      27,
+      54,
+      67,
+      83
+    ],
+    "jolly": 65,
+    "superstar": 30,
+    "sestina": [
+      1,
+      23,
+      27,
+      54,
+      67,
+      83
+    ]
+  },
+  {
+    "concorso": 1074,
+    "data": "09/05/2025",
+    "combinazione": [
+      3,
+      47,
+      51,
+      77,
+      85,
+      88
+    ],
+    "jolly": 52,
+    "superstar": 39,
+    "sestina": [
+      3,
+      47,
+      51,
+      77,
+      85,
+      88
+    ]
+  },
+  {
+    "concorso": 1075,
+    "data": "10/05/2025",
+    "combinazione": [
+      8,
+      14,
+      17,
+      39,
+      49,
+      55
+    ],
+    "jolly": 2,
+    "superstar": 80,
+    "sestina": [
+      8,
+      14,
+      17,
+      39,
+      49,
+      55
+    ]
+  },
+  {
+    "concorso": 1076,
+    "data": "13/05/2025",
+    "combinazione": [
+      2,
+      15,
+      25,
+      62,
+      76,
+      81
+    ],
+    "jolly": 89,
+    "superstar": 5,
+    "sestina": [
+      2,
+      15,
+      25,
+      62,
+      76,
+      81
+    ]
+  },
+  {
+    "concorso": 1077,
+    "data": "15/05/2025",
+    "combinazione": [
+      10,
+      28,
+      35,
+      37,
+      73,
+      75
+    ],
+    "jolly": 42,
+    "superstar": 27,
+    "sestina": [
+      10,
+      28,
+      35,
+      37,
+      73,
+      75
+    ]
+  },
+  {
+    "concorso": 1078,
+    "data": "16/05/2025",
+    "combinazione": [
+      15,
+      21,
+      30,
+      31,
+      42,
+      80
+    ],
+    "jolly": 69,
+    "superstar": 42,
+    "sestina": [
+      15,
+      21,
+      30,
+      31,
+      42,
+      80
+    ]
+  },
+  {
+    "concorso": 1079,
+    "data": "17/05/2025",
+    "combinazione": [
+      10,
+      11,
+      19,
+      22,
+      39,
+      88
+    ],
+    "jolly": 29,
+    "superstar": 73,
+    "sestina": [
+      10,
+      11,
+      19,
+      22,
+      39,
+      88
+    ]
+  },
+  {
+    "concorso": 1080,
+    "data": "20/05/2025",
+    "combinazione": [
+      5,
+      19,
+      21,
+      30,
+      33,
+      48
+    ],
+    "jolly": 74,
+    "superstar": 39,
+    "sestina": [
+      5,
+      19,
+      21,
+      30,
+      33,
+      48
+    ]
+  },
+  {
+    "concorso": 1081,
+    "data": "22/05/2025",
+    "combinazione": [
+      2,
+      19,
+      23,
+      46,
+      49,
+      72
+    ],
+    "jolly": 71,
+    "superstar": 88,
+    "sestina": [
+      2,
+      19,
+      23,
+      46,
+      49,
+      72
+    ]
+  },
+  {
+    "concorso": 1082,
+    "data": "23/05/2025",
+    "combinazione": [
+      2,
+      8,
+      10,
+      18,
+      20,
+      79
+    ],
+    "jolly": 13,
+    "superstar": 10,
+    "sestina": [
+      2,
+      8,
+      10,
+      18,
+      20,
+      79
+    ]
+  },
+  {
+    "concorso": 1083,
+    "data": "24/05/2025",
+    "combinazione": [
+      1,
+      3,
+      5,
+      53,
+      62,
+      71
+    ],
+    "jolly": 32,
+    "superstar": 53,
+    "sestina": [
+      1,
+      3,
+      5,
+      53,
+      62,
+      71
+    ]
+  },
+  {
+    "concorso": 1084,
+    "data": "27/05/2025",
+    "combinazione": [
+      7,
+      10,
+      35,
+      40,
+      53,
+      75
+    ],
+    "jolly": 60,
+    "superstar": 33,
+    "sestina": [
+      7,
+      10,
+      35,
+      40,
+      53,
+      75
+    ]
+  },
+  {
+    "concorso": 1085,
+    "data": "29/05/2025",
+    "combinazione": [
+      27,
+      32,
+      51,
+      67,
+      71,
+      81
+    ],
+    "jolly": 35,
+    "superstar": 90,
+    "sestina": [
+      27,
+      32,
+      51,
+      67,
+      71,
+      81
+    ]
+  },
+  {
+    "concorso": 1086,
+    "data": "30/05/2025",
+    "combinazione": [
+      31,
+      34,
+      62,
+      63,
+      82,
+      87
+    ],
+    "jolly": 81,
+    "superstar": 77,
+    "sestina": [
+      31,
+      34,
+      62,
+      63,
+      82,
+      87
+    ]
+  },
+  {
+    "concorso": 1087,
+    "data": "31/05/2025",
+    "combinazione": [
+      4,
+      8,
+      47,
+      48,
+      63,
+      90
+    ],
+    "jolly": 77,
+    "superstar": 12,
+    "sestina": [
+      4,
+      8,
+      47,
+      48,
+      63,
+      90
+    ]
+  },
+  {
+    "concorso": 1088,
+    "data": "03/06/2025",
+    "combinazione": [
+      1,
+      6,
+      31,
+      37,
+      47,
+      71
+    ],
+    "jolly": 26,
+    "superstar": 72,
+    "sestina": [
+      1,
+      6,
+      31,
+      37,
+      47,
+      71
+    ]
+  },
+  {
+    "concorso": 1089,
+    "data": "05/06/2025",
+    "combinazione": [
+      10,
+      17,
+      19,
+      21,
+      63,
+      74
+    ],
+    "jolly": 4,
+    "superstar": 60,
+    "sestina": [
+      10,
+      17,
+      19,
+      21,
+      63,
+      74
+    ]
+  },
+  {
+    "concorso": 1090,
+    "data": "06/06/2025",
+    "combinazione": [
+      2,
+      10,
+      33,
+      55,
+      73,
+      74
+    ],
+    "jolly": 80,
+    "superstar": 49,
+    "sestina": [
+      2,
+      10,
+      33,
+      55,
+      73,
+      74
+    ]
+  },
+  {
+    "concorso": 1091,
+    "data": "07/06/2025",
+    "combinazione": [
+      5,
+      28,
+      46,
+      49,
+      52,
+      78
+    ],
+    "jolly": 83,
+    "superstar": 21,
+    "sestina": [
+      5,
+      28,
+      46,
+      49,
+      52,
+      78
+    ]
+  },
+  {
+    "concorso": 1092,
+    "data": "10/06/2025",
+    "combinazione": [
+      14,
+      45,
+      55,
+      62,
+      76,
+      80
+    ],
+    "jolly": 51,
+    "superstar": 17,
+    "sestina": [
+      14,
+      45,
+      55,
+      62,
+      76,
+      80
+    ]
+  },
+  {
+    "concorso": 1093,
+    "data": "12/06/2025",
+    "combinazione": [
+      21,
+      61,
+      69,
+      76,
+      79,
+      81
+    ],
+    "jolly": 77,
+    "superstar": 76,
+    "sestina": [
+      21,
+      61,
+      69,
+      76,
+      79,
+      81
+    ]
+  },
+  {
+    "concorso": 1094,
+    "data": "13/06/2025",
+    "combinazione": [
+      8,
+      23,
+      25,
+      48,
+      78,
+      83
+    ],
+    "jolly": 80,
+    "superstar": 39,
+    "sestina": [
+      8,
+      23,
+      25,
+      48,
+      78,
+      83
+    ]
+  },
+  {
+    "concorso": 1095,
+    "data": "14/06/2025",
+    "combinazione": [
+      10,
+      18,
+      44,
+      56,
+      73,
+      86
+    ],
+    "jolly": 48,
+    "superstar": 55,
+    "sestina": [
+      10,
+      18,
+      44,
+      56,
+      73,
+      86
+    ]
+  },
+  {
+    "concorso": 1096,
+    "data": "17/06/2025",
+    "combinazione": [
+      17,
+      48,
+      52,
+      58,
+      86,
+      87
+    ],
+    "jolly": 74,
+    "superstar": 49,
+    "sestina": [
+      17,
+      48,
+      52,
+      58,
+      86,
+      87
+    ]
+  },
+  {
+    "concorso": 1097,
+    "data": "19/06/2025",
+    "combinazione": [
+      4,
+      6,
+      11,
+      31,
+      69,
+      73
+    ],
+    "jolly": 9,
+    "superstar": 26,
+    "sestina": [
+      4,
+      6,
+      11,
+      31,
+      69,
+      73
+    ]
+  },
+  {
+    "concorso": 1098,
+    "data": "20/06/2025",
+    "combinazione": [
+      34,
+      67,
+      76,
+      77,
+      86,
+      90
+    ],
+    "jolly": 40,
+    "superstar": 43,
+    "sestina": [
+      34,
+      67,
+      76,
+      77,
+      86,
+      90
+    ]
+  },
+  {
+    "concorso": 1099,
+    "data": "21/06/2025",
+    "combinazione": [
+      4,
+      17,
+      28,
+      36,
+      42,
+      50
+    ],
+    "jolly": 5,
+    "superstar": 71,
+    "sestina": [
+      4,
+      17,
+      28,
+      36,
+      42,
+      50
+    ]
+  },
+  {
+    "concorso": 1100,
+    "data": "24/06/2025",
+    "combinazione": [
+      2,
+      23,
+      32,
+      36,
+      63,
+      64
+    ],
+    "jolly": 37,
+    "superstar": 76,
+    "sestina": [
+      2,
+      23,
+      32,
+      36,
+      63,
+      64
+    ]
+  },
+  {
+    "concorso": 1101,
+    "data": "26/06/2025",
+    "combinazione": [
+      10,
+      56,
+      69,
+      70,
+      79,
+      81
+    ],
+    "jolly": 53,
+    "superstar": 45,
+    "sestina": [
+      10,
+      56,
+      69,
+      70,
+      79,
+      81
+    ]
+  },
+  {
+    "concorso": 1102,
+    "data": "27/06/2025",
+    "combinazione": [
+      25,
+      49,
+      54,
+      55,
+      62,
+      73
+    ],
+    "jolly": 4,
+    "superstar": 86,
+    "sestina": [
+      25,
+      49,
+      54,
+      55,
+      62,
+      73
+    ]
+  },
+  {
+    "concorso": 1103,
+    "data": "28/06/2025",
+    "combinazione": [
+      10,
+      35,
+      38,
+      41,
+      51,
+      56
+    ],
+    "jolly": 3,
+    "superstar": 51,
+    "sestina": [
+      10,
+      35,
+      38,
+      41,
+      51,
+      56
+    ]
+  },
+  {
+    "concorso": 1104,
+    "data": "01/07/2025",
+    "combinazione": [
+      6,
+      9,
+      25,
+      28,
+      75,
+      79
+    ],
+    "jolly": 83,
+    "superstar": 20,
+    "sestina": [
+      6,
+      9,
+      25,
+      28,
+      75,
+      79
+    ]
+  },
+  {
+    "concorso": 1105,
+    "data": "03/07/2025",
+    "combinazione": [
+      37,
+      42,
+      49,
+      53,
+      57,
+      65
+    ],
+    "jolly": 62,
+    "superstar": 8,
+    "sestina": [
+      37,
+      42,
+      49,
+      53,
+      57,
+      65
+    ]
+  },
+  {
+    "concorso": 1106,
+    "data": "04/07/2025",
+    "combinazione": [
+      26,
+      45,
+      58,
+      65,
+      70,
+      82
+    ],
+    "jolly": 27,
+    "superstar": 73,
+    "sestina": [
+      26,
+      45,
+      58,
+      65,
+      70,
+      82
+    ]
+  },
+  {
+    "concorso": 1107,
+    "data": "05/07/2025",
+    "combinazione": [
+      16,
+      46,
+      61,
+      71,
+      75,
+      85
+    ],
+    "jolly": 64,
+    "superstar": 12,
+    "sestina": [
+      16,
+      46,
+      61,
+      71,
+      75,
+      85
+    ]
+  },
+  {
+    "concorso": 1108,
+    "data": "08/07/2025",
+    "combinazione": [
+      1,
+      33,
+      40,
+      61,
+      64,
+      73
+    ],
+    "jolly": 15,
+    "superstar": 48,
+    "sestina": [
+      1,
+      33,
+      40,
+      61,
+      64,
+      73
+    ]
+  },
+  {
+    "concorso": 1109,
+    "data": "10/07/2025",
+    "combinazione": [
+      5,
+      15,
+      20,
+      32,
+      65,
+      75
+    ],
+    "jolly": 12,
+    "superstar": 24,
+    "sestina": [
+      5,
+      15,
+      20,
+      32,
+      65,
+      75
+    ]
+  },
+  {
+    "concorso": 1110,
+    "data": "11/07/2025",
+    "combinazione": [
+      1,
+      31,
+      40,
+      62,
+      64,
+      74
+    ],
+    "jolly": 81,
+    "superstar": 11,
+    "sestina": [
+      1,
+      31,
+      40,
+      62,
+      64,
+      74
+    ]
+  },
+  {
+    "concorso": 1111,
+    "data": "12/07/2025",
+    "combinazione": [
+      16,
+      24,
+      25,
+      43,
+      64,
+      78
+    ],
+    "jolly": 54,
+    "superstar": 12,
+    "sestina": [
+      16,
+      24,
+      25,
+      43,
+      64,
+      78
+    ]
+  },
+  {
+    "concorso": 1112,
+    "data": "15/07/2025",
+    "combinazione": [
+      4,
+      10,
+      14,
+      48,
+      58,
+      83
+    ],
+    "jolly": 47,
+    "superstar": 63,
+    "sestina": [
+      4,
+      10,
+      14,
+      48,
+      58,
+      83
+    ]
+  },
+  {
+    "concorso": 1113,
+    "data": "17/07/2025",
+    "combinazione": [
+      16,
+      35,
+      37,
+      42,
+      43,
+      68
+    ],
+    "jolly": 58,
+    "superstar": 8,
+    "sestina": [
+      16,
+      35,
+      37,
+      42,
+      43,
+      68
+    ]
+  },
+  {
+    "concorso": 1114,
+    "data": "18/07/2025",
+    "combinazione": [
+      20,
+      37,
+      50,
+      70,
+      75,
+      88
+    ],
+    "jolly": 46,
+    "superstar": 16,
+    "sestina": [
+      20,
+      37,
+      50,
+      70,
+      75,
+      88
+    ]
+  },
+  {
+    "concorso": 1115,
+    "data": "19/07/2025",
+    "combinazione": [
+      5,
+      43,
+      46,
+      56,
+      58,
+      90
+    ],
+    "jolly": 23,
+    "superstar": 54,
+    "sestina": [
+      5,
+      43,
+      46,
+      56,
+      58,
+      90
+    ]
+  },
+  {
+    "concorso": 1116,
+    "data": "22/07/2025",
+    "combinazione": [
+      3,
+      8,
+      44,
+      52,
+      69,
+      85
+    ],
+    "jolly": 11,
+    "superstar": 67,
+    "sestina": [
+      3,
+      8,
+      44,
+      52,
+      69,
+      85
+    ]
+  },
+  {
+    "concorso": 1117,
+    "data": "24/07/2025",
+    "combinazione": [
+      10,
+      14,
+      37,
+      66,
+      88,
+      89
+    ],
+    "jolly": 34,
+    "superstar": 88,
+    "sestina": [
+      10,
+      14,
+      37,
+      66,
+      88,
+      89
+    ]
+  },
+  {
+    "concorso": 1118,
+    "data": "25/07/2025",
+    "combinazione": [
+      15,
+      16,
+      17,
+      36,
+      62,
+      83
+    ],
+    "jolly": 7,
+    "superstar": 31,
+    "sestina": [
+      15,
+      16,
+      17,
+      36,
+      62,
+      83
+    ]
+  },
+  {
+    "concorso": 1119,
+    "data": "26/07/2025",
+    "combinazione": [
+      1,
+      9,
+      19,
+      49,
+      53,
+      88
+    ],
+    "jolly": 77,
+    "superstar": 44,
+    "sestina": [
+      1,
+      9,
+      19,
+      49,
+      53,
+      88
+    ]
+  },
+  {
+    "concorso": 1120,
+    "data": "29/07/2025",
+    "combinazione": [
+      13,
+      27,
+      31,
+      60,
+      65,
+      75
+    ],
+    "jolly": 39,
+    "superstar": 69,
+    "sestina": [
+      13,
+      27,
+      31,
+      60,
+      65,
+      75
+    ]
+  },
+  {
+    "concorso": 1121,
+    "data": "31/07/2025",
+    "combinazione": [
+      14,
+      55,
+      56,
+      57,
+      58,
+      66
+    ],
+    "jolly": 46,
+    "superstar": 65,
+    "sestina": [
+      14,
+      55,
+      56,
+      57,
+      58,
+      66
+    ]
+  },
+  {
+    "concorso": 1122,
+    "data": "01/08/2025",
+    "combinazione": [
+      9,
+      25,
+      27,
+      36,
+      54,
+      86
+    ],
+    "jolly": 45,
+    "superstar": 31,
+    "sestina": [
+      9,
+      25,
+      27,
+      36,
+      54,
+      86
+    ]
+  },
+  {
+    "concorso": 1123,
+    "data": "02/08/2025",
+    "combinazione": [
+      42,
+      54,
+      66,
+      78,
+      80,
+      88
+    ],
+    "jolly": 60,
+    "superstar": 14,
+    "sestina": [
+      42,
+      54,
+      66,
+      78,
+      80,
+      88
+    ]
+  },
+  {
+    "concorso": 1124,
+    "data": "05/08/2025",
+    "combinazione": [
+      6,
+      31,
+      57,
+      60,
+      65,
+      80
+    ],
+    "jolly": 12,
+    "superstar": 71,
+    "sestina": [
+      6,
+      31,
+      57,
+      60,
+      65,
+      80
+    ]
+  },
+  {
+    "concorso": 1125,
+    "data": "07/08/2025",
+    "combinazione": [
+      43,
+      55,
+      70,
+      79,
+      83,
+      85
+    ],
+    "jolly": 24,
+    "superstar": 4,
+    "sestina": [
+      43,
+      55,
+      70,
+      79,
+      83,
+      85
+    ]
+  },
+  {
+    "concorso": 1126,
+    "data": "08/08/2025",
+    "combinazione": [
+      8,
+      34,
+      38,
+      53,
+      78,
+      79
+    ],
+    "jolly": 58,
+    "superstar": 37,
+    "sestina": [
+      8,
+      34,
+      38,
+      53,
+      78,
+      79
+    ]
+  },
+  {
+    "concorso": 1127,
+    "data": "09/08/2025",
+    "combinazione": [
+      6,
+      18,
+      40,
+      41,
+      45,
+      88
+    ],
+    "jolly": 37,
+    "superstar": 12,
+    "sestina": [
+      6,
+      18,
+      40,
+      41,
+      45,
+      88
+    ]
+  },
+  {
+    "concorso": 1128,
+    "data": "12/08/2025",
+    "combinazione": [
+      7,
+      11,
+      26,
+      59,
+      82,
+      83
+    ],
+    "jolly": 24,
+    "superstar": 54,
+    "sestina": [
+      7,
+      11,
+      26,
+      59,
+      82,
+      83
+    ]
+  },
+  {
+    "concorso": 1129,
+    "data": "14/08/2025",
+    "combinazione": [
+      3,
+      19,
+      30,
+      47,
+      49,
+      75
+    ],
+    "jolly": 35,
+    "superstar": 14,
+    "sestina": [
+      3,
+      19,
+      30,
+      47,
+      49,
+      75
+    ]
+  },
+  {
+    "concorso": 1130,
+    "data": "16/08/2025",
+    "combinazione": [
+      6,
+      15,
+      25,
+      31,
+      72,
+      79
+    ],
+    "jolly": 54,
+    "superstar": 31,
+    "sestina": [
+      6,
+      15,
+      25,
+      31,
+      72,
+      79
+    ]
+  },
+  {
+    "concorso": 1131,
+    "data": "18/08/2025",
+    "combinazione": [
+      5,
+      19,
+      58,
+      59,
+      83,
+      87
+    ],
+    "jolly": 10,
+    "superstar": 32,
+    "sestina": [
+      5,
+      19,
+      58,
+      59,
+      83,
+      87
+    ]
+  },
+  {
+    "concorso": 1132,
+    "data": "19/08/2025",
+    "combinazione": [
+      5,
+      10,
+      51,
+      62,
+      77,
+      81
+    ],
+    "jolly": 74,
+    "superstar": 58,
+    "sestina": [
+      5,
+      10,
+      51,
+      62,
+      77,
+      81
+    ]
+  },
+  {
+    "concorso": 1133,
+    "data": "21/08/2025",
+    "combinazione": [
+      49,
+      56,
+      57,
+      61,
+      62,
+      86
+    ],
+    "jolly": 16,
+    "superstar": 53,
+    "sestina": [
+      49,
+      56,
+      57,
+      61,
+      62,
+      86
+    ]
+  },
+  {
+    "concorso": 1134,
+    "data": "22/08/2025",
+    "combinazione": [
+      7,
+      25,
+      38,
+      39,
+      66,
+      69
+    ],
+    "jolly": 17,
+    "superstar": 24,
+    "sestina": [
+      7,
+      25,
+      38,
+      39,
+      66,
+      69
+    ]
+  },
+  {
+    "concorso": 1135,
+    "data": "23/08/2025",
+    "combinazione": [
+      5,
+      29,
+      40,
+      47,
+      52,
+      80
+    ],
+    "jolly": 4,
+    "superstar": 61,
+    "sestina": [
+      5,
+      29,
+      40,
+      47,
+      52,
+      80
+    ]
+  },
+  {
+    "concorso": 1136,
+    "data": "26/08/2025",
+    "combinazione": [
+      12,
+      23,
+      25,
+      34,
+      41,
+      63
+    ],
+    "jolly": 21,
+    "superstar": 20,
+    "sestina": [
+      12,
+      23,
+      25,
+      34,
+      41,
+      63
+    ]
+  },
+  {
+    "concorso": 1137,
+    "data": "28/08/2025",
+    "combinazione": [
+      56,
+      59,
+      64,
+      67,
+      72,
+      78
+    ],
+    "jolly": 51,
+    "superstar": 86,
+    "sestina": [
+      56,
+      59,
+      64,
+      67,
+      72,
+      78
+    ]
+  },
+  {
+    "concorso": 1138,
+    "data": "29/08/2025",
+    "combinazione": [
+      18,
+      22,
+      32,
+      34,
+      52,
+      56
+    ],
+    "jolly": 62,
+    "superstar": 45,
+    "sestina": [
+      18,
+      22,
+      32,
+      34,
+      52,
+      56
+    ]
+  },
+  {
+    "concorso": 1139,
+    "data": "30/08/2025",
+    "combinazione": [
+      30,
+      43,
+      46,
+      62,
+      73,
+      90
+    ],
+    "jolly": 35,
+    "superstar": 73,
+    "sestina": [
+      30,
+      43,
+      46,
+      62,
+      73,
+      90
+    ]
+  },
+  {
+    "concorso": 1140,
+    "data": "02/09/2025",
+    "combinazione": [
+      16,
+      19,
+      28,
+      44,
+      60,
+      78
+    ],
+    "jolly": 9,
+    "superstar": 73,
+    "sestina": [
+      16,
+      19,
+      28,
+      44,
+      60,
+      78
+    ]
+  },
+  {
+    "concorso": 1141,
+    "data": "04/09/2025",
+    "combinazione": [
+      5,
+      16,
+      38,
+      45,
+      63,
+      83
+    ],
+    "jolly": 46,
+    "superstar": 83,
+    "sestina": [
+      5,
+      16,
+      38,
+      45,
+      63,
+      83
+    ]
+  },
+  {
+    "concorso": 1142,
+    "data": "05/09/2025",
+    "combinazione": [
+      9,
+      39,
+      47,
+      52,
+      71,
+      82
+    ],
+    "jolly": 83,
+    "superstar": 52,
+    "sestina": [
+      9,
+      39,
+      47,
+      52,
+      71,
+      82
+    ]
+  },
+  {
+    "concorso": 1143,
+    "data": "06/09/2025",
+    "combinazione": [
+      59,
+      73,
+      75,
+      76,
+      78,
+      88
+    ],
+    "jolly": 57,
+    "superstar": 5,
+    "sestina": [
+      59,
+      73,
+      75,
+      76,
+      78,
+      88
+    ]
+  },
+  {
+    "concorso": 1144,
+    "data": "09/09/2025",
+    "combinazione": [
+      34,
+      47,
+      71,
+      73,
+      82,
+      90
+    ],
+    "jolly": 49,
+    "superstar": 52,
+    "sestina": [
+      34,
+      47,
+      71,
+      73,
+      82,
+      90
+    ]
+  },
+  {
+    "concorso": 1145,
+    "data": "11/09/2025",
+    "combinazione": [
+      3,
+      9,
+      11,
+      35,
+      65,
+      74
+    ],
+    "jolly": 26,
+    "superstar": 29,
+    "sestina": [
+      3,
+      9,
+      11,
+      35,
+      65,
+      74
+    ]
+  },
+  {
+    "concorso": 1146,
+    "data": "12/09/2025",
+    "combinazione": [
+      29,
+      33,
+      44,
+      52,
+      63,
+      65
+    ],
+    "jolly": 19,
+    "superstar": 84,
+    "sestina": [
+      29,
+      33,
+      44,
+      52,
+      63,
+      65
+    ]
+  },
+  {
+    "concorso": 1147,
+    "data": "13/09/2025",
+    "combinazione": [
+      26,
+      28,
+      31,
+      35,
+      37,
+      65
+    ],
+    "jolly": 30,
+    "superstar": 5,
+    "sestina": [
+      26,
+      28,
+      31,
+      35,
+      37,
+      65
+    ]
+  },
+  {
+    "concorso": 1148,
+    "data": "16/09/2025",
+    "combinazione": [
+      1,
+      12,
+      26,
+      44,
+      51,
+      90
+    ],
+    "jolly": 72,
+    "superstar": 45,
+    "sestina": [
+      1,
+      12,
+      26,
+      44,
+      51,
+      90
+    ]
+  },
+  {
+    "concorso": 1149,
+    "data": "18/09/2025",
+    "combinazione": [
+      12,
+      38,
+      46,
+      49,
+      60,
+      65
+    ],
+    "jolly": 2,
+    "superstar": 46,
+    "sestina": [
+      12,
+      38,
+      46,
+      49,
+      60,
+      65
+    ]
+  },
+  {
+    "concorso": 1150,
+    "data": "19/09/2025",
+    "combinazione": [
+      11,
+      16,
+      23,
+      31,
+      49,
+      78
+    ],
+    "jolly": 63,
+    "superstar": 13,
+    "sestina": [
+      11,
+      16,
+      23,
+      31,
+      49,
+      78
+    ]
+  },
+  {
+    "concorso": 1151,
+    "data": "20/09/2025",
+    "combinazione": [
+      2,
+      12,
+      15,
+      31,
+      63,
+      71
+    ],
+    "jolly": 50,
+    "superstar": 57,
+    "sestina": [
+      2,
+      12,
+      15,
+      31,
+      63,
+      71
+    ]
+  },
+  {
+    "concorso": 1152,
+    "data": "23/09/2025",
+    "combinazione": [
+      1,
+      6,
+      20,
+      43,
+      59,
+      73
+    ],
+    "jolly": 58,
+    "superstar": 89,
+    "sestina": [
+      1,
+      6,
+      20,
+      43,
+      59,
+      73
+    ]
+  },
+  {
+    "concorso": 1153,
+    "data": "25/09/2025",
+    "combinazione": [
+      11,
+      19,
+      36,
+      41,
+      65,
+      82
+    ],
+    "jolly": 17,
+    "superstar": 15,
+    "sestina": [
+      11,
+      19,
+      36,
+      41,
+      65,
+      82
+    ]
+  },
+  {
+    "concorso": 1154,
+    "data": "26/09/2025",
+    "combinazione": [
+      2,
+      17,
+      23,
+      39,
+      58,
+      82
+    ],
+    "jolly": 75,
+    "superstar": 6,
+    "sestina": [
+      2,
+      17,
+      23,
+      39,
+      58,
+      82
+    ]
+  },
+  {
+    "concorso": 1155,
+    "data": "27/09/2025",
+    "combinazione": [
+      9,
+      10,
+      21,
+      25,
+      27,
+      68
+    ],
+    "jolly": 54,
+    "superstar": 6,
+    "sestina": [
+      9,
+      10,
+      21,
+      25,
+      27,
+      68
+    ]
+  },
+  {
+    "concorso": 1156,
+    "data": "30/09/2025",
+    "combinazione": [
+      5,
+      8,
+      71,
+      74,
+      77,
+      81
+    ],
+    "jolly": 34,
+    "superstar": 70,
+    "sestina": [
+      5,
+      8,
+      71,
+      74,
+      77,
+      81
+    ]
+  },
+  {
+    "concorso": 1157,
+    "data": "02/10/2025",
+    "combinazione": [
+      1,
+      21,
+      39,
+      42,
+      52,
+      89
+    ],
+    "jolly": 6,
+    "superstar": 17,
+    "sestina": [
+      1,
+      21,
+      39,
+      42,
+      52,
+      89
+    ]
+  },
+  {
+    "concorso": 1158,
+    "data": "03/10/2025",
+    "combinazione": [
+      2,
+      4,
+      69,
+      75,
+      79,
+      88
+    ],
+    "jolly": 12,
+    "superstar": 7,
+    "sestina": [
+      2,
+      4,
+      69,
+      75,
+      79,
+      88
+    ]
+  },
+  {
+    "concorso": 1159,
+    "data": "04/10/2025",
+    "combinazione": [
+      48,
+      54,
+      61,
+      68,
+      79,
+      87
+    ],
+    "jolly": 80,
+    "superstar": 45,
+    "sestina": [
+      48,
+      54,
+      61,
+      68,
+      79,
+      87
+    ]
+  },
+  {
+    "concorso": 1160,
+    "data": "07/10/2025",
+    "combinazione": [
+      17,
+      21,
+      40,
+      56,
+      61,
+      79
+    ],
+    "jolly": 87,
+    "superstar": 85,
+    "sestina": [
+      17,
+      21,
+      40,
+      56,
+      61,
+      79
+    ]
+  },
+  {
+    "concorso": 1161,
+    "data": "09/10/2025",
+    "combinazione": [
+      38,
+      49,
+      50,
+      54,
+      78,
+      82
+    ],
+    "jolly": 90,
+    "superstar": 43,
+    "sestina": [
+      38,
+      49,
+      50,
+      54,
+      78,
+      82
+    ]
+  },
+  {
+    "concorso": 1162,
+    "data": "10/10/2025",
+    "combinazione": [
+      20,
+      38,
+      42,
+      61,
+      81,
+      82
+    ],
+    "jolly": 16,
+    "superstar": 80,
+    "sestina": [
+      20,
+      38,
+      42,
+      61,
+      81,
+      82
+    ]
+  },
+  {
+    "concorso": 1163,
+    "data": "11/10/2025",
+    "combinazione": [
+      28,
+      51,
+      55,
+      62,
+      80,
+      90
+    ],
+    "jolly": 68,
+    "superstar": 90,
+    "sestina": [
+      28,
+      51,
+      55,
+      62,
+      80,
+      90
+    ]
+  },
+  {
+    "concorso": 1164,
+    "data": "14/10/2025",
+    "combinazione": [
+      9,
+      31,
+      44,
+      59,
+      70,
+      86
+    ],
+    "jolly": 37,
+    "superstar": 81,
+    "sestina": [
+      9,
+      31,
+      44,
+      59,
+      70,
+      86
+    ]
+  },
+  {
+    "concorso": 1165,
+    "data": "16/10/2025",
+    "combinazione": [
+      7,
+      44,
+      45,
+      58,
+      76,
+      80
+    ],
+    "jolly": 77,
+    "superstar": 13,
+    "sestina": [
+      7,
+      44,
+      45,
+      58,
+      76,
+      80
+    ]
+  },
+  {
+    "concorso": 1166,
+    "data": "17/10/2025",
+    "combinazione": [
+      2,
+      9,
+      10,
+      32,
+      66,
+      77
+    ],
+    "jolly": 72,
+    "superstar": 44,
+    "sestina": [
+      2,
+      9,
+      10,
+      32,
+      66,
+      77
+    ]
+  },
+  {
+    "concorso": 1167,
+    "data": "18/10/2025",
+    "combinazione": [
+      12,
+      13,
+      19,
+      26,
+      75,
+      82
+    ],
+    "jolly": 50,
+    "superstar": 54,
+    "sestina": [
+      12,
+      13,
+      19,
+      26,
+      75,
+      82
+    ]
+  },
+  {
+    "concorso": 1168,
+    "data": "21/10/2025",
+    "combinazione": [
+      4,
+      9,
+      14,
+      33,
+      36,
+      77
+    ],
+    "jolly": 66,
+    "superstar": 15,
+    "sestina": [
+      4,
+      9,
+      14,
+      33,
+      36,
+      77
+    ]
+  },
+  {
+    "concorso": 1169,
+    "data": "23/10/2025",
+    "combinazione": [
+      7,
+      29,
+      42,
+      62,
+      68,
+      73
+    ],
+    "jolly": 26,
+    "superstar": 21,
+    "sestina": [
+      7,
+      29,
+      42,
+      62,
+      68,
+      73
+    ]
+  },
+  {
+    "concorso": 1170,
+    "data": "24/10/2025",
+    "combinazione": [
+      5,
+      12,
+      23,
+      31,
+      84,
+      90
+    ],
+    "jolly": 68,
+    "superstar": 77,
+    "sestina": [
+      5,
+      12,
+      23,
+      31,
+      84,
+      90
+    ]
+  },
+  {
+    "concorso": 1171,
+    "data": "25/10/2025",
+    "combinazione": [
+      16,
+      18,
+      33,
+      53,
+      58,
+      89
+    ],
+    "jolly": 81,
+    "superstar": 59,
+    "sestina": [
+      16,
+      18,
+      33,
+      53,
+      58,
+      89
+    ]
+  },
+  {
+    "concorso": 1172,
+    "data": "28/10/2025",
+    "combinazione": [
+      8,
+      25,
+      40,
+      54,
+      58,
+      63
+    ],
+    "jolly": 50,
+    "superstar": 63,
+    "sestina": [
+      8,
+      25,
+      40,
+      54,
+      58,
+      63
+    ]
+  },
+  {
+    "concorso": 1173,
+    "data": "30/10/2025",
+    "combinazione": [
+      15,
+      30,
+      37,
+      39,
+      58,
+      74
+    ],
+    "jolly": 43,
+    "superstar": 47,
+    "sestina": [
+      15,
+      30,
+      37,
+      39,
+      58,
+      74
+    ]
+  },
+  {
+    "concorso": 1174,
+    "data": "31/10/2025",
+    "combinazione": [
+      8,
+      30,
+      32,
+      61,
+      67,
+      85
+    ],
+    "jolly": 22,
+    "superstar": 9,
+    "sestina": [
+      8,
+      30,
+      32,
+      61,
+      67,
+      85
+    ]
+  },
+  {
+    "concorso": 1175,
+    "data": "03/11/2025",
+    "combinazione": [
+      30,
+      56,
+      80,
+      81,
+      85,
+      87
+    ],
+    "jolly": 67,
+    "superstar": 2,
+    "sestina": [
+      30,
+      56,
+      80,
+      81,
+      85,
+      87
+    ]
+  },
+  {
+    "concorso": 1176,
+    "data": "04/11/2025",
+    "combinazione": [
+      5,
+      18,
+      28,
+      38,
+      44,
+      76
+    ],
+    "jolly": 23,
+    "superstar": 89,
+    "sestina": [
+      5,
+      18,
+      28,
+      38,
+      44,
+      76
+    ]
+  },
+  {
+    "concorso": 1177,
+    "data": "06/11/2025",
+    "combinazione": [
+      9,
+      48,
+      51,
+      53,
+      73,
+      88
+    ],
+    "jolly": 19,
+    "superstar": 43,
+    "sestina": [
+      9,
+      48,
+      51,
+      53,
+      73,
+      88
+    ]
+  },
+  {
+    "concorso": 1178,
+    "data": "07/11/2025",
+    "combinazione": [
+      5,
+      24,
+      32,
+      67,
+      82,
+      88
+    ],
+    "jolly": 43,
+    "superstar": 89,
+    "sestina": [
+      5,
+      24,
+      32,
+      67,
+      82,
+      88
+    ]
+  },
+  {
+    "concorso": 1179,
+    "data": "08/11/2025",
+    "combinazione": [
+      17,
+      18,
+      19,
+      33,
+      35,
+      62
+    ],
+    "jolly": 80,
+    "superstar": 58,
+    "sestina": [
+      17,
+      18,
+      19,
+      33,
+      35,
+      62
+    ]
+  },
+  {
+    "concorso": 1180,
+    "data": "11/11/2025",
+    "combinazione": [
+      3,
+      37,
+      42,
+      59,
+      63,
+      84
+    ],
+    "jolly": 49,
+    "superstar": 64,
+    "sestina": [
+      3,
+      37,
+      42,
+      59,
+      63,
+      84
+    ]
+  },
+  {
+    "concorso": 1181,
+    "data": "13/11/2025",
+    "combinazione": [
+      7,
+      9,
+      17,
+      54,
+      73,
+      90
+    ],
+    "jolly": 89,
+    "superstar": 3,
+    "sestina": [
+      7,
+      9,
+      17,
+      54,
+      73,
+      90
+    ]
+  },
+  {
+    "concorso": 1182,
+    "data": "14/11/2025",
+    "combinazione": [
+      26,
+      38,
+      43,
+      46,
+      72,
+      73
+    ],
+    "jolly": 45,
+    "superstar": 45,
+    "sestina": [
+      26,
+      38,
+      43,
+      46,
+      72,
+      73
+    ]
+  },
+  {
+    "concorso": 1183,
+    "data": "15/11/2025",
+    "combinazione": [
+      20,
+      23,
+      40,
+      51,
+      55,
+      85
+    ],
+    "jolly": 5,
+    "superstar": 80,
+    "sestina": [
+      20,
+      23,
+      40,
+      51,
+      55,
+      85
+    ]
+  },
+  {
+    "concorso": 1184,
+    "data": "18/11/2025",
+    "combinazione": [
+      18,
+      40,
+      54,
+      83,
+      85,
+      89
+    ],
+    "jolly": 4,
+    "superstar": 57,
+    "sestina": [
+      18,
+      40,
+      54,
+      83,
+      85,
+      89
+    ]
+  },
+  {
+    "concorso": 1185,
+    "data": "20/11/2025",
+    "combinazione": [
+      5,
+      9,
+      15,
+      17,
+      48,
+      74
+    ],
+    "jolly": 65,
+    "superstar": 75,
+    "sestina": [
+      5,
+      9,
+      15,
+      17,
+      48,
+      74
+    ]
+  },
+  {
+    "concorso": 1186,
+    "data": "21/11/2025",
+    "combinazione": [
+      12,
+      14,
+      18,
+      53,
+      84,
+      86
+    ],
+    "jolly": 72,
+    "superstar": 35,
+    "sestina": [
+      12,
+      14,
+      18,
+      53,
+      84,
+      86
+    ]
+  },
+  {
+    "concorso": 1187,
+    "data": "22/11/2025",
+    "combinazione": [
+      2,
+      8,
+      29,
+      47,
+      59,
+      65
+    ],
+    "jolly": 86,
+    "superstar": 26,
+    "sestina": [
+      2,
+      8,
+      29,
+      47,
+      59,
+      65
+    ]
+  },
+  {
+    "concorso": 1188,
+    "data": "25/11/2025",
+    "combinazione": [
+      18,
+      20,
+      21,
+      23,
+      40,
+      43
+    ],
+    "jolly": 52,
+    "superstar": 10,
+    "sestina": [
+      18,
+      20,
+      21,
+      23,
+      40,
+      43
+    ]
+  },
+  {
+    "concorso": 1189,
+    "data": "27/11/2025",
+    "combinazione": [
+      9,
+      28,
+      43,
+      50,
+      61,
+      88
+    ],
+    "jolly": 83,
+    "superstar": 62,
+    "sestina": [
+      9,
+      28,
+      43,
+      50,
+      61,
+      88
+    ]
+  },
+  {
+    "concorso": 1190,
+    "data": "28/11/2025",
+    "combinazione": [
+      1,
+      12,
+      20,
+      21,
+      42,
+      58
+    ],
+    "jolly": 84,
+    "superstar": 34,
+    "sestina": [
+      1,
+      12,
+      20,
+      21,
+      42,
+      58
+    ]
+  },
+  {
+    "concorso": 1191,
+    "data": "29/11/2025",
+    "combinazione": [
+      8,
+      16,
+      29,
+      61,
+      65,
+      69
+    ],
+    "jolly": 17,
+    "superstar": 85,
+    "sestina": [
+      8,
+      16,
+      29,
+      61,
+      65,
+      69
+    ]
+  },
+  {
+    "concorso": 1192,
+    "data": "02/12/2025",
+    "combinazione": [
+      5,
+      17,
+      28,
+      59,
+      70,
+      90
+    ],
+    "jolly": 27,
+    "superstar": 66,
+    "sestina": [
+      5,
+      17,
+      28,
+      59,
+      70,
+      90
+    ]
+  },
+  {
+    "concorso": 1193,
+    "data": "04/12/2025",
+    "combinazione": [
+      12,
+      30,
+      45,
+      48,
+      59,
+      60
+    ],
+    "jolly": 40,
+    "superstar": 90,
+    "sestina": [
+      12,
+      30,
+      45,
+      48,
+      59,
+      60
+    ]
+  },
+  {
+    "concorso": 1194,
+    "data": "05/12/2025",
+    "combinazione": [
+      10,
+      19,
+      29,
+      30,
+      56,
+      71
+    ],
+    "jolly": 76,
+    "superstar": 13,
+    "sestina": [
+      10,
+      19,
+      29,
+      30,
+      56,
+      71
+    ]
+  },
+  {
+    "concorso": 1195,
+    "data": "06/12/2025",
+    "combinazione": [
+      1,
+      38,
+      42,
+      78,
+      82,
+      84
+    ],
+    "jolly": 24,
+    "superstar": 71,
+    "sestina": [
+      1,
+      38,
+      42,
+      78,
+      82,
+      84
+    ]
+  },
+  {
+    "concorso": 1196,
+    "data": "09/12/2025",
+    "combinazione": [
+      8,
+      31,
+      51,
+      65,
+      78,
+      79
+    ],
+    "jolly": 26,
+    "superstar": 77,
+    "sestina": [
+      8,
+      31,
+      51,
+      65,
+      78,
+      79
+    ]
+  },
+  {
+    "concorso": 1197,
+    "data": "11/12/2025",
+    "combinazione": [
+      14,
+      44,
+      72,
+      81,
+      85,
+      86
+    ],
+    "jolly": 80,
+    "superstar": 47,
+    "sestina": [
+      14,
+      44,
+      72,
+      81,
+      85,
+      86
+    ]
+  },
+  {
+    "concorso": 1198,
+    "data": "12/12/2025",
+    "combinazione": [
+      7,
+      21,
+      35,
+      38,
+      64,
+      80
+    ],
+    "jolly": 29,
+    "superstar": 87,
+    "sestina": [
+      7,
+      21,
+      35,
+      38,
+      64,
+      80
+    ]
+  },
+  {
+    "concorso": 1199,
+    "data": "13/12/2025",
+    "combinazione": [
+      2,
+      5,
+      7,
+      36,
+      58,
+      64
+    ],
+    "jolly": 14,
+    "superstar": 62,
+    "sestina": [
+      2,
+      5,
+      7,
+      36,
+      58,
+      64
+    ]
+  },
+  {
+    "concorso": 1200,
+    "data": "16/12/2025",
+    "combinazione": [
+      2,
+      18,
+      24,
+      35,
+      41,
+      84
+    ],
+    "jolly": 44,
+    "superstar": 20,
+    "sestina": [
+      2,
+      18,
+      24,
+      35,
+      41,
+      84
+    ]
+  },
+  {
+    "concorso": 1201,
+    "data": "18/12/2025",
+    "combinazione": [
+      7,
+      28,
+      63,
+      69,
+      73,
+      77
+    ],
+    "jolly": 64,
+    "superstar": 14,
+    "sestina": [
+      7,
+      28,
+      63,
+      69,
+      73,
+      77
+    ]
+  },
+  {
+    "concorso": 1202,
+    "data": "19/12/2025",
+    "combinazione": [
+      16,
+      52,
+      60,
+      75,
+      81,
+      88
+    ],
+    "jolly": 40,
+    "superstar": 49,
+    "sestina": [
+      16,
+      52,
+      60,
+      75,
+      81,
+      88
+    ]
+  },
+  {
+    "concorso": 1203,
+    "data": "20/12/2025",
+    "combinazione": [
+      11,
+      24,
+      42,
+      50,
+      89,
+      90
+    ],
+    "jolly": 36,
+    "superstar": 44,
+    "sestina": [
+      11,
+      24,
+      42,
+      50,
+      89,
+      90
+    ]
+  },
+  {
+    "concorso": 1204,
+    "data": "22/12/2025",
+    "combinazione": [
+      2,
+      14,
+      28,
+      36,
+      78,
+      85
+    ],
+    "jolly": 17,
+    "superstar": 11,
+    "sestina": [
+      2,
+      14,
+      28,
+      36,
+      78,
+      85
+    ]
+  },
+  {
+    "concorso": 1205,
+    "data": "23/12/2025",
+    "combinazione": [
+      16,
+      18,
+      22,
+      24,
+      34,
+      80
+    ],
+    "jolly": 62,
+    "superstar": 53,
+    "sestina": [
+      16,
+      18,
+      22,
+      24,
+      34,
+      80
+    ]
+  },
+  {
+    "concorso": 1206,
+    "data": "27/12/2025",
+    "combinazione": [
+      8,
+      19,
+      20,
+      41,
+      74,
+      84
+    ],
+    "jolly": 45,
+    "superstar": 74,
+    "sestina": [
+      8,
+      19,
+      20,
+      41,
+      74,
+      84
+    ]
+  },
+  {
+    "concorso": 1207,
+    "data": "29/12/2025",
+    "combinazione": [
+      36,
+      38,
+      45,
+      61,
+      79,
+      83
+    ],
+    "jolly": 12,
+    "superstar": 52,
+    "sestina": [
+      36,
+      38,
+      45,
+      61,
+      79,
+      83
+    ]
+  },
+  {
+    "concorso": 1208,
+    "data": "30/12/2025",
+    "combinazione": [
+      6,
+      9,
+      17,
+      20,
+      60,
+      67
+    ],
+    "jolly": 1,
+    "superstar": 73,
+    "sestina": [
+      6,
+      9,
+      17,
+      20,
+      60,
+      67
+    ]
   }
 ]
