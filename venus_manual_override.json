@@ -1,11 +1,11 @@
 {
-  "jackpot": 28100000,
+  "jackpot": 28800000,
   "last_draw": {
-    "concorso": 148,
-    "data": "15/09/2026",
-    "combinazione": [3, 12, 18, 32, 47, 54],
-    "jolly": 69,
-    "superstar": 28
+    "concorso": 149,
+    "data": "17/09/2026",
+    "combinazione": [6, 7, 16, 35, 46, 54],
+    "jolly": 21,
+    "superstar": 51
   },
-  "note": "File di override manuale. Quando il fetch automatico fallisce, aggiorna qui jackpot e ultima estrazione. Il sistema usa SEMPRE questi valori se presenti."
+  "note": "Concorso 149"
 }
