@@ -5156,6 +5156,34 @@
     ]
   },
   {
+    "concorso": 103,
+    "data": "27/06/2026",
+    "combinazione": [
+      15,
+      19,
+      36,
+      47,
+      85,
+      90
+    ],
+    "jolly": 42,
+    "superstar": 62
+  },
+  {
+    "concorso": 104,
+    "data": "30/06/2026",
+    "combinazione": [
+      1,
+      7,
+      51,
+      64,
+      78,
+      83
+    ],
+    "jolly": 13,
+    "superstar": 66
+  },
+  {
     "concorso": 105,
     "data": "02/07/2026",
     "combinazione": [
@@ -5486,6 +5514,48 @@
     ]
   },
   {
+    "concorso": 120,
+    "data": "28/07/2026",
+    "combinazione": [
+      1,
+      6,
+      9,
+      43,
+      54,
+      62
+    ],
+    "jolly": 87,
+    "superstar": 69
+  },
+  {
+    "concorso": 121,
+    "data": "30/07/2026",
+    "combinazione": [
+      20,
+      47,
+      75,
+      76,
+      78,
+      89
+    ],
+    "jolly": 9,
+    "superstar": 89
+  },
+  {
+    "concorso": 122,
+    "data": "31/07/2026",
+    "combinazione": [
+      2,
+      6,
+      10,
+      31,
+      39,
+      83
+    ],
+    "jolly": 66,
+    "superstar": 75
+  },
+  {
     "concorso": 123,
     "data": "01/08/2026",
     "combinazione": [
@@ -5814,6 +5884,34 @@
       75,
       84
     ]
+  },
+  {
+    "concorso": 138,
+    "data": "28/08/2026",
+    "combinazione": [
+      4,
+      8,
+      27,
+      62,
+      70,
+      79
+    ],
+    "jolly": 60,
+    "superstar": 55
+  },
+  {
+    "concorso": 139,
+    "data": "29/08/2026",
+    "combinazione": [
+      12,
+      17,
+      45,
+      59,
+      74,
+      77
+    ],
+    "jolly": 62,
+    "superstar": 62
   },
   {
     "concorso": 140,
