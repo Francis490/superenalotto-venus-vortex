@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-17T14:32:20",
+  "updated_at": "2026-09-17T14:53:25",
   "next_contest": {
     "number": 149,
     "date": "17/09/2026",
@@ -52,17 +52,17 @@
       "id": "VORTEX 1",
       "numbers": [
         5,
-        25,
-        30,
-        31,
+        35,
         46,
-        57
+        48,
+        65,
+        80
       ],
-      "sum": 194,
-      "z_score": -1.82,
-      "confidence": 15.9,
+      "sum": 279,
+      "z_score": 0.14,
+      "confidence": 24.3,
       "ev_score": 1.0,
-      "signature": "VX-2026-149-A10D28"
+      "signature": "VX-2026-149-B4771E"
     }
   ],
   "vortex": {
