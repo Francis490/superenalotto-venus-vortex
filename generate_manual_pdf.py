@@ -23,16 +23,6 @@ CSS = """
 @page {
     size: A4;
     margin: 2cm 1.8cm;
-    @bottom-center {
-        content: "Venus Vortex — Manuale Tecnico v3.3.1";
-        font-size: 8pt;
-        color: #999;
-    }
-    @bottom-right {
-        content: counter(page);
-        font-size: 8pt;
-        color: #999;
-    }
 }
 
 body {
