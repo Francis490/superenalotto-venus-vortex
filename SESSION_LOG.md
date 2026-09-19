@@ -7,7 +7,7 @@
 
 ### Stato attuale
 - Versione bot: v3.3.1
-- Database: 357 concorsi (208 del 2025 + 149 del 2026)
+- Database: 358 concorsi (208 del 2025 + 150 del 2026)
 - Ultimo concorso elaborato: 150 (18/09/2026)
 - Prossimo concorso: 151 (19/09/2026)
 - Personal stats: speso €4,00 / vinto €5,00 / bilancio +€1,00 / ROI +25,00%
@@ -272,7 +272,7 @@
 
 ---
 
-## ## 2026-09-19 — Blocco 5: bump azioni GitHub su tutti i workflow
+## 2026-09-19 — Blocco 5: bump azioni GitHub su tutti i workflow
 
 **Obiettivo:** Risolvere il warning "Node.js 20 is deprecated" e modernizzare i workflow.
 
@@ -299,5 +299,48 @@
 - Il pattern comune include: `checkout@v5`, `setup-python@v6` con `cache: 'pip'`, `timeout-minutes`, `git pull --rebase` prima del push.
 
 **Prossimo:**
-- Blocco 6 (opzionale): data samples JSON.
+- Blocco 6: data samples JSON.
 - Aggiornare il PDF del manuale quando ci saranno modifiche sostanziali.
+
+---
+
+## 2026-09-19 — Blocco 6: analisi data samples
+
+**Obiettivo:** Verificare coerenza tra strutture JSON e codice.
+
+**Fatto:**
+- **venus_played.json**: verificato, coerente. Aggiunta giocata concorso 151.
+- **venus_history.json**: analizzato in dettaglio.
+  - Totale: **358 entry** (208 del 2025 + 150 del 2026).
+  - Tutte le date in formato `DD/MM/YYYY`.
+  - Tutte le `combinazione` hanno 6 numeri in range 1-90.
+  - Pattern offset +1000 per il 2025 rispettato (1001-1208).
+  - Nessun duplicato.
+- Identificata **incoerenza SESSION_LOG**: riportava 357 concorsi (208+149) invece di 358 (208+150). Corretto.
+- Identificata **entry 150 con campo `sestina` mancante** (le altre 357 ce l'hanno).
+- Identificate **divergenze tra `venus_history.json` e `build_history_2026.py`**: alcune entry hardcoded non corrispondono ai dati reali (es. concorso 16, 17, 51, 68). Il merge non sovrascrive, quindi nessun rischio immediato, ma il codice è "stale".
+
+**Problemi:**
+- SESSION_LOG riportava 357/149 invece di 358/150.
+- Entry 150 manca di `sestina`.
+- `build_history_2026.py` ha dati hardcoded divergenti dal JSON (che è la fonte di verità).
+
+**Decisioni:**
+- `venus_history.json` è la **fonte di verità** per i dati storici.
+- `build_history_2026.py` va reso "validator" più che "seeder": il suo scopo diventa verificare completezza, non iniettare dati potenzialmente stale.
+- Fix SESSION_LOG: aggiornati conteggi a 358/150.
+
+**Prossimo:**
+- Fix entry 150 (aggiungere `sestina`).
+- Refactor `build_history_2026.py` (trust del JSON).
+
+---
+
+## Template nuova sessione
+
+### YYYY-MM-DD — Titolo
+**Obiettivo:**
+**Fatto:**
+**Problemi:**
+**Decisioni:**
+**Prossimo:**
