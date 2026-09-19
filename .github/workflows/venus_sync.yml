@@ -2,7 +2,9 @@ name: TITAN Engine Automated Execution
 
 on:
   schedule:
-    - cron: '15 20 * * 2,4,5,6'
+    # 19:45 UTC = 21:45 italiane (CEST, ora legale estiva)
+    # ⚠️ In inverno (CET) diventa 20:45 italiane. Aggiornare a '45 20' se serve.
+    - cron: '45 19 * * 2,4,5,6'
   workflow_dispatch:
 
 permissions:
