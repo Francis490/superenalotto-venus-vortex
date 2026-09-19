@@ -23,7 +23,6 @@
 - Generate PWA Icons
 - Build History 2026
 - Import External History
-- Check History Gaps
 - Generate Manual PDF
 
 ### File principali nel repo
@@ -39,8 +38,8 @@
 ### Lavoro in sospeso
 1. ~~Lanciare workflow "Generate Manual PDF" e scaricare il PDF.~~ ✅
 2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅ (già presente, verificato)
-3. Pulire requirements.txt: rimuovere requests, bs4, lxml, sklearn se non usati.
-4. Rimuovere file diagnostici residui: check_history_gaps.py, check_gaps.yml.
+3. ~~Pulire requirements.txt.~~ ✅ (già pulito, 6 pacchetti tutti necessari)
+4. ~~Rimuovere file diagnostici residui.~~ ✅
 5. Valutare fix True Mimic: produce sestine fuori range 240-310; il fallback classico funziona.
 
 ### Problemi noti
@@ -97,6 +96,32 @@
 **Prossimo:**
 - Pulizia `requirements.txt`.
 - Rimozione file diagnostici residui (`check_history_gaps.py`, `check_gaps.yml`).
+- Valutazione fix True Mimic (range 240-310).
+
+---
+
+## 2026-09-19 — Pulizia requirements.txt e file diagnostici
+
+**Obiettivo:** Ripulire il repository da dipendenze e file non più necessari.
+
+**Fatto:**
+- Verificato `requirements.txt`: già pulito, nessuna dipendenza obsoleta (`requests`, `bs4`, `lxml`, `sklearn` già assenti). File composto da 6 pacchetti tutti necessari:
+  - `numpy`, `scipy` → calcoli numerici e statistici
+  - `matplotlib` → generazione grafici
+  - `Pillow` → generazione icone PWA
+  - `markdown`, `xhtml2pdf` → generazione manuale PDF
+- Rimossi file diagnostici orfani:
+  - `check_history_gaps.py` (nessun import esterno, solo diagnostica su stdout)
+  - `.github/workflows/check_gaps.yml` (workflow manuale senza artifact né commit)
+
+**Problemi:**
+- Nessuno.
+
+**Decisioni:**
+- `requirements.txt` non necessita modifiche.
+- Nessun altro file diagnostico residuo rilevato.
+
+**Prossimo:**
 - Valutazione fix True Mimic (range 240-310).
 
 ---
