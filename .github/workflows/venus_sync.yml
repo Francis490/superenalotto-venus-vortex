@@ -2,9 +2,10 @@ name: TITAN Engine Automated Execution
 
 on:
   schedule:
-    # 19:45 UTC = 21:45 italiane (CEST, ora legale estiva)
-    # ⚠️ In inverno (CET) diventa 20:45 italiane. Aggiornare a '45 20' se serve.
+    # Cron 1: estate (CEST = UTC+2) → 21:45 italiane
     - cron: '45 19 * * 2,4,5,6'
+    # Cron 2: inverno (CET = UTC+1) → 21:45 italiane
+    - cron: '45 20 * * 2,4,5,6'
   workflow_dispatch:
 
 permissions:
@@ -17,7 +18,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ==========================================
+  # Gatekeeper: verifica che sia l'ora italiana corretta
+  # ==========================================
+  check-time:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        name: Verifica orario italiano
+        run: |
+          # Se attivato manualmente (workflow_dispatch) → bypass check
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "[*] Esecuzione manuale: skip check orario."
+            exit 0
+          fi
+
+          # Ora italiana attuale
+          HOUR_IT=$(TZ="Europe/Rome" date +%H)
+          MIN_IT=$(TZ="Europe/Rome" date +%M)
+          TOTAL_MIN=$((10#$HOUR_IT * 60 + 10#$MIN_IT))
+
+          # Finestra target: 21:15 - 22:30 italiane
+          # (tollerante per ritardi GitHub Actions, tipicamente 5-20 min)
+          MIN_TARGET=$((21 * 60 + 15))
+          MAX_TARGET=$((22 * 60 + 30))
+
+          echo "[*] Ora italiana attuale: ${HOUR_IT}:${MIN_IT}"
+          echo "[*] Finestra target: 21:15 - 22:30 italiane"
+
+          if [ $TOTAL_MIN -ge $MIN_TARGET ] && [ $TOTAL_MIN -le $MAX_TARGET ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "[✓] Dentro la finestra. Procedo."
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "[✗] Fuori dalla finestra. Salto."
+          fi
+
+  # ==========================================
+  # Job principale (parte solo se check-time passa)
+  # ==========================================
   run-titan-engine:
+    needs: check-time
+    if: needs.check-time.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -93,6 +139,9 @@ jobs:
         with:
           path: _site
 
+  # ==========================================
+  # Deploy GitHub Pages (parte solo se run-titan-engine gira)
+  # ==========================================
   deploy-pages:
     needs: run-titan-engine
     runs-on: ubuntu-latest
