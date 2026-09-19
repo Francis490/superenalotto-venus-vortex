@@ -1,6 +1,6 @@
 # ==========================================
 # TITAN Engine — Dipendenze Python
-# Target: Python 3.10
+# Target: Python 3.10 (workflow GitHub Actions)
 # ==========================================
 
 # --- Core numerico e scientifico ---
