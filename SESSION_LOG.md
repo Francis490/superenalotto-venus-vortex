@@ -57,6 +57,27 @@
 
 ---
 
+## 2026-09-19 — Errore generazione PDF e soluzione
+
+**Obiettivo:** Lanciare il workflow "Generate Manual PDF" e ottenere il file scaricabile.
+
+**Fatto:**
+- Lanciato il workflow `Generate Manual PDF`.
+- Il workflow fallisce con errore `CSSParseError: Declaration group closing '}' not found`.
+
+**Problemi:**
+- La libreria `xhtml2pdf` non riesce a parsare il CSS contenuto in `MANUALE_VENUS_VORTEX.md`. Il problema è noto e legato alla complessità di alcune regole CSS (probabilmente annidate o non standard). Il traceback punta a una direttiva CSS malformata o non supportata.
+
+**Decisioni:**
+- Si procederà a semplificare il CSS nel file Markdown per superare l'errore.
+- Se la semplificazione non dovesse bastare, si valuterà la sostituzione di `xhtml2pdf` con una libreria più moderna come `WeasyPrint`.
+
+**Prossimo:**
+- Modificare `MANUALE_VENUS_VORTEX.md` semplificando il CSS.
+- Rilanciare il workflow.
+
+---
+
 ## Template nuova sessione
 
 ### YYYY-MM-DD — Titolo
