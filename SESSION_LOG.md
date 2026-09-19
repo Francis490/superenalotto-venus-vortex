@@ -12,8 +12,8 @@
 - Prossimo concorso: 151 (19/09/2026)
 - Personal stats: speso €4,00 / vinto €5,00 / bilancio +€1,00 / ROI +25,00%
 - Track record: 2 concorsi tracciati (+1 in attesa), 3+ punti: 0
-- Ultima giocata: [5, 30, 34, 48, 65, 87]
-- Firma: VX-2026-151-9A70A3
+- Ultima giocata: [5, 30, 31, 34, 65, 80]
+- Firma: VX-2026-151-XXXXXX (da rigenerare)
 - Concorso: 151
 
 ### Workflow GitHub attivi
@@ -180,7 +180,31 @@
 
 ---
 
-## ## 2026-09-19 — Fix bug backtest_e2e (sort cronologico)
+## 2026-09-19 — Fix PWA: rebranding manifest + service worker
+
+**Obiettivo:** Allineare PWA al brand "Venus Vortex" (era rimasto "TITAN God Mode").
+
+**Fatto:**
+- **manifest.json**: rebranding completo (name, short_name, description), colore theme allineato a `#0a0612`, `start_url` a `./`, `purpose` separato in `any`/`maskable`, aggiunto `id` e `categories`.
+- **sw.js**: cache rinominata da `titan-cache-v1` a `venus-vortex-cache-v1` con versioning esplicito, aggiunto fallback 503, `event.waitUntil` su cache.put, skip richieste cross-origin e non-GET, aggiunto `favicon.ico`.
+- **index.html**: aggiunto `<meta name="mobile-web-app-capable">` (standard W3C), sostituito placeholder bot Telegram con `FrancisenalottoBot`.
+- Rimossi da pre-cache `venus_database.json` e `vortex_chart.png` (sono network-first).
+
+**Problemi:**
+- Il nome PWA era "TITAN God Mode" (residuo del rebranding a Venus Vortex).
+- `theme_color` in manifest (`#09090b`) diverso da quello in `index.html` (`#0a0612`).
+- `purpose: "any maskable"` combinato (sconsigliato dallo standard).
+
+**Decisioni:**
+- Brand "Venus Vortex" come unico nome in tutta la PWA.
+- Palette "spazio" `#0a0612` come theme_color ovunque.
+
+**Prossimo:**
+- Blocco 5: workflow GitHub Actions.
+
+---
+
+## 2026-09-19 — Fix backtest_e2e (sort cronologico)
 
 **Obiettivo:** Correggere il sort di `backtest_e2e.py` che ordinava per `concorso` invece che per data.
 
@@ -197,4 +221,62 @@
 - Il sort cronologico per data è lo standard per tutti i moduli che gestiscono storico misto 2025/2026.
 
 **Prossimo:**
-- Blocco 4 (config & docs): manifest.json, sw.js.
+- Blocco 5: workflow GitHub Actions.
+
+---
+
+## 2026-09-19 — Fix workflow + manual_update
+
+**Obiettivo:** Aggiornare azioni GitHub deprecate e correggere logica di manual_update.
+
+**Fatto:**
+- **venus_sync.yml** e **manual_update.yml**: bump `actions/checkout@v4` → `@v5`, `actions/setup-python@v5` → `@v6`, aggiunto `cache: 'pip'`, aggiunto `timeout-minutes`.
+- **manual_update.py**: le sestine giocate ora vengono registrate sotto `concorso + 1` (concorso prossimo) invece che sotto il concorso appena uscito.
+
+**Problemi:**
+- Workflow con azioni deprecate (warning Node.js 20).
+- Bug logico: le sestine per il concorso 151 venivano registrate sotto il 150.
+
+**Decisioni:**
+- Bump azioni per risolvere warning e garantire supporto futuro.
+- Le sestine giocate vanno sempre registrate sotto il concorso per cui si giocano (prossimo).
+
+**Prossimo:**
+- Correzione dati in `venus_played.json` e `SESSION_LOG.md`.
+
+---
+
+## 2026-09-19 — Correzione dati giocate reali
+
+**Obiettivo:** Allineare `venus_played.json` e `SESSION_LOG.md` con le giocate reali.
+
+**Fatto:**
+- Confermato che la sestina `[5, 30, 34, 48, 65, 87]` era per il **concorso 150** (correttamente registrata).
+- Aggiunta entry per il **concorso 151** con sestina `[5, 30, 31, 34, 65, 80]`.
+- Aggiornato `SESSION_LOG.md`:
+  - Personal stats: speso €4,00 (2+1+1) / vinto €5,00 / bilancio +€1,00 / ROI +25,00%.
+  - Ultima giocata: `[5, 30, 31, 34, 65, 80]`.
+  - Firma: `VX-2026-151-XXXXXX` (placeholder, da rigenerare al prossimo run).
+
+**Problemi:**
+- Discrepanza tra SESSION_LOG (ultima giocata registrata sotto 151) e played.json (sotto 150).
+- Nessun dato storico mancante.
+
+**Decisioni:**
+- `venus_played.json` è la fonte di verità per le giocate reali.
+- La firma della sestina 151 sarà rigenerata automaticamente dal bot al prossimo run.
+
+**Prossimo:**
+- Monitorare l'esito dei concorsi 150 e 151.
+- Completare analisi degli altri workflow GitHub (Blocco 5).
+
+---
+
+## Template nuova sessione
+
+### YYYY-MM-DD — Titolo
+**Obiettivo:**
+**Fatto:**
+**Problemi:**
+**Decisioni:**
+**Prossimo:**
