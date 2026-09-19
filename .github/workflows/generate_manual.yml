@@ -16,9 +16,12 @@ jobs:
         uses: baileyjm02/markdown-to-pdf@v1
         with:
           input_path: MANUALE_VENUS_VORTEX.md
-          output_dir: .
+          output_dir: output
           image_import: ./images
           build_html: false
+
+      - name: Move PDF to root
+        run: mv output/MANUALE_VENUS_VORTEX.pdf .
 
       - name: Commit and push PDF
         run: |
