@@ -48,33 +48,30 @@
 - Errore Telegram 400 risolto: caption troppo lunga, ora troncata.
 - File diagnostici "orfani" rimossi.
 
-### Prossimi passi immediati
-- [ ] Creare/aggiornare SESSION_LOG.md
-- [ ] Lanciare "Generate Manual PDF"
-- [ ] Scaricare artifact PDF
-- [ ] Aggiornare SESSION_LOG.md con esito
-- [ ] Passare a setup PWA
-
 ---
 
-## 2026-09-19 — Errore generazione PDF e soluzione
+## 2026-09-19 — Fix generazione PDF
 
-**Obiettivo:** Lanciare il workflow "Generate Manual PDF" e ottenere il file scaricabile.
+**Obiettivo:** Risolvere errore `CSSParseError` nel workflow `Generate Manual PDF`.
 
 **Fatto:**
-- Lanciato il workflow `Generate Manual PDF`.
-- Il workflow fallisce con errore `CSSParseError: Declaration group closing '}' not found`.
+- Lanciato il workflow `Generate Manual PDF` → fallisce con `CSSParseError: Declaration group closing '}' not found`.
+- Analizzato il traceback: il parser CSS di `xhtml2pdf` si blocca sul blocco `@page`.
+- Identificata la causa: `xhtml2pdf` non supporta le regole annidate dentro `@page`, ovvero i margin box `@bottom-center` e `@bottom-right` usati per footer e numero di pagina.
+- Modificato `generate_manual_pdf.py`: rimosse le regole annidate dentro `@page`, mantenendo solo `size` e `margin`.
+- Rilanciato il workflow → PDF generato correttamente.
 
 **Problemi:**
-- La libreria `xhtml2pdf` non riesce a parsare il CSS contenuto in `MANUALE_VENUS_VORTEX.md`. Il problema è noto e legato alla complessità di alcune regole CSS (probabilmente annidate o non standard). Il traceback punta a una direttiva CSS malformata o non supportata.
+- Perdita del piè di pagina con "Venus Vortex — Manuale Tecnico v3.3.1" e numero di pagina.
+- `xhtml2pdf` supporta un sottoinsieme limitato di CSS e non gestisce i margin box.
 
 **Decisioni:**
-- Si procederà a semplificare il CSS nel file Markdown per superare l'errore.
-- Se la semplificazione non dovesse bastare, si valuterà la sostituzione di `xhtml2pdf` con una libreria più moderna come `WeasyPrint`.
+- Si accetta per ora la perdita del piè di pagina: la soluzione rapida sblocca il workflow.
+- In futuro, se il footer diventa necessario, si valuterà il passaggio a **WeasyPrint** (supporta nativamente `@page` con margin box e CSS3).
 
 **Prossimo:**
-- Modificare `MANUALE_VENUS_VORTEX.md` semplificando il CSS.
-- Rilanciare il workflow.
+- Scaricare il PDF dall'artifact del workflow.
+- Procedere con il setup PWA (`manifest.json`, `sw.js`, icone).
 
 ---
 
