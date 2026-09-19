@@ -1,0 +1,40 @@
+name: Generate Manual PDF
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-manual:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Markdown and xhtml2pdf
+        run: |
+          python -m pip install --upgrade pip
+          pip install markdown==3.6
+          pip install xhtml2pdf==0.2.16
+
+      - name: Generate Manual PDF
+        run: python generate_manual_pdf.py
+
+      - name: Commit and Push PDF
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add MANUALE_VENUS_VORTEX.pdf
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica."
+          else
+            git commit -m "Generate manual PDF [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
