@@ -16,9 +16,6 @@ MD_FILE = "MANUALE_VENUS_VORTEX.md"
 PDF_FILE = "MANUALE_VENUS_VORTEX.pdf"
 
 
-# ==========================================
-# CSS per il PDF
-# ==========================================
 CSS = """
 @page {
     size: A4;
@@ -34,7 +31,7 @@ body {
 
 h1 {
     color: #c026d3;
-    font-size: 22pt;
+    font-size: 20pt;
     border-bottom: 2px solid #c026d3;
     padding-bottom: 6px;
     margin-top: 24px;
@@ -43,8 +40,8 @@ h1 {
 
 h2 {
     color: #06b6d4;
-    font-size: 16pt;
-    margin-top: 22px;
+    font-size: 15pt;
+    margin-top: 20px;
     margin-bottom: 10px;
     border-bottom: 1px solid #e5e5e5;
     padding-bottom: 4px;
@@ -73,7 +70,6 @@ code {
     font-family: Courier, monospace;
     background: #f4f4f4;
     padding: 1px 4px;
-    border-radius: 3px;
     font-size: 9.5pt;
     color: #c026d3;
 }
@@ -137,28 +133,30 @@ a {
     text-decoration: none;
 }
 
+/* Copertina */
 .cover {
     text-align: center;
     page-break-after: always;
-    padding-top: 180px;
+    padding-top: 60px;
 }
 
 .cover h1 {
-    font-size: 42pt;
+    font-size: 36pt;
     border: none;
     color: #c026d3;
-    letter-spacing: 4px;
-    margin-bottom: 20px;
+    letter-spacing: 6px;
+    margin-bottom: 15px;
+    margin-top: 20px;
 }
 
 .cover .subtitle {
-    font-size: 16pt;
+    font-size: 14pt;
     color: #06b6d4;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .cover .meta {
-    margin-top: 100px;
+    margin-top: 60px;
     font-size: 11pt;
     color: #666;
 }
@@ -168,16 +166,14 @@ a {
 }
 
 .cover .vortex-symbol {
-    font-size: 80pt;
+    font-size: 60pt;
     color: #a855f7;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    line-height: 1;
 }
 """
 
 
-# ==========================================
-# Copertina
-# ==========================================
 def build_cover():
     data_oggi = datetime.now().strftime("%d/%m/%Y")
     return f"""
@@ -194,9 +190,6 @@ def build_cover():
     """
 
 
-# ==========================================
-# Conversione Markdown -> PDF
-# ==========================================
 def md_to_pdf(md_path, pdf_path):
     if not os.path.exists(md_path):
         print(f"[!] File Markdown non trovato: {md_path}")
@@ -207,16 +200,9 @@ def md_to_pdf(md_path, pdf_path):
 
     print(f"[*] Letto Markdown: {len(md_content)} caratteri")
 
-    # Estensioni: tabelle, code block, indice, liste
     html_body = markdown.markdown(
         md_content,
-        extensions=[
-            "tables",
-            "fenced_code",
-            "toc",
-            "sane_lists",
-            "nl2br",
-        ],
+        extensions=["tables", "fenced_code", "sane_lists"],
     )
 
     html_full = f"""<!DOCTYPE html>
@@ -235,7 +221,6 @@ def md_to_pdf(md_path, pdf_path):
 
     print(f"[*] HTML generato: {len(html_full)} caratteri")
 
-    # Converti in PDF
     with open(pdf_path, "wb") as f:
         result = pisa.CreatePDF(html_full, dest=f, encoding="utf-8")
 
@@ -247,9 +232,6 @@ def md_to_pdf(md_path, pdf_path):
     print(f"[+] PDF generato: {pdf_path} ({size_kb:.1f} KB)")
 
 
-# ==========================================
-# Main
-# ==========================================
 if __name__ == "__main__":
     print("=== GENERAZIONE MANUALE PDF ===")
     md_to_pdf(MD_FILE, PDF_FILE)
