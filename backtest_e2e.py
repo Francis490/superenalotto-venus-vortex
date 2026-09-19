@@ -28,6 +28,15 @@ def load_history():
     return []
 
 
+def parse_date(date_str):
+    """Ritorna (YYYY, MM, DD) per ordinamento cronologico."""
+    try:
+        dt = datetime.strptime(str(date_str), "%d/%m/%Y")
+        return (dt.year, dt.month, dt.day)
+    except Exception:
+        return (0, 0, 0)
+
+
 def generate_sestinas_from_history(history_subset, n_sestinas=2):
     """
     Genera sestine usando SOLO lo storico passato.
@@ -38,9 +47,9 @@ def generate_sestinas_from_history(history_subset, n_sestinas=2):
             select_vortex_sestinas_multi,
             balance_pool,
         )
+        import math
 
         # Calcola score come fa il bot
-        import math
         delays = {i: 0 for i in range(1, 91)}
         frequencies = {i: 0 for i in range(1, 91)}
         total_draws = len(history_subset)
@@ -79,7 +88,9 @@ def generate_sestinas_from_history(history_subset, n_sestinas=2):
 
         # Costruisci pool
         from scraper import build_tiered_dodecahedron
-        dodeca_pool = build_tiered_dodecahedron(adjusted_scores, delays, history_subset)
+        dodeca_pool = build_tiered_dodecahedron(
+            adjusted_scores, delays, history_subset
+        )
         dodeca_pool = balance_pool(dodeca_pool)
 
         # Genera sestine
@@ -103,8 +114,9 @@ def run_backtest(n_tests=10, n_sestinas=2):
               f"(servono almeno {n_tests + 30})")
         return None
 
-    # Ordina per concorso
-    history = sorted(history, key=lambda x: x.get("concorso", 0))
+    # FIX: ordina per DATA (non per concorso), così 2025 e 2026
+    # sono in ordine cronologico corretto
+    history = sorted(history, key=lambda x: parse_date(x.get("data", "")))
 
     # Ultimi N concorsi come test
     test_range = range(len(history) - n_tests, len(history))
@@ -122,6 +134,7 @@ def run_backtest(n_tests=10, n_sestinas=2):
         test_draw = history[i]
 
         concorso = test_draw.get("concorso")
+        data = test_draw.get("data", "N/A")
         real_numbers = test_draw.get("combinazione", [])
 
         if len(real_numbers) != 6:
@@ -131,7 +144,7 @@ def run_backtest(n_tests=10, n_sestinas=2):
         sestinas = generate_sestinas_from_history(train_data, n_sestinas)
 
         if not sestinas:
-            print(f"[!] Concorso {concorso}: generazione fallita")
+            print(f"[!] Concorso {concorso} ({data}): generazione fallita")
             continue
 
         # Calcola hit
@@ -143,7 +156,7 @@ def run_backtest(n_tests=10, n_sestinas=2):
 
         results.append({
             "concorso": concorso,
-            "data": test_draw.get("data", "N/A"),
+            "data": data,
             "real_numbers": real_numbers,
             "sestinas": sestinas,
             "hits_list": hits_list,
@@ -152,8 +165,8 @@ def run_backtest(n_tests=10, n_sestinas=2):
 
         # Stampa progressiva
         marker = "🔥" if best_hits >= 3 else "  "
-        print(f"{marker} Concorso {concorso}: "
-              f"sestine={sestinas} → hits={hits_list} → best={best_hits}")
+        print(f"{marker} Concorso {concorso} ({data}): "
+              f"best={best_hits}")
 
     # Statistiche finali
     n_tested = len(results)
@@ -167,7 +180,6 @@ def run_backtest(n_tests=10, n_sestinas=2):
         "hits_distribution": hits_distribution,
         "hits_3plus": hits_3plus,
         "hit_rate_3plus": round(hits_3plus / n_tested * 100, 2),
-        "baseline_theoretical": 0.31,  # %
         "results": results,
     }
 
