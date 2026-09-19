@@ -32,20 +32,21 @@
 - personal_stats.py
 - venus_track_record.py
 - manual_update.py
+- fetch_latest_draw.py
 - MANUALE_VENUS_VORTEX.md
 - generate_manual_pdf.py
 
 ### Lavoro in sospeso
 1. ~~Lanciare workflow "Generate Manual PDF" e scaricare il PDF.~~ ✅
 2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅ (già presente, verificato)
-3. ~~Pulire requirements.txt.~~ ✅ (già pulito, 6 pacchetti tutti necessari)
+3. ~~Pulire requirements.txt.~~ ✅ (finalizzato con requests e beautifulsoup4)
 4. ~~Rimuovere file diagnostici residui.~~ ✅
-5. ~~Valutare fix True Mimic (range 240-310).~~ ✅
+5. ~~Valutare fix True Mimic (range 240-310).~~ ✅ (verificato sul campo)
 
 ### Problemi noti
 - Errore Telegram 400 risolto: caption troppo lunga, ora troncata.
 - File diagnostici "orfani" rimossi.
-- True Mimic: fix applicato per rispettare range 240-310.
+- True Mimic: fix applicato e verificato (sestina somma 269).
 
 ---
 
@@ -105,25 +106,23 @@
 **Obiettivo:** Ripulire il repository da dipendenze e file non più necessari.
 
 **Fatto:**
-- Verificato `requirements.txt`: già pulito, nessuna dipendenza obsoleta (`requests`, `bs4`, `lxml`, `sklearn` già assenti). File composto da 6 pacchetti tutti necessari:
-  - `numpy`, `scipy` → calcoli numerici e statistici
-  - `matplotlib` → generazione grafici
-  - `Pillow` → generazione icone PWA
-  - `markdown`, `xhtml2pdf` → generazione manuale PDF
+- Verificato `requirements.txt` iniziale: conteneva solo numpy, scipy, matplotlib, Pillow, markdown, xhtml2pdf.
 - Rimossi file diagnostici orfani:
   - `check_history_gaps.py` (nessun import esterno, solo diagnostica su stdout)
   - `.github/workflows/check_gaps.yml` (workflow manuale senza artifact né commit)
 - Rimosso `Check History Gaps` dalla lista dei workflow attivi.
 
 **Problemi:**
-- Nessuno.
+- ⚠️ La pulizia iniziale è stata fatta **senza verificare tutti i file `.py`** che importavano pacchetti esterni.
+- Conseguenza: al primo rilancio del workflow TITAN, `fetch_latest_draw.py` è fallito con `ModuleNotFoundError: requests` (riga 14) e poi `ModuleNotFoundError: bs4` (riga 15).
 
 **Decisioni:**
-- `requirements.txt` non necessita modifiche.
-- Nessun altro file diagnostico residuo rilevato.
+- `requirements.txt` finalizzato con `requests` e `beautifulsoup4`.
+- `lxml` **non necessario**: `fetch_latest_draw.py` usa `BeautifulSoup(content, "html.parser")` (parser built-in).
+- Procedura futura: prima di rimuovere pacchetti, cercare gli import in tutto il repo con `grep -rn "^import \|^from " *.py`.
 
 **Prossimo:**
-- Valutazione fix True Mimic (range 240-310).
+- Rilanciare workflow TITAN e verificare il fix del True Mimic.
 
 ---
 
@@ -134,7 +133,7 @@
 **Fatto:**
 - Aggiunte costanti `SUM_HARD_MIN=240` e `SUM_HARD_MAX=310` in `true_mimic_generator.py`.
 - Modificato check #1 in `validate_sestina`: il range effettivo è ora l'**intersezione** tra il bound statistico (μ±1.5σ) e il bound hard 240-310.
-- Migliorato il fallback: filtra le combinazioni per somma 240-310 **prima** di ordinarle per score (prima includeva anche sestine fuori range, causando output fuori target).
+- Migliorato il fallback: filtra le combinazioni per somma 240-310 **prima** di ordinarle per score.
 - Aggiunto log del range hard nell'output di `generate_true_mimic` per debug futuro.
 
 **Problemi:**
@@ -143,11 +142,41 @@
 
 **Decisioni:**
 - Il range 240-310 è un vincolo di dominio SuperEnalotto: prevale sul bound statistico e va imposto hard.
-- Se il True Mimic non trova valide, il fallback ora garantisce comunque somma nel range corretto.
 
 **Prossimo:**
 - Verificare l'esecuzione del workflow TITAN e controllare che le sestine prodotte siano nel range 240-310.
-- Monitorare le prossime giocate reali.
+
+---
+
+## 2026-09-19 — Verifica end-to-end TITAN
+
+**Obiettivo:** Verificare che il bot funzioni a regime dopo i fix.
+
+**Fatto:**
+- Aggiunti `requests==2.31.0` e `beautifulsoup4==4.12.3` a `requirements.txt` (necessari per `fetch_latest_draw.py`).
+- Workflow TITAN completato con successo.
+- Report Telegram ricevuto correttamente con tutti i moduli attivi:
+  - Opportunity Engine: EV -0.5344 → SALTA
+  - Budget Mode: MINIMO · 1 sestina · 1,00 €
+  - Track Record: 1 concorso tracciato (+1 in attesa)
+  - Statistiche Personali: ROI +150,00%
+  - Statistical Tests: χ²=84.3 (p=0.6211), Entropia 99.6%, Autocorr lag-1 = 0.018
+  - Vortex Numerical Field: [5, 25, 30, 31, 34, 43, 48, 57, 65, 72, 80, 87]
+- Sestina generata: **[5, 30, 34, 48, 65, 87] → somma 269** ✅ in range 240-310.
+- Firma: `VX-2026-150-9D1CEE`.
+- Grafici (heatmap + distribuzione) inviati correttamente.
+
+**Problemi:**
+- Nessuno. Tutti i fix verificati sul campo.
+
+**Decisioni:**
+- `requirements.txt` è ora completo e stabile (8 pacchetti).
+- Il True Mimic è affidabile: rispetta il range hard ed è sempre in grado di produrre sestine valide.
+
+**Prossimo:**
+- Monitorare le prossime giocate reali (concorsi 151+).
+- Sostituire il placeholder `IL_TUO_BOT_USERNAME` in `index.html` con l'username reale del bot.
+- Aggiornare il PDF del manuale quando ci saranno altre modifiche sostanziali al `MANUALE_VENUS_VORTEX.md`.
 
 ---
 
