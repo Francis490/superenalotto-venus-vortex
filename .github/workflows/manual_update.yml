@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       concorso:
-        description: 'N° concorso appena uscito (es. 150)'
+        description: 'Numero concorso appena uscito (es. 150)'
         required: true
         type: string
       data:
@@ -12,19 +12,19 @@ on:
         required: true
         type: string
       combinazione:
-        description: 'Sestina vincente separata da virgole (es. "5,12,18,32,47,54")'
+        description: 'Sestina vincente separata da virgole (es. "29,37,41,43,74,86")'
         required: true
         type: string
       jolly:
-        description: 'Jolly (es. 21)'
+        description: 'Jolly (es. 25)'
         required: true
         type: string
       superstar:
-        description: 'SuperStar (es. 51)'
+        description: 'SuperStar (es. 78)'
         required: true
         type: string
       jackpot:
-        description: 'Jackpot in euro senza simboli (es. 28800000)'
+        description: 'Jackpot in euro senza simboli (es. 29500000)'
         required: true
         type: string
       sestine_giocate:
