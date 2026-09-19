@@ -40,12 +40,12 @@
 2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅ (già presente, verificato)
 3. ~~Pulire requirements.txt.~~ ✅ (già pulito, 6 pacchetti tutti necessari)
 4. ~~Rimuovere file diagnostici residui.~~ ✅
-5. Valutare fix True Mimic: produce sestine fuori range 240-310; il fallback classico funziona.
+5. ~~Valutare fix True Mimic (range 240-310).~~ ✅
 
 ### Problemi noti
-- True Mimic: 0/1 sestine nel range 240-310 → fallback classico funziona.
 - Errore Telegram 400 risolto: caption troppo lunga, ora troncata.
 - File diagnostici "orfani" rimossi.
+- True Mimic: fix applicato per rispettare range 240-310.
 
 ---
 
@@ -113,6 +113,7 @@
 - Rimossi file diagnostici orfani:
   - `check_history_gaps.py` (nessun import esterno, solo diagnostica su stdout)
   - `.github/workflows/check_gaps.yml` (workflow manuale senza artifact né commit)
+- Rimosso `Check History Gaps` dalla lista dei workflow attivi.
 
 **Problemi:**
 - Nessuno.
@@ -123,6 +124,30 @@
 
 **Prossimo:**
 - Valutazione fix True Mimic (range 240-310).
+
+---
+
+## 2026-09-19 — Fix True Mimic (range 240-310)
+
+**Obiettivo:** Far rispettare al True Mimic il range di somma 240-310.
+
+**Fatto:**
+- Aggiunte costanti `SUM_HARD_MIN=240` e `SUM_HARD_MAX=310` in `true_mimic_generator.py`.
+- Modificato check #1 in `validate_sestina`: il range effettivo è ora l'**intersezione** tra il bound statistico (μ±1.5σ) e il bound hard 240-310.
+- Migliorato il fallback: filtra le combinazioni per somma 240-310 **prima** di ordinarle per score (prima includeva anche sestine fuori range, causando output fuori target).
+- Aggiunto log del range hard nell'output di `generate_true_mimic` per debug futuro.
+
+**Problemi:**
+- In precedenza il range era derivato solo da μ±1.5σ (tipicamente 210-330), permettendo somme fuori target.
+- Il fallback ereditava lo stesso problema, restituendo sestine fuori range anche quando non trovava valide.
+
+**Decisioni:**
+- Il range 240-310 è un vincolo di dominio SuperEnalotto: prevale sul bound statistico e va imposto hard.
+- Se il True Mimic non trova valide, il fallback ora garantisce comunque somma nel range corretto.
+
+**Prossimo:**
+- Verificare l'esecuzione del workflow TITAN e controllare che le sestine prodotte siano nel range 240-310.
+- Monitorare le prossime giocate reali.
 
 ---
 
