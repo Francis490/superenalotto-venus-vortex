@@ -1,16 +1,39 @@
+"""
+scraper.py
+VENUS VORTEX — Cosmic Pattern Engine
+Orchestratore principale (TITAN Engine).
+
+FIX (2026-09-19):
+- #4:  override/jackpot letti una sola volta in main() e passati come parametro
+- #13: ev_for_risk non più hardcoded -0.957, ora None con fallback
+- #14: rimosso ev_score hardcoded 1.0 da titan_predictions
+- #17: documentato GAUSS_MEAN (teorica) vs media empirica (267.99)
+- #18: report Telegram splittato automaticamente se > 3500 char
+- #23: send_telegram_photo/message ritornano bool per gestione errori
+- Import utility da venus_utils
+"""
 import json
 import os
 import math
-from datetime import datetime, timedelta
-import itertools
 import urllib.request
+import urllib.parse
+import itertools
+from datetime import datetime, timedelta
 
-# Librerie di rendering grafico e analisi statistica
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
+
+from venus_utils import (
+    load_json as _load_json_util,
+    save_json,
+    parse_date,
+    sort_history_by_date,
+    SUM_HARD_MIN,
+    SUM_HARD_MAX,
+)
 
 # ==========================================
 # VORTEX OPPORTUNITY ENGINE (opzionale)
@@ -108,6 +131,10 @@ MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
 DASHBOARD_URL = "https://francis490.github.io/superenalotto-venus-vortex/"
 ANALYTICS_URL = "https://francis490.github.io/superenalotto-venus-vortex/analysis.html"
 
+# FIX #17: GAUSS_MEAN è la media TEORICA (273) calcolata come
+# (1+2+...+90)/6 * 6 = 273. La media EMPIRICA sui dati reali è ~267-268
+# (dipende dal campione). Usiamo 273 come riferimento teorico per Z-score
+# e distribuzione normale.
 GAUSS_MEAN = 273.0
 GAUSS_STD = 43.5
 
@@ -117,27 +144,19 @@ SUPERENALOTTO_WEEKDAYS = {1, 3, 4, 5}
 
 # Limite caption Telegram per sendPhoto
 TELEGRAM_CAPTION_LIMIT = 1000
+# Limite messaggio Telegram per sendMessage
+TELEGRAM_MESSAGE_LIMIT = 4000
+# Soglia oltre la quale splittare il report in 2 messaggi
+TELEGRAM_SPLIT_THRESHOLD = 3500
+
 
 # ==========================================
 # 1. GESTIONE FILE JSON & NORMALIZZAZIONE
 # ==========================================
 def load_json(filepath, default_value):
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"[!] Errore nel caricamento di {filepath}: {e}")
-            return default_value
-    return default_value
+    """Wrapper locale per retro-compatibilità."""
+    return _load_json_util(filepath, default_value)
 
-def save_json(filepath, data):
-    try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"[+] File salvato con successo: {filepath}")
-    except Exception as e:
-        print(f"[!] Errore durante il salvataggio di {filepath}: {e}")
 
 def _coerce_numbers(value):
     if value is None:
@@ -157,6 +176,7 @@ def _coerce_numbers(value):
                 continue
         return out
     return []
+
 
 def normalize_history(raw_data):
     items = []
@@ -214,6 +234,56 @@ def normalize_history(raw_data):
 
     return normalized
 
+
+# ==========================================
+# FIX #4: CONFIGURAZIONE RUNTIME (una sola lettura)
+# ==========================================
+def read_runtime_config():
+    """
+    Legge una sola volta override manuale e jackpot dal filesystem.
+    Ritorna un dict con: jackpot, override_last_draw, source.
+    """
+    config = {
+        "jackpot": None,
+        "override_last_draw": None,
+        "source": "default",
+    }
+
+    # Priorità 1: override manuale
+    if os.path.exists(MANUAL_OVERRIDE_FILE):
+        try:
+            mdata = load_json(MANUAL_OVERRIDE_FILE, {})
+            if isinstance(mdata.get("jackpot"), int) and mdata["jackpot"] > 0:
+                config["jackpot"] = mdata["jackpot"]
+                config["source"] = "manual_override"
+            if isinstance(mdata.get("last_draw"), dict):
+                config["override_last_draw"] = mdata["last_draw"]
+            print(f"[+] Config: jackpot da OVERRIDE MANUALE = "
+                  f"{config['jackpot']:,} €" if config["jackpot"] else "")
+        except Exception as e:
+            print(f"[!] Errore lettura {MANUAL_OVERRIDE_FILE}: {e}")
+
+    # Priorità 2: jackpot scraped (fallback)
+    if config["jackpot"] is None and os.path.exists(JACKPOT_FILE):
+        try:
+            jdata = load_json(JACKPOT_FILE, {})
+            if isinstance(jdata.get("jackpot"), int) and jdata["jackpot"] > 0:
+                config["jackpot"] = jdata["jackpot"]
+                config["source"] = "scraped"
+                print(f"[+] Config: jackpot da {JACKPOT_FILE} = "
+                      f"{config['jackpot']:,} €")
+        except Exception as e:
+            print(f"[!] Errore lettura {JACKPOT_FILE}: {e}")
+
+    # Priorità 3: default
+    if config["jackpot"] is None:
+        config["jackpot"] = DEFAULT_JACKPOT
+        config["source"] = "default"
+        print(f"[!] Config: uso jackpot DEFAULT = {config['jackpot']:,} €")
+
+    return config
+
+
 # ==========================================
 # 2. ALGORITMI QUANTITATIVI E FILTRI
 # ==========================================
@@ -242,6 +312,7 @@ def calculate_raw_scores(history):
 
     return raw_scores, delays, frequencies
 
+
 def apply_cooldown_factor(raw_scores, history):
     adjusted_scores = raw_scores.copy()
     if len(history) < 3:
@@ -261,9 +332,11 @@ def apply_cooldown_factor(raw_scores, history):
 
     return adjusted_scores
 
+
 def build_tiered_dodecahedron(adjusted_scores, delays, history):
     dodeca_pool = []
-    sorted_by_score = sorted(range(1, 91), key=lambda x: adjusted_scores[x], reverse=True)
+    sorted_by_score = sorted(range(1, 91),
+                             key=lambda x: adjusted_scores[x], reverse=True)
 
     for num in sorted_by_score:
         if len(dodeca_pool) < 4:
@@ -298,6 +371,7 @@ def build_tiered_dodecahedron(adjusted_scores, delays, history):
                 break
 
     return sorted(dodeca_pool[:12])
+
 
 def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
     t1_set = set(history[-1].get("combinazione", [])) if history else set()
@@ -340,12 +414,14 @@ def select_titan_sestinas(dodeca_pool, adjusted_scores, history):
 
     return titan1, titan2
 
+
 # ==========================================
 # 3. CONFIDENCE / DATE
 # ==========================================
 def estimate_confidence(z_score):
     val = max(0.0, 25.0 - abs(z_score) * 5.0)
     return round(val, 2)
+
 
 def calculate_next_draw_date(last_date_str):
     try:
@@ -361,31 +437,18 @@ def calculate_next_draw_date(last_date_str):
 
     return (last_date + timedelta(days=1)).strftime("%d/%m/%Y")
 
-# ==========================================
-# 3-bis. HELPER PER DATA E 2026 (FIX)
-# ==========================================
-def sort_history_by_date(history):
-    """Ordina lo storico per DATA (non per numero concorso)."""
-    def _key(item):
-        try:
-            dt = datetime.strptime(str(item.get("data", "")), "%d/%m/%Y")
-            return (dt.year, dt.month, dt.day)
-        except (ValueError, TypeError):
-            return (0, 0, 0)
-    return sorted(history, key=_key)
 
-
+# ==========================================
+# HELPER PER DATA E 2026
+# ==========================================
 def find_last_2026_draw(history):
-    """
-    Trova l'ultima estrazione del 2026 (concorso 1-999).
-    Ignora i concorsi 2025 che hanno offset +1000.
-    """
     candidates = [h for h in history
                   if isinstance(h.get("concorso"), int)
                   and 1 <= h["concorso"] <= 999]
     if not candidates:
         return None
     return max(candidates, key=lambda x: x["concorso"])
+
 
 # ==========================================
 # 4. GENERAZIONE GRAFICO PRINCIPALE
@@ -456,6 +519,7 @@ def generate_vortex_chart(all_sestinas, dodeca_pool, scores):
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
     plt.close()
+
 
 # ==========================================
 # 4-bis. GRAFICO DISTRIBUZIONE
@@ -580,19 +644,24 @@ def generate_distribution_chart(history):
     print(f"[+] Grafico distribuzione salvato: {DISTRIBUTION_FILE}")
     return DISTRIBUTION_FILE
 
+
 # ==========================================
 # 5. NOTIFICA TELEGRAM
 # ==========================================
 def send_telegram_photo(photo_path, caption=""):
+    """
+    Invia una foto via Telegram.
+    FIX #23: ritorna True se successo, False altrimenti.
+    """
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not bot_token or not chat_id:
         print("[!] Token mancanti. Invio saltato.")
-        return
+        return False
 
     if not os.path.exists(photo_path):
         print(f"[!] File non trovato: {photo_path}")
-        return
+        return False
 
     if caption and len(caption) > TELEGRAM_CAPTION_LIMIT:
         caption = caption[:TELEGRAM_CAPTION_LIMIT - 3] + "..."
@@ -638,25 +707,30 @@ def send_telegram_photo(photo_path, caption=""):
 
         with urllib.request.urlopen(req, timeout=30) as response:
             print(f"[+] Foto inviata: {filename} ({response.status})")
+            return True
 
     except Exception as e:
         print(f"[!] Errore invio foto {photo_path}: {e}")
+        return False
 
 
 def send_telegram_message(text):
+    """
+    Invia un messaggio testuale via Telegram.
+    FIX #23: ritorna True se successo, False altrimenti.
+    """
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not bot_token or not chat_id:
         print("[!] Token mancanti. Messaggio saltato.")
-        return
+        return False
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    if len(text) > 4000:
-        text = text[:3997] + "..."
+    if len(text) > TELEGRAM_MESSAGE_LIMIT:
+        text = text[:TELEGRAM_MESSAGE_LIMIT - 3] + "..."
 
     try:
-        import urllib.parse
         data = urllib.parse.urlencode({
             "chat_id": chat_id,
             "text": text,
@@ -669,17 +743,47 @@ def send_telegram_message(text):
 
         with urllib.request.urlopen(req, timeout=30) as response:
             print(f"[+] Messaggio Telegram inviato! ({response.status})")
+            return True
     except Exception as e:
         print(f"[!] Errore invio messaggio: {e}")
+        return False
+
+
+def send_telegram_report_smart(report_text):
+    """
+    FIX #18: se il report supera la soglia, lo splitta in 2 messaggi
+    cercando un punto di taglio naturale (doppio newline).
+    """
+    if len(report_text) <= TELEGRAM_SPLIT_THRESHOLD:
+        return send_telegram_message(report_text)
+
+    # Cerca un punto di taglio: doppio newline più vicino a metà
+    mid = len(report_text) // 2
+    split_pos = report_text.rfind("\n\n", 0, mid + 500)
+    if split_pos < 1000:
+        split_pos = mid
+
+    part1 = report_text[:split_pos].rstrip()
+    part2 = report_text[split_pos:].lstrip()
+
+    print(f"[*] Report splittato: parte 1 ({len(part1)} char), "
+          f"parte 2 ({len(part2)} char)")
+
+    ok1 = send_telegram_message(part1)
+    ok2 = send_telegram_message(part2)
+    return ok1 and ok2
+
 
 # ==========================================
 # 6. COSTRUZIONE DATABASE PER L'HTML
 # ==========================================
 def build_database_payload(history, dodeca_pool, all_sestinas,
-                           next_concorso, budget_mode):
+                           next_concorso, budget_mode, config):
+    """
+    FIX #4: ora riceve `config` (dict con jackpot e override) già letto.
+    """
     now_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-    # FIX: usa l'ultima estrazione 2026 (non il concorso 1208 del 2025)
     last_draw_2026 = find_last_2026_draw(history)
     last_draw = last_draw_2026 if last_draw_2026 else (history[-1] if history else {})
 
@@ -689,26 +793,9 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
     last_jolly = last_draw.get("jolly", "N/A")
     last_superstar = last_draw.get("superstar", "N/A")
 
-    jackpot_value = DEFAULT_JACKPOT
-    if os.path.exists(MANUAL_OVERRIDE_FILE):
-        try:
-            with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
-                mdata = json.load(mf)
-                if isinstance(mdata.get("jackpot"), int) and mdata["jackpot"] > 0:
-                    jackpot_value = mdata["jackpot"]
-                    print(f"[+] Jackpot da OVERRIDE MANUALE: {jackpot_value:,} €")
-        except Exception as e:
-            print(f"[!] Errore lettura {MANUAL_OVERRIDE_FILE}: {e}")
-    elif os.path.exists(JACKPOT_FILE):
-        try:
-            with open(JACKPOT_FILE, "r", encoding="utf-8") as jf:
-                jdata = json.load(jf)
-                if isinstance(jdata.get("jackpot"), int) and jdata["jackpot"] > 0:
-                    jackpot_value = jdata["jackpot"]
-                    print(f"[+] Jackpot letto da {JACKPOT_FILE}: {jackpot_value:,} €")
-        except Exception as e:
-            print(f"[!] Errore lettura {JACKPOT_FILE}: {e}. Uso DEFAULT.")
+    jackpot_value = config["jackpot"]
 
+    # Vortex analysis
     vortex_data = {}
     ev_data = {}
     if VORTEX_ENGINE_AVAILABLE and jackpot_value > 0:
@@ -730,6 +817,8 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         except Exception as e:
             print(f"[!] Errore VORTEX analysis: {e}")
 
+    # Titan predictions
+    # FIX #14: rimosso ev_score hardcoded 1.0
     titan_predictions = []
     for i, sestina in enumerate(all_sestinas):
         s_sum = sum(sestina)
@@ -747,11 +836,11 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
             "sum": s_sum,
             "z_score": s_z,
             "confidence": estimate_confidence(s_z),
-            "ev_score": 1.0,
             "signature": sig,
         })
 
-    ev_for_risk = ev_data.get("ev_total", -0.957) if ev_data else -0.957
+    # FIX #13: ev_for_risk non più hardcoded -0.957
+    ev_for_risk = ev_data.get("ev_total") if ev_data else None
 
     payload = {
         "updated_at": now_str,
@@ -780,11 +869,15 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
     }
     return payload
 
+
 # ==========================================
 # 7. MAIN PIPELINE
 # ==========================================
 def main():
     print("=== VENUS VORTEX — COSMIC PATTERN ENGINE ===")
+
+    # FIX #4: legge config una sola volta
+    config = read_runtime_config()
 
     raw_history = load_json(HISTORY_FILE, [])
     history = normalize_history(raw_history)
@@ -803,12 +896,10 @@ def main():
         ]
         save_json(HISTORY_FILE, history)
 
-    # === OVERRIDE MANUALE ===
-    if os.path.exists(MANUAL_OVERRIDE_FILE):
+    # === OVERRIDE MANUALE (usa config già letto) ===
+    if config.get("override_last_draw"):
         try:
-            with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
-                mdata = json.load(mf)
-            manual_draw = mdata.get("last_draw", {})
+            manual_draw = config["override_last_draw"]
             manual_concorso = manual_draw.get("concorso")
             manual_comb = manual_draw.get("combinazione", [])
 
@@ -856,16 +947,8 @@ def main():
         except Exception as e:
             print(f"[!] Errore bilanciamento pool: {e}")
 
-    jackpot_for_mode = DEFAULT_JACKPOT
-    if os.path.exists(MANUAL_OVERRIDE_FILE):
-        try:
-            with open(MANUAL_OVERRIDE_FILE, "r", encoding="utf-8") as mf:
-                mdata = json.load(mf)
-                if isinstance(mdata.get("jackpot"), int) and mdata["jackpot"] > 0:
-                    jackpot_for_mode = mdata["jackpot"]
-        except Exception:
-            pass
-
+    # Budget mode (usa config già letto)
+    jackpot_for_mode = config["jackpot"]
     budget_mode = {
         "mode": "NORMALE", "emoji": "🟡", "n_sestinas": 2,
         "cost_eur": 2.0, "ev": 0.0,
@@ -918,15 +1001,7 @@ def main():
         except Exception as e:
             print(f"[!] Validazione fingerprint saltata: {e}")
 
-    titan1 = all_sestinas[0] if all_sestinas else []
-    titan2 = all_sestinas[1] if len(all_sestinas) > 1 else titan1
-
-    sum1 = sum(titan1) if titan1 else 0
-    sum2 = sum(titan2) if titan2 else 0
-    z1 = round((sum1 - GAUSS_MEAN) / GAUSS_STD, 2) if titan1 else 0
-    z2 = round((sum2 - GAUSS_MEAN) / GAUSS_STD, 2) if titan2 else 0
-
-    # === ULTIMA ESTRAZIONE 2026 (non 1208) ===
+    # === ULTIMA ESTRAZIONE 2026 ===
     last_draw = last_2026 if last_2026 else (history[-1] if history else {})
     last_concorso = last_draw.get("concorso", "N/A")
     last_comb = last_draw.get("combinazione") or []
@@ -940,7 +1015,7 @@ def main():
 
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
 
-    # === TRACK RECORD: registra sestine generate ===
+    # === TRACK RECORD: registra sestine ===
     if TRACK_AVAILABLE and all_sestinas:
         try:
             record_predictions(next_concorso, all_sestinas,
@@ -968,7 +1043,7 @@ def main():
 
     # === SCRITTURA DATABASE ===
     payload = build_database_payload(
-        history, dodeca_pool, all_sestinas, next_concorso, budget_mode
+        history, dodeca_pool, all_sestinas, next_concorso, budget_mode, config
     )
     save_json(DATABASE_FILE, payload)
 
@@ -1095,17 +1170,20 @@ def main():
         f"🏠 <a href='{DASHBOARD_URL}'>Apri Dashboard Principale</a>"
     )
 
-    # === INVIA GRAFICO (senza caption) + REPORT (come messaggio) ===
+    # === INVIO GRAFICO (senza caption) + REPORT ===
     send_telegram_photo(CHART_FILE, "")
-    send_telegram_message(report_text)
+    # FIX #18: split intelligente
+    send_telegram_report_smart(report_text)
 
     # === INVIA HEATMAP ===
     if heatmap_path and os.path.exists(heatmap_path):
-        send_telegram_photo(heatmap_path, "🔥 Vortex Heatmap — Numeri caldi/freddi")
+        send_telegram_photo(heatmap_path,
+                            "🔥 Vortex Heatmap — Numeri caldi/freddi")
 
     # === INVIA GRAFICO DISTRIBUZIONE ===
     if dist_path and os.path.exists(dist_path):
-        send_telegram_photo(dist_path, "📊 Analisi Distribuzione — Somme, Decadi, Parità")
+        send_telegram_photo(dist_path,
+                            "📊 Analisi Distribuzione — Somme, Decadi, Parità")
 
     # === INVIA MESSAGGIO LINK ===
     links_msg = (
@@ -1126,6 +1204,7 @@ def main():
             print(f"[!] Notifica VINCITA inviata per concorso {win_info['concorso']}")
 
     print("=== VENUS VORTEX — COMPLETATO ===")
+
 
 if __name__ == "__main__":
     main()
