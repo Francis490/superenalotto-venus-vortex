@@ -2,6 +2,10 @@
 manual_update.py
 Aggiorna venus_manual_override.json e (opzionalmente) venus_played.json
 con i dati dell'estrazione appena uscita.
+
+FIX: le sestine giocate vengono registrate sotto il PROSSIMO concorso
+(concorso + 1), perché sono le sestine che verranno giocate per
+l'estrazione successiva a quella appena comunicata.
 """
 import json
 import os
@@ -73,6 +77,10 @@ def update_override(concorso, data, combinazione, jolly, superstar, jackpot):
 
 
 def update_played(concorso, data, sestine):
+    """
+    Registra le sestine giocate per il concorso indicato.
+    Nota: questo concorso è quello PROSSIMO (quello per cui si gioca).
+    """
     if not sestine:
         print("[*] Nessuna sestina giocata da registrare.")
         return
@@ -99,12 +107,13 @@ def update_played(concorso, data, sestine):
     oggi = datetime.now().strftime("%d/%m/%Y")
 
     if existing:
+        # Preserva giocata_il originale se esiste
         existing["sestine"] = sestine
         existing["costo_eur"] = float(len(sestine)) * 1.0
         existing["data"] = data
-        existing["giocata_il"] = oggi
+        existing.setdefault("giocata_il", oggi)
         existing["note"] = f"Concorso {concorso}: {len(sestine)} sestine"
-        print(f"[+] Concorso {concorso} gia presente: aggiornato.")
+        print(f"[+] Concorso {concorso} già presente: aggiornato.")
     else:
         played_data["played"].append({
             "concorso": concorso,
@@ -182,8 +191,11 @@ def main():
 
     sestine = parse_sestine(sestine_raw)
     if sestine:
+        # FIX: le sestine giocate sono per il PROSSIMO concorso (concorso + 1)
+        next_concorso = concorso + 1
         print(f"[*] Sestine giocate: {len(sestine)}")
-        update_played(concorso, data, sestine)
+        print(f"[*] Registrate per il concorso PROSSIMO: {next_concorso}")
+        update_played(next_concorso, data, sestine)
 
     print("=== MANUAL UPDATE COMPLETATO ===")
 
