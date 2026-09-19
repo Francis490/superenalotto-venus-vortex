@@ -180,11 +180,21 @@
 
 ---
 
-## Template nuova sessione
+## ## 2026-09-19 — Fix bug backtest_e2e (sort cronologico)
 
-### YYYY-MM-DD — Titolo
-**Obiettivo:**
+**Obiettivo:** Correggere il sort di `backtest_e2e.py` che ordinava per `concorso` invece che per data.
+
 **Fatto:**
+- Identificato bug: con offset +1000 sui concorsi 2025 (1001-1208), il sort per `concorso` metteva i 2026 (1-148) prima dei 2025. Risultato: test set = 2025, training set = 2026 → backtest cronologicamente invertito.
+- Aggiunta funzione `parse_date()` (helper).
+- Sostituito sort per `concorso` con sort per `data`.
+- Rimosso `baseline_theoretical` mai usato (codice morto).
+
 **Problemi:**
+- Il bug era già presente prima; gli altri moduli (`build_history_2026`, `import_external_history`, `scraper`) usavano correttamente il sort per data.
+
 **Decisioni:**
+- Il sort cronologico per data è lo standard per tutti i moduli che gestiscono storico misto 2025/2026.
+
 **Prossimo:**
+- Blocco 4 (config & docs): manifest.json, sw.js.
