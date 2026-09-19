@@ -272,11 +272,32 @@
 
 ---
 
-## Template nuova sessione
+## ## 2026-09-19 — Blocco 5: bump azioni GitHub su tutti i workflow
 
-### YYYY-MM-DD — Titolo
-**Obiettivo:**
+**Obiettivo:** Risolvere il warning "Node.js 20 is deprecated" e modernizzare i workflow.
+
 **Fatto:**
+- Bump `actions/checkout@v4` → `@v5` su tutti i workflow.
+- Bump `actions/setup-python@v5` → `@v6` su tutti i workflow.
+- Aggiunto `cache: 'pip'` dove mancava (installazioni più veloci).
+- Aggiunto `timeout-minutes` a tutti i job (evita run appesi).
+- Aggiunto `git pull --rebase` prima del push dove mancava (evita conflitti tra workflow concorrenti).
+- Workflow aggiornati:
+  - `venus_sync.yml` (TITAN)
+  - `manual_update.yml`
+  - `backtest.yml`
+  - `generate_icons.yml`
+  - `generate_manual.yml`
+  - `build_history.yml`
+  - `import_history.yml`
+
 **Problemi:**
+- Warning GitHub: "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5".
+
 **Decisioni:**
+- Tutti i workflow usano le stesse versioni di azioni per coerenza e manutenibilità.
+- Il pattern comune include: `checkout@v5`, `setup-python@v6` con `cache: 'pip'`, `timeout-minutes`, `git pull --rebase` prima del push.
+
 **Prossimo:**
+- Blocco 6 (opzionale): data samples JSON.
+- Aggiornare il PDF del manuale quando ci saranno modifiche sostanziali.
