@@ -3,38 +3,33 @@ name: Generate Manual PDF
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  generate-manual:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.10
-        uses: actions/setup-python@v5
+      - name: Convert Markdown to PDF
+        uses: baileyjm02/markdown-to-pdf@v1
         with:
-          python-version: '3.10'
+          input_path: MANUALE_VENUS_VORTEX.md
+          output_dir: .
+          image_import: ./images
+          build_html: false
 
-      - name: Install Markdown and xhtml2pdf
+      - name: Commit and push PDF
         run: |
-          python -m pip install --upgrade pip
-          pip install markdown==3.6
-          pip install xhtml2pdf==0.2.16
-
-      - name: Generate Manual PDF
-        run: python generate_manual_pdf.py
-
-      - name: Commit and Push PDF
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add MANUALE_VENUS_VORTEX.pdf
-          if git diff --cached --quiet; then
-            echo "Nessuna modifica."
-          else
-            git commit -m "Generate manual PDF [skip ci]"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+          git diff --cached --quiet || git commit -m "docs: rigenera manuale PDF [skip ci]"
+          git push
+
+      - name: Upload PDF as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuale-venus-vortex
+          path: MANUALE_VENUS_VORTEX.pdf
