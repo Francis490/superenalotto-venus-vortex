@@ -13,6 +13,10 @@ import math
 
 HISTORY_FILE = "venus_history.json"
 
+# Range target per la somma delle sestine (vincolo dominio SuperEnalotto)
+SUM_HARD_MIN = 240
+SUM_HARD_MAX = 310
+
 
 # ==========================================
 # FINGERPRINT ANALYSIS
@@ -166,17 +170,17 @@ def validate_sestina(sestina, fp):
     s = sorted(sestina)
     checks = {}
 
-    # 1. Somma
+    # 1. Somma — vincolo statistico (μ±1.5σ) intersecato al range hard 240-310
     total = sum(s)
-    sum_lo = fp["sum_mean"] - 1.5 * fp["sum_std"]
-    sum_hi = fp["sum_mean"] + 1.5 * fp["sum_std"]
+    sum_lo = max(SUM_HARD_MIN, fp["sum_mean"] - 1.5 * fp["sum_std"])
+    sum_hi = min(SUM_HARD_MAX, fp["sum_mean"] + 1.5 * fp["sum_std"])
     checks["sum"] = sum_lo <= total <= sum_hi
 
     # 2. Parità
     n_pari = sum(1 for x in s if x % 2 == 0)
     checks["parity"] = 2 <= n_pari <= 4
 
-    # 3. Decadi (max 1 numero in ogni decade ammesso, ma no 4+ in stessa)
+    # 3. Decadi (max 2 numeri per decade)
     decades = [0] * 9
     for x in s:
         decades[min(8, (x - 1) // 10)] += 1
@@ -242,9 +246,11 @@ def generate_mimic_sestinas(pool, fp, n_sestinas=2, candidates=5000):
             valid.append((combo, score))
 
     if not valid:
-        # Fallback: prendi quelle con più fingerprint rispettati
+        # Fallback: filtra per somma nel range hard, poi ordina per score
         scored = []
         for combo in all_combos:
+            if not (SUM_HARD_MIN <= sum(combo) <= SUM_HARD_MAX):
+                continue
             ok, score, _ = validate_sestina(combo, fp)
             scored.append((combo, score))
         scored.sort(key=lambda x: x[1], reverse=True)
@@ -257,13 +263,11 @@ def generate_mimic_sestinas(pool, fp, n_sestinas=2, candidates=5000):
     for combo, score in valid:
         if len(selected) >= n_sestinas:
             break
-        # Overlap con sestine già selezionate
         combo_set = set(combo)
         max_overlap = 0
         for existing, _ in selected:
             overlap = len(combo_set & set(existing))
             max_overlap = max(max_overlap, overlap)
-        # Accetta solo se overlap <= 2
         if max_overlap <= 2 or not selected:
             selected.append((combo, score))
 
@@ -280,7 +284,8 @@ def generate_true_mimic(history, pool, n_sestinas=2):
     fp = extract_fingerprints(history)
     print(f"[+] Fingerprint estratti da {fp['n_samples']} estrazioni")
     print(f"    • Somma: μ={fp['sum_mean']}, σ={fp['sum_std']}")
-    print(f"    • Range somma: {fp['sum_min']}-{fp['sum_max']}")
+    print(f"    • Range somma (stat): {fp['sum_min']}-{fp['sum_max']}")
+    print(f"    • Range somma (hard): {SUM_HARD_MIN}-{SUM_HARD_MAX}")
     print(f"    • Primo: {fp['first_min']}-{fp['first_max']} (μ={fp['first_mean']})")
     print(f"    • Ultimo: {fp['last_min']}-{fp['last_max']} (μ={fp['last_mean']})")
     print(f"    • Gap max osservato: {fp['gap_max']}")
