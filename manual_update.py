@@ -3,39 +3,91 @@ manual_update.py
 Aggiorna venus_manual_override.json e (opzionalmente) venus_played.json
 con i dati dell'estrazione appena uscita.
 
-FIX: le sestine giocate vengono registrate sotto il PROSSIMO concorso
-(concorso + 1), perché sono le sestine che verranno giocate per
-l'estrazione successiva a quella appena comunicata.
+- Le sestine giocate vengono registrate sotto il PROSSIMO concorso
+  (concorso + 1), perché sono le sestine che verranno giocate per
+  l'estrazione successiva a quella appena comunicata.
+
+FIX (2026-09-19):
+- #9:  preserve nota esistente in update_played (non più sovrascritta ciecamente)
+- #10: validazione formato data DD/MM/YYYY + anno plausibile
+- #11: validazione concorso nel range 1-9999
+- Import utility condivise da venus_utils
 """
-import json
 import os
 import sys
+import re
 from datetime import datetime
+
+from venus_utils import load_json, save_json, is_valid_date
 
 
 OVERRIDE_FILE = "venus_manual_override.json"
 PLAYED_FILE = "venus_played.json"
 
+# Range plausibile per il numero concorso
+CONCORSO_MIN = 1
+CONCORSO_MAX = 9999
 
-def load_json(filepath, default):
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"[!] Errore lettura {filepath}: {e}")
-    return default
+# Range plausibile per l'anno
+ANNO_MIN = 2020
+ANNO_MAX = 2099
 
 
-def save_json(filepath, data):
+# ==========================================
+# VALIDAZIONE
+# ==========================================
+def validate_concorso(value):
+    """Ritorna (ok, value, error)."""
     try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"[+] Salvato: {filepath}")
-    except Exception as e:
-        print(f"[!] Errore salvataggio {filepath}: {e}")
+        c = int(value)
+    except (ValueError, TypeError):
+        return False, 0, f"concorso non valido: '{value}'"
+    if not (CONCORSO_MIN <= c <= CONCORSO_MAX):
+        return False, c, f"concorso fuori range ({CONCORSO_MIN}-{CONCORSO_MAX}): {c}"
+    return True, c, None
 
 
+def validate_data(value):
+    """Ritorna (ok, value, error). Accetta solo DD/MM/YYYY."""
+    if not value:
+        return False, value, "data mancante"
+    s = str(value).strip()
+    # Formato DD/MM/YYYY
+    if not re.match(r"^\d{2}/\d{2}/\d{4}$", s):
+        return False, s, f"data deve essere DD/MM/YYYY: '{s}'"
+    # Validazione cronologica + range anno
+    if not is_valid_date(s):
+        return False, s, f"data non valida cronologicamente: '{s}'"
+    anno = int(s[-4:])
+    if not (ANNO_MIN <= anno <= ANNO_MAX):
+        return False, s, f"anno fuori range ({ANNO_MIN}-{ANNO_MAX}): {anno}"
+    return True, s, None
+
+
+def validate_combinazione(value):
+    """Ritorna (ok, list, error). 6 numeri 1-90."""
+    nums = parse_combinazione(value)
+    if len(nums) != 6:
+        return False, nums, f"combinazione deve avere 6 numeri, trovati {len(nums)}"
+    if not all(1 <= n <= 90 for n in nums):
+        return False, nums, "combinazione contiene numeri fuori range 1-90"
+    return True, nums, None
+
+
+def validate_int_in_range(value, name, lo, hi):
+    """Ritorna (ok, int, error)."""
+    try:
+        v = int(value)
+    except (ValueError, TypeError):
+        return False, 0, f"{name} non valido: '{value}'"
+    if not (lo <= v <= hi):
+        return False, v, f"{name} fuori range ({lo}-{hi}): {v}"
+    return True, v, None
+
+
+# ==========================================
+# PARSING INPUT
+# ==========================================
 def parse_combinazione(s):
     if not s:
         return []
@@ -55,11 +107,14 @@ def parse_sestine(s):
     result = []
     for part in s.split("|"):
         nums = parse_combinazione(part)
-        if len(nums) == 6:
+        if len(nums) == 6 and all(1 <= n <= 90 for n in nums):
             result.append(nums)
     return result
 
 
+# ==========================================
+# UPDATE
+# ==========================================
 def update_override(concorso, data, combinazione, jolly, superstar, jackpot):
     print(f"[*] Aggiornamento override per concorso {concorso} ({data})")
     override = {
@@ -80,6 +135,8 @@ def update_played(concorso, data, sestine):
     """
     Registra le sestine giocate per il concorso indicato.
     Nota: questo concorso è quello PROSSIMO (quello per cui si gioca).
+
+    FIX #9: preserva la nota esistente se presente, invece di sovrascriverla.
     """
     if not sestine:
         print("[*] Nessuna sestina giocata da registrare.")
@@ -107,12 +164,20 @@ def update_played(concorso, data, sestine):
     oggi = datetime.now().strftime("%d/%m/%Y")
 
     if existing:
-        # Preserva giocata_il originale se esiste
+        # FIX #9: preserva nota esistente se c'era, altrimenti genera
+        nota_precedente = existing.get("note", "").strip()
+        nuova_nota = f"Concorso {concorso}: {len(sestine)} sestine"
+
         existing["sestine"] = sestine
         existing["costo_eur"] = float(len(sestine)) * 1.0
         existing["data"] = data
         existing.setdefault("giocata_il", oggi)
-        existing["note"] = f"Concorso {concorso}: {len(sestine)} sestine"
+
+        if not nota_precedente or nota_precedente.startswith("Concorso "):
+            # Sovrascrivi solo se era vuota o generata automaticamente
+            existing["note"] = nuova_nota
+        # Altrimenti preserva la nota manuale
+
         print(f"[+] Concorso {concorso} già presente: aggiornato.")
     else:
         played_data["played"].append({
@@ -128,11 +193,14 @@ def update_played(concorso, data, sestine):
     save_json(PLAYED_FILE, played_data)
 
 
+# ==========================================
+# MAIN
+# ==========================================
 def main():
     print("=== MANUAL UPDATE ===")
 
     concorso_raw = os.environ.get("MANUAL_CONCORSO", "").strip()
-    data = os.environ.get("MANUAL_DATA", "").strip()
+    data_raw = os.environ.get("MANUAL_DATA", "").strip()
     combinazione_raw = os.environ.get("MANUAL_COMBINAZIONE", "").strip()
     jolly_raw = os.environ.get("MANUAL_JOLLY", "").strip()
     superstar_raw = os.environ.get("MANUAL_SUPERSTAR", "").strip()
@@ -141,38 +209,37 @@ def main():
 
     errors = []
 
-    try:
-        concorso = int(concorso_raw)
-    except ValueError:
-        errors.append(f"concorso non valido: '{concorso_raw}'")
-        concorso = 0
+    # FIX #11: validazione concorso
+    ok, concorso, err = validate_concorso(concorso_raw)
+    if not ok:
+        errors.append(err)
 
-    if not data:
-        errors.append("data mancante")
+    # FIX #10: validazione data
+    ok, data, err = validate_data(data_raw)
+    if not ok:
+        errors.append(err)
 
-    combinazione = parse_combinazione(combinazione_raw)
-    if len(combinazione) != 6:
-        errors.append(f"combinazione deve avere 6 numeri, trovati {len(combinazione)}")
-    if not all(1 <= n <= 90 for n in combinazione):
-        errors.append("combinazione contiene numeri fuori range 1-90")
+    # Validazione combinazione
+    ok, combinazione, err = validate_combinazione(combinazione_raw)
+    if not ok:
+        errors.append(err)
 
-    try:
-        jolly = int(jolly_raw)
-    except ValueError:
-        errors.append(f"jolly non valido: '{jolly_raw}'")
-        jolly = 0
+    # Jolly
+    ok, jolly, err = validate_int_in_range(jolly_raw, "jolly", 1, 90)
+    if not ok:
+        errors.append(err)
 
-    try:
-        superstar = int(superstar_raw)
-    except ValueError:
-        errors.append(f"superstar non valido: '{superstar_raw}'")
-        superstar = 0
+    # Superstar
+    ok, superstar, err = validate_int_in_range(superstar_raw, "superstar", 1, 90)
+    if not ok:
+        errors.append(err)
 
-    try:
-        jackpot = int(jackpot_raw)
-    except ValueError:
-        errors.append(f"jackpot non valido: '{jackpot_raw}'")
-        jackpot = 0
+    # Jackpot (intero positivo, range ragionevole)
+    ok, jackpot, err = validate_int_in_range(
+        jackpot_raw, "jackpot", 1_000_000, 500_000_000
+    )
+    if not ok:
+        errors.append(err)
 
     if errors:
         print("[!] ERRORI DI VALIDAZIONE:")
@@ -191,11 +258,15 @@ def main():
 
     sestine = parse_sestine(sestine_raw)
     if sestine:
-        # FIX: le sestine giocate sono per il PROSSIMO concorso (concorso + 1)
+        # Le sestine giocate sono per il PROSSIMO concorso
         next_concorso = concorso + 1
         print(f"[*] Sestine giocate: {len(sestine)}")
         print(f"[*] Registrate per il concorso PROSSIMO: {next_concorso}")
         update_played(next_concorso, data, sestine)
+    elif sestine_raw:
+        print(f"[!] Sestine giocate: input non valido (attesi 6 numeri 1-90 separati da virgole, "
+              f"più sestine separati da |)")
+        sys.exit(1)
 
     print("=== MANUAL UPDATE COMPLETATO ===")
 
