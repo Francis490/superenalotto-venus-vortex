@@ -37,8 +37,8 @@
 - generate_manual_pdf.py
 
 ### Lavoro in sospeso
-1. Lanciare workflow "Generate Manual PDF" e scaricare il PDF.
-2. Riprendere setup PWA: manifest.json, sw.js, icone.
+1. ~~Lanciare workflow "Generate Manual PDF" e scaricare il PDF.~~ ✅
+2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅ (già presente, verificato)
 3. Pulire requirements.txt: rimuovere requests, bs4, lxml, sklearn se non usati.
 4. Rimuovere file diagnostici residui: check_history_gaps.py, check_gaps.yml.
 5. Valutare fix True Mimic: produce sestine fuori range 240-310; il fallback classico funziona.
@@ -72,6 +72,32 @@
 **Prossimo:**
 - Scaricare il PDF dall'artifact del workflow.
 - Procedere con il setup PWA (`manifest.json`, `sw.js`, icone).
+
+---
+
+## 2026-09-19 — PDF risolto definitivamente
+
+**Obiettivo:** Ottenere un PDF impaginato correttamente (copertina su una pagina, heading renderizzati).
+
+**Fatto:**
+- Provato `baileyjm02/markdown-to-pdf` come alternativa → fallito per permessi Docker (`Cannot move outside of directory /github/workspace/`).
+- Ripristinato `xhtml2pdf` con `generate_manual_pdf.py` ottimizzato.
+- Rimosse le estensioni `toc` e `nl2br`: erano la causa dei titoli Markdown non renderizzati come heading.
+- Ridotta altezza copertina (`padding-top: 180` → `60`) e font ridotti: ora la copertina sta su una sola pagina.
+- Workflow completato con successo (56s). Artifact `manuale-venus-vortex` caricato.
+- Verificato il PDF: copertina su una pagina, indice e heading corretti.
+
+**Problemi:**
+- Nessuno.
+
+**Decisioni:**
+- `xhtml2pdf` è la soluzione stabile per questo progetto. Nessuna dipendenza da azioni di terze parti.
+- `baileyjm02/markdown-to-pdf` scartato (problemi di permessi Docker).
+
+**Prossimo:**
+- Pulizia `requirements.txt`.
+- Rimozione file diagnostici residui (`check_history_gaps.py`, `check_gaps.yml`).
+- Valutazione fix True Mimic (range 240-310).
 
 ---
 
