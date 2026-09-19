@@ -3,6 +3,11 @@ fetch_latest_draw.py
 Scarica le ultime estrazioni SuperEnalotto e il jackpot corrente.
 Usa proxy intermedi (r.jina.ai, allorigins, corsproxy) per bypassare
 i blocchi IP di GitHub Actions verso i siti italiani.
+
+FIX (2026-09-19):
+- Parser jackpot riscritto: privilegia numeri vicini alla keyword "jackpot"
+  ed esclude il montepremi totale (range ristretto a 10M-200M).
+- Import utility condivise da venus_utils.
 """
 import json
 import os
@@ -13,6 +18,9 @@ from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
+
+from venus_utils import load_json, save_json
+
 
 HISTORY_FILE = "venus_history.json"
 JACKPOT_FILE = "venus_jackpot.json"
@@ -29,45 +37,34 @@ HEADERS = {
     "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
 }
 
+
 # ==========================================
-# UTILITY
+# UTILITY LOCALI
 # ==========================================
 def load_history():
-    if not os.path.exists(HISTORY_FILE):
-        return []
-    try:
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, list) else []
-    except Exception as e:
-        print(f"[!] Errore lettura {HISTORY_FILE}: {e}")
-        return []
+    """Wrapper che garantisce una lista come ritorno."""
+    data = load_json(HISTORY_FILE, [])
+    return data if isinstance(data, list) else []
+
 
 def save_history(history):
-    try:
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history, f, indent=2, ensure_ascii=False)
-        print(f"[+] {HISTORY_FILE} salvato ({len(history)} estrazioni).")
-    except Exception as e:
-        print(f"[!] Errore salvataggio {HISTORY_FILE}: {e}")
+    save_json(HISTORY_FILE, history)
+
 
 def save_jackpot(jackpot_int):
     payload = {
         "jackpot": int(jackpot_int),
         "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
     }
-    try:
-        with open(JACKPOT_FILE, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2, ensure_ascii=False)
-        print(f"[+] {JACKPOT_FILE} salvato: {jackpot_int:,} €")
-    except Exception as e:
-        print(f"[!] Errore salvataggio {JACKPOT_FILE}: {e}")
+    save_json(JACKPOT_FILE, payload)
+
 
 def to_int(value, default=None):
     try:
         return int(value)
     except (ValueError, TypeError):
         return default
+
 
 def normalize_date(raw):
     if not raw:
@@ -83,24 +80,62 @@ def normalize_date(raw):
         return f"{int(d):02d}/{int(mo):02d}/{y}"
     return None
 
-def parse_jackpot_text(text):
-    """Cerca un importo jackpot plausibile (10M-400M €) nel testo."""
+
+def parse_jackpot_text(text, verbose=False):
+    """
+    Cerca un importo jackpot plausibile (10M-200M €).
+
+    FIX (2026-09-19):
+    - Prima strategia: numeri VICINI alla keyword "jackpot" (contesto).
+    - Fallback: numero più alto nel testo che cade nel range.
+    - Range ristretto a 10M-200M (esclude montepremi totali, che di solito
+      sono più alti del jackpot corrente).
+    """
     if not text:
         return None
-    pattern = r"(\d{1,3}(?:[.,\s]\d{3}){1,4}|\d{6,9})"
-    matches = re.findall(pattern, text)
-    candidates = []
-    for m in matches:
+
+    # === STRATEGIA 1: contesto "jackpot ... numero" ===
+    # Cerca "jackpot" seguito (entro 80 caratteri) da un numero
+    pattern_context = r"jackpot[^\d]{0,80}(\d{1,3}(?:[.,\s]\d{3}){1,3}|\d{7,9})"
+    matches_context = re.findall(pattern_context, text, re.IGNORECASE)
+
+    candidates_context = []
+    for m in matches_context:
         clean = re.sub(r"[.,\s]", "", m)
         try:
             val = int(clean)
         except ValueError:
             continue
-        if 10_000_000 <= val <= 400_000_000:
-            candidates.append(val)
-    if not candidates:
+        if 10_000_000 <= val <= 200_000_000:
+            candidates_context.append(val)
+
+    if verbose:
+        print(f"    [debug] Candidati con contesto 'jackpot': {candidates_context}")
+
+    if candidates_context:
+        return max(candidates_context)
+
+    # === STRATEGIA 2: fallback generico sul testo ===
+    pattern_generic = r"(\d{1,3}(?:[.,\s]\d{3}){1,3}|\d{7,9})"
+    matches_generic = re.findall(pattern_generic, text)
+
+    candidates_generic = []
+    for m in matches_generic:
+        clean = re.sub(r"[.,\s]", "", m)
+        try:
+            val = int(clean)
+        except ValueError:
+            continue
+        if 10_000_000 <= val <= 200_000_000:
+            candidates_generic.append(val)
+
+    if verbose:
+        print(f"    [debug] Candidati fallback: {candidates_generic}")
+
+    if not candidates_generic:
         return None
-    return max(candidates)
+    return max(candidates_generic)
+
 
 # ==========================================
 # FETCH MULTI-PROXY
@@ -113,12 +148,14 @@ def fetch_via_jina(url, timeout=30):
     r.raise_for_status()
     return r.text, "text"
 
+
 def fetch_via_allorigins(url, timeout=25):
     proxy_url = f"https://api.allorigins.win/raw?url={url}"
     print(f"    → tentativo allorigins.win...")
     r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
     r.raise_for_status()
     return r.text, "html"
+
 
 def fetch_via_corsproxy(url, timeout=25):
     proxy_url = f"https://corsproxy.io/?{url}"
@@ -127,11 +164,13 @@ def fetch_via_corsproxy(url, timeout=25):
     r.raise_for_status()
     return r.text, "html"
 
+
 def fetch_via_direct(url, timeout=20):
     print(f"    → tentativo diretto...")
     r = requests.get(url, headers=HEADERS, timeout=timeout)
     r.raise_for_status()
     return r.text, "html"
+
 
 def smart_fetch(url):
     """
@@ -152,6 +191,7 @@ def smart_fetch(url):
         time.sleep(1)
     return None, None
 
+
 # ==========================================
 # PARSING — Estrazioni
 # ==========================================
@@ -171,10 +211,8 @@ def parse_draws_from_text(text):
         concorso = int(m.group(1))
         data = normalize_date(m.group(2))
         chunk = m.group(3)
-        # Estrai tutti i numeri 1-90 nel chunk
         nums = [int(n) for n in re.findall(r"\b(\d{1,2})\b", chunk)
                 if 1 <= int(n) <= 90]
-        # Deduplica mantenendo ordine (evita di prendere lo stesso num 2 volte)
         seen = set()
         unique_nums = []
         for n in nums:
@@ -191,6 +229,7 @@ def parse_draws_from_text(text):
             })
     return results
 
+
 def fetch_all_draws():
     """Prova più siti, ritorna la lista più lunga trovata."""
     sources = [
@@ -205,7 +244,6 @@ def fetch_all_draws():
         if not content:
             print(f"    [!] Fonte non raggiungibile.")
             continue
-        # Se HTML, estrai prima il testo
         if kind == "html":
             soup = BeautifulSoup(content, "html.parser")
             text = soup.get_text(" ", strip=True)
@@ -218,9 +256,7 @@ def fetch_all_draws():
         time.sleep(1)
     if not all_results:
         return []
-    # Prendi la lista più lunga
     best = max(all_results, key=len)
-    # Deduplica per concorso
     seen = set()
     clean = []
     for item in sorted(best, key=lambda x: x["concorso"]):
@@ -230,11 +266,18 @@ def fetch_all_draws():
             clean.append(item)
     return clean
 
+
 # ==========================================
 # PARSING — Jackpot
 # ==========================================
 def fetch_jackpot():
-    """Cerca il jackpot corrente su più siti."""
+    """
+    Cerca il jackpot corrente su più siti.
+
+    FIX (2026-09-19):
+    - Usa il parser migliorato che privilegia il contesto "jackpot".
+    - Log di debug attivo per capire cosa viene scartato.
+    """
     sources = [
         "https://www.superenalotto.net/",
         "https://www.estrazionedelotto.it/estrazione-superenalotto",
@@ -250,20 +293,15 @@ def fetch_jackpot():
             text = soup.get_text(" ", strip=True)
         else:
             text = content
-        # Cerca un numero preceduto da "jackpot"
-        m = re.search(r"jackpot[^\d]{0,60}([\d.,\s]{6,20})", text, re.IGNORECASE)
-        if m:
-            val = parse_jackpot_text(m.group(1))
-            if val:
-                print(f"    ✓ Jackpot trovato: {val:,} €")
-                return val
-        # Fallback: cerca in tutto il testo
-        val = parse_jackpot_text(text)
+
+        val = parse_jackpot_text(text, verbose=True)
         if val:
-            print(f"    ✓ Jackpot (fallback): {val:,} €")
+            print(f"    ✓ Jackpot trovato: {val:,} €")
             return val
+
         time.sleep(1)
     return None
+
 
 # ==========================================
 # MERGE
@@ -284,6 +322,7 @@ def merge_history(existing, fetched):
         item["jolly"] = to_int(item.get("jolly"))
         item["superstar"] = to_int(item.get("superstar"))
     return existing + new_items, len(new_items)
+
 
 # ==========================================
 # MAIN
@@ -317,6 +356,7 @@ def main():
         save_jackpot(jackpot)
     else:
         print("[!] Impossibile recuperare il jackpot.")
+
 
 if __name__ == "__main__":
     main()
