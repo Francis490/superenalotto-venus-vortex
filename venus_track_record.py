@@ -2,6 +2,12 @@
 venus_track_record.py
 Gestisce il track record delle sestine generate.
 Include rilevamento vincite (3+, 4+, 5+, 6 punti).
+
+FIX (2026-09-19):
+- get_stats(): include correttamente il caso 6 punti in hits_3plus
+  (prima il dict escludeva la chiave "6" e la somma ignorava i 6 punti).
+- detect_wins(): aggiunto controllo `result is None` per evitare
+  notifiche duplicate se il workflow gira due volte sullo stesso concorso.
 """
 import json
 import os
@@ -95,6 +101,9 @@ def detect_wins(concorso, real_numbers):
     """
     Rileva se ci sono state vincite significative (3+ punti).
     Ritorna un dict con info dettagliate sulle vincite, o None se nessuna.
+
+    FIX: aggiunto controllo `result is None` per evitare notifiche duplicate
+    se il workflow gira due volte sullo stesso concorso.
     """
     if not real_numbers or len(real_numbers) != 6:
         return None
@@ -105,6 +114,11 @@ def detect_wins(concorso, real_numbers):
 
     for r in records:
         if r.get("target_concorso") == concorso:
+            # FIX: salta se il risultato è già stato processato
+            # (evita notifica di vincita duplicata)
+            if r.get("result") is not None:
+                return None
+
             sestinas = r.get("sestinas", [])
             mode = r.get("mode", "NORMALE")
             generated_at = r.get("generated_at", "N/A")
@@ -189,7 +203,13 @@ def format_win_notification(win_info):
 
 
 def get_stats():
-    """Ritorna statistiche aggregate del track record."""
+    """
+    Ritorna statistiche aggregate del track record.
+
+    FIX: il dict `dist` ora include la chiave "6" (prima era range(6)
+    quindi escludeva il caso 6 punti). Inoltre hits_3plus somma anche
+    i 6 punti.
+    """
     track = load_track()
     records = track.get("records", [])
 
@@ -200,17 +220,19 @@ def get_stats():
         return {
             "total": 0,
             "pending": len(records),
-            "distribution": {str(i): 0 for i in range(6)},
+            "distribution": {str(i): 0 for i in range(7)},
             "hits_3plus": 0,
             "hit_rate_3plus": 0.0,
         }
 
-    dist = {str(i): 0 for i in range(6)}
+    # FIX: range(7) include 0..6
+    dist = {str(i): 0 for i in range(7)}
     for r in completed:
         best = r["result"].get("best_hits", 0)
         dist[str(best)] = dist.get(str(best), 0) + 1
 
-    hits_3plus = dist["3"] + dist["4"] + dist["5"]
+    # FIX: include anche i 6 punti
+    hits_3plus = dist["3"] + dist["4"] + dist["5"] + dist["6"]
 
     return {
         "total": total,
@@ -230,9 +252,13 @@ def format_stats_for_report(stats):
     total = stats["total"]
     dist = stats["distribution"]
 
+    # FIX: mostra anche eventuali 6 punti
     lines = [
         f"📊 Concorsi tracciati: {total} (+{stats['pending']} in attesa)",
-        f"🎯 3 punti: {dist.get('3', 0)} · 4 punti: {dist.get('4', 0)} · 5 punti: {dist.get('5', 0)}",
+        f"🎯 3 punti: {dist.get('3', 0)} · "
+        f"4 punti: {dist.get('4', 0)} · "
+        f"5 punti: {dist.get('5', 0)} · "
+        f"6 punti: {dist.get('6', 0)}",
         f"📈 Hit rate 3+: {stats['hit_rate_3plus']}%",
     ]
     return "\n".join(lines)
