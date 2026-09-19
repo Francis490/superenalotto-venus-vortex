@@ -2,15 +2,6 @@
 manual_update.py
 Aggiorna venus_manual_override.json e (opzionalmente) venus_played.json
 con i dati dell'estrazione appena uscita.
-
-Input via variabili d'ambiente:
-- MANUAL_CONCORSO
-- MANUAL_DATA
-- MANUAL_COMBINAZIONE
-- MANUAL_JOLLY
-- MANUAL_SUPERSTAR
-- MANUAL_JACKPOT
-- MANUAL_SESTINE (opzionale)
 """
 import json
 import os
@@ -76,7 +67,7 @@ def update_override(concorso, data, combinazione, jolly, superstar, jackpot):
             "jolly": jolly,
             "superstar": superstar,
         },
-        "note": f"Concorso {concorso} — aggiornato manualmente",
+        "note": f"Concorso {concorso} - aggiornato manualmente",
     }
     save_json(OVERRIDE_FILE, override)
 
@@ -113,7 +104,7 @@ def update_played(concorso, data, sestine):
         existing["data"] = data
         existing["giocata_il"] = oggi
         existing["note"] = f"Concorso {concorso}: {len(sestine)} sestine"
-        print(f"[+] Concorso {concorso} già presente: aggiornato.")
+        print(f"[+] Concorso {concorso} gia presente: aggiornato.")
     else:
         played_data["played"].append({
             "concorso": concorso,
@@ -177,7 +168,7 @@ def main():
     if errors:
         print("[!] ERRORI DI VALIDAZIONE:")
         for e in errors:
-            print(f"    • {e}")
+            print(f"    - {e}")
         sys.exit(1)
 
     print(f"[*] Concorso:     {concorso}")
@@ -185,7 +176,7 @@ def main():
     print(f"[*] Combinazione: {combinazione}")
     print(f"[*] Jolly:        {jolly}")
     print(f"[*] SuperStar:    {superstar}")
-    print(f"[*] Jackpot:      € {jackpot:,}")
+    print(f"[*] Jackpot:      EUR {jackpot:,}")
 
     update_override(concorso, data, combinazione, jolly, superstar, jackpot)
 
