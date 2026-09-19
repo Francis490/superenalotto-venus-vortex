@@ -4,39 +4,43 @@ Gestisce il track record delle sestine generate.
 Include rilevamento vincite (3+, 4+, 5+, 6 punti).
 
 FIX (2026-09-19):
+- #12: record_predictions non sovrascrive più silenziosamente le sestine
+  per lo stesso concorso. Salva la versione precedente in `history_versions`.
 - get_stats(): include correttamente il caso 6 punti in hits_3plus
   (prima il dict escludeva la chiave "6" e la somma ignorava i 6 punti).
 - detect_wins(): aggiunto controllo `result is None` per evitare
   notifiche duplicate se il workflow gira due volte sullo stesso concorso.
+- Import utility condivise da venus_utils.
 """
-import json
 import os
 from datetime import datetime
+
+from venus_utils import load_json, save_json
+
 
 TRACK_FILE = "venus_track_record.json"
 
 
 def load_track():
-    if os.path.exists(TRACK_FILE):
-        try:
-            with open(TRACK_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {"records": []}
+    data = load_json(TRACK_FILE, {"records": []})
+    if not isinstance(data, dict) or "records" not in data:
+        return {"records": []}
+    return data
 
 
 def save_track(data):
-    try:
-        with open(TRACK_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+    if save_json(TRACK_FILE, data):
         print(f"[+] Track record salvato: {TRACK_FILE}")
-    except Exception as e:
-        print(f"[!] Errore salvataggio track: {e}")
 
 
 def record_predictions(target_concorso, sestinas, mode):
-    """Salva le sestine generate per un concorso target."""
+    """
+    Salva le sestine generate per un concorso target.
+
+    FIX #12: se esiste già un record per questo concorso e le sestine
+    sono diverse, salva la versione precedente in `history_versions`
+    prima di sovrascrivere. Non si perde più traccia.
+    """
     if not sestinas:
         return
 
@@ -47,11 +51,27 @@ def record_predictions(target_concorso, sestinas, mode):
         if r.get("target_concorso") == target_concorso:
             existing = r.get("sestinas", [])
             if existing != sestinas:
+                # FIX #12: archivia versione precedente
+                if "history_versions" not in r:
+                    r["history_versions"] = []
+
+                r["history_versions"].append({
+                    "sestinas": existing,
+                    "mode": r.get("mode", "N/A"),
+                    "generated_at": r.get("generated_at", "N/A"),
+                    "replaced_at": datetime.now().isoformat(),
+                })
+
+                # Aggiorna il record principale
                 r["sestinas"] = sestinas
                 r["mode"] = mode
                 r["generated_at"] = datetime.now().isoformat()
+
                 save_track(track)
-                print(f"[+] Track record aggiornato per concorso {target_concorso}")
+                print(f"[+] Track record aggiornato per concorso {target_concorso} "
+                      f"(versione precedente archiviata)")
+            else:
+                print(f"[*] Track record concorso {target_concorso}: sestine invariate.")
             return
 
     records.append({
@@ -60,6 +80,7 @@ def record_predictions(target_concorso, sestinas, mode):
         "mode": mode,
         "sestinas": sestinas,
         "result": None,
+        "history_versions": [],
     })
 
     save_track(track)
@@ -114,8 +135,7 @@ def detect_wins(concorso, real_numbers):
 
     for r in records:
         if r.get("target_concorso") == concorso:
-            # FIX: salta se il risultato è già stato processato
-            # (evita notifica di vincita duplicata)
+            # Salta se il risultato è già stato processato
             if r.get("result") is not None:
                 return None
 
@@ -123,7 +143,6 @@ def detect_wins(concorso, real_numbers):
             mode = r.get("mode", "NORMALE")
             generated_at = r.get("generated_at", "N/A")
 
-            # Analizza ogni sestina
             wins = []
             for i, s in enumerate(sestinas):
                 hits = len(set(s) & real_set)
@@ -149,9 +168,7 @@ def detect_wins(concorso, real_numbers):
 
 
 def format_win_notification(win_info):
-    """
-    Formatta una notifica di VINCITA in HTML per Telegram.
-    """
+    """Formatta una notifica di VINCITA in HTML per Telegram."""
     if not win_info:
         return None
 
@@ -161,7 +178,6 @@ def format_win_notification(win_info):
     best = win_info["best_hits"]
     mode = win_info["mode"]
 
-    # Emoji e messaggio in base al livello di vincita
     if best == 6:
         header = "🏆🏆🏆 JACKPOT! 🏆🏆🏆"
         emoji = "💰💰💰"
@@ -174,7 +190,7 @@ def format_win_notification(win_info):
         header = "🎉🎉 VINCITA! 🎉🎉"
         emoji = "💸💸"
         msg = "4 PUNTI — complimenti!"
-    else:  # 3
+    else:
         header = "🎯 VINCITA! 🎯"
         emoji = "✨"
         msg = "3 PUNTI — vincita!"
@@ -206,9 +222,8 @@ def get_stats():
     """
     Ritorna statistiche aggregate del track record.
 
-    FIX: il dict `dist` ora include la chiave "6" (prima era range(6)
-    quindi escludeva il caso 6 punti). Inoltre hits_3plus somma anche
-    i 6 punti.
+    FIX: il dict `dist` ora include la chiave "6". Inoltre hits_3plus somma
+    anche i 6 punti.
     """
     track = load_track()
     records = track.get("records", [])
@@ -252,7 +267,6 @@ def format_stats_for_report(stats):
     total = stats["total"]
     dist = stats["distribution"]
 
-    # FIX: mostra anche eventuali 6 punti
     lines = [
         f"📊 Concorsi tracciati: {total} (+{stats['pending']} in attesa)",
         f"🎯 3 punti: {dist.get('3', 0)} · "
