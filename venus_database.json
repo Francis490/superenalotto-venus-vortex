@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-19T15:43:57",
+  "updated_at": "2026-09-19T19:49:24",
   "next_contest": {
     "number": 151,
     "date": "19/09/2026",
@@ -61,7 +61,6 @@
       "sum": 245,
       "z_score": -0.64,
       "confidence": 21.8,
-      "ev_score": 1.0,
       "signature": "VX-2026-151-938394"
     }
   ],
@@ -74,7 +73,7 @@
       "ev_6_solo": 0.1185,
       "ev_total": -0.5315,
       "profitable": false,
-      "recommendation": "SALTA"
+      "recommendation": "GIOCA POCO"
     },
     "rollover": {
       "level": "NORMALE",
