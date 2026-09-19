@@ -16,3 +16,6 @@ Pillow==10.3.0
 # --- Generazione manuale PDF ---
 markdown==3.6
 xhtml2pdf==0.2.16
+
+# --- HTTP (fetch estrazioni da fonte esterna) ---
+requests==2.31.0
