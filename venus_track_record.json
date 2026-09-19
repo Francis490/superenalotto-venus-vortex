@@ -62,16 +62,16 @@
     },
     {
       "target_concorso": 151,
-      "generated_at": "2026-09-19T00:45:39.069196",
+      "generated_at": "2026-09-19T15:27:54.781646",
       "mode": "MINIMO",
       "sestinas": [
         [
           5,
           30,
+          31,
           34,
-          48,
           65,
-          87
+          80
         ]
       ],
       "result": null
