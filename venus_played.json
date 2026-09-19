@@ -21,6 +21,16 @@
         [5, 30, 34, 48, 65, 87]
       ],
       "note": "Concorso 150: 1 sestina (VX-2026-150-9D1CEE)"
+    },
+    {
+      "concorso": 151,
+      "data": "19/09/2026",
+      "giocata_il": "19/09/2026",
+      "costo_eur": 1.00,
+      "sestine": [
+        [5, 30, 31, 34, 65, 80]
+      ],
+      "note": "Concorso 151: 1 sestina"
     }
   ],
   "config": {
