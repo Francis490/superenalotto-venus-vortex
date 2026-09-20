@@ -457,11 +457,17 @@
 
 ---
 
-## Template nuova sessione
+## 2026-09-20 — Esito concorso 151
 
-### YYYY-MM-DD — Titolo
-**Obiettivo:**
 **Fatto:**
-**Problemi:**
-**Decisioni:**
+- Estrazione: `[20, 42, 45, 48, 68, 85]` (jolly 49, superstar 41)
+- Giocata: `[5, 30, 31, 34, 65, 80]` → **0 punti**
+- Somma estratti: 308 (dentro range 240-310 ✅)
+- Bilancio: +€1,00 (invariato)
+
+**Note:**
+- Nessuna vincita, esito statisticamente previsto.
+- Bot ha correttamente rilevato il risultato e rigenerato per il 152.
+
 **Prossimo:**
+- Concorso 152 (martedì 22/09/2026).
