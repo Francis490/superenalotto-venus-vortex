@@ -1,18 +1,18 @@
 {
-  "jackpot": 30400000,
+  "jackpot": 31100000,
   "last_draw": {
-    "concorso": 151,
-    "data": "19/09/2026",
+    "concorso": 152,
+    "data": "22/09/2026",
     "combinazione": [
-      20,
+      12,
       42,
-      45,
-      48,
-      68,
-      85
+      57,
+      65,
+      76,
+      77
     ],
-    "jolly": 49,
-    "superstar": 41
+    "jolly": 21,
+    "superstar": 54
   },
-  "note": "Concorso 151 - aggiornato manualmente"
+  "note": "Concorso 152 - aggiornato manualmente"
 }

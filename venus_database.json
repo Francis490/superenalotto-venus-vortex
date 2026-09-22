@@ -1,27 +1,27 @@
 {
-  "updated_at": "2026-09-22T19:51:13",
+  "updated_at": "2026-09-22T23:01:52",
   "next_contest": {
-    "number": 152,
-    "date": "22/09/2026",
-    "jackpot": 30400000
+    "number": 153,
+    "date": "24/09/2026",
+    "jackpot": 31100000
   },
   "last_draw": {
-    "contest_number": 151,
-    "date": "19/09/2026",
+    "contest_number": 152,
+    "date": "22/09/2026",
     "numbers": [
-      20,
+      12,
       42,
-      45,
-      48,
-      68,
-      85
+      57,
+      65,
+      76,
+      77
     ],
-    "jolly": 49,
-    "superstar": 41
+    "jolly": 21,
+    "superstar": 54
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
-    "ev": -0.5279,
+    "ev": -0.5251,
     "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
     "advice": "EV basso. 1 sestina (1,00 €)."
   },
@@ -30,7 +30,7 @@
     "emoji": "🟢",
     "n_sestinas": 1,
     "cost_eur": 1.0,
-    "ev": -0.5279,
+    "ev": -0.5251,
     "message": "EV basso. 1 sestina (1,00 €)."
   },
   "dodeca_pool": [
@@ -38,10 +38,10 @@
     22,
     30,
     34,
-    36,
-    65,
-    69,
+    49,
+    62,
     75,
+    79,
     80,
     84,
     87,
@@ -55,23 +55,23 @@
         22,
         30,
         34,
-        65,
-        84
+        62,
+        87
       ],
       "sum": 240,
       "z_score": -0.76,
       "confidence": 21.2,
-      "signature": "VX-2026-152-28860D"
+      "signature": "VX-2026-153-36C3AB"
     }
   ],
   "vortex": {
     "ev": {
-      "jackpot": 30400000,
+      "jackpot": 31100000,
       "players_estimated": 50000000,
       "expected_winners": 1.0,
-      "effective_jackpot": 76000000.0,
-      "ev_6_solo": 0.1221,
-      "ev_total": -0.5279,
+      "effective_jackpot": 77750000.0,
+      "ev_6_solo": 0.1249,
+      "ev_total": -0.5251,
       "profitable": false,
       "recommendation": "GIOCA POCO"
     },
