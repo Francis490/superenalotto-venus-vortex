@@ -1,6 +1,6 @@
-# Aggiorna Venus Vortex - Concorso N. 151
+# Aggiorna Venus Vortex - Concorso N. 152
 
-> Ultima generazione automatica: **2026-09-19 19:49:30**
+> Ultima generazione automatica: **2026-09-22 19:51:19**
 
 ---
 
@@ -8,18 +8,18 @@
 
 | Campo | Valore |
 |---|---|
-| **Ultima estrazione** | Concorso N. 150 del 18/09/2026 |
-| **Combinazione** | `[29, 37, 41, 43, 74, 86]` |
-| **Jolly** | 25 |
-| **SuperStar** | 78 |
-| **Prossimo concorso** | N. 151 del 19/09/2026 |
-| **Jackpot attuale** | EUR 29,500,000 |
+| **Ultima estrazione** | Concorso N. 151 del 19/09/2026 |
+| **Combinazione** | `[20, 42, 45, 48, 68, 85]` |
+| **Jolly** | 49 |
+| **SuperStar** | 41 |
+| **Prossimo concorso** | N. 152 del 22/09/2026 |
+| **Jackpot attuale** | EUR 30,400,000 |
 
 ---
 
 ## Procedura aggiornamento (2 minuti)
 
-### STEP 1 - Trova i numeri veri del concorso 151
+### STEP 1 - Trova i numeri veri del concorso 152
 
 Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
 - 6 numeri vincenti
@@ -38,15 +38,15 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 
 ```json
 {
-  "jackpot": 29500000,
+  "jackpot": 30400000,
   "last_draw": {
-    "concorso": 151,
-    "data": "19/09/2026",
+    "concorso": 152,
+    "data": "22/09/2026",
     "combinazione": [0, 0, 0, 0, 0, 0],
     "jolly": 0,
     "superstar": 0
   },
-  "note": "Compila con i numeri reali del concorso 151"
+  "note": "Compila con i numeri reali del concorso 152"
 }
 ```
 
@@ -54,7 +54,7 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 - `[0, 0, 0, 0, 0, 0]` con i 6 numeri veri (ordine crescente)
 - `"jolly": 0` con il Jolly vero
 - `"superstar": 0` con il SuperStar vero
-- `"jackpot": 29500000` con il nuovo jackpot (o lascia invariato)
+- `"jackpot": 30400000` con il nuovo jackpot (o lascia invariato)
 
 ### STEP 4 - Commit changes
 
