@@ -1,6 +1,6 @@
-# Aggiorna Venus Vortex - Concorso N. 154
+# Aggiorna Venus Vortex - Concorso N. 155
 
-> Ultima generazione automatica: **2026-09-25 19:52:27**
+> Ultima generazione automatica: **2026-09-25 20:54:19**
 
 ---
 
@@ -8,18 +8,18 @@
 
 | Campo | Valore |
 |---|---|
-| **Ultima estrazione** | Concorso N. 153 del 24/09/2026 |
-| **Combinazione** | `[1, 28, 31, 50, 63, 85]` |
-| **Jolly** | 86 |
+| **Ultima estrazione** | Concorso N. 154 del 25/09/2026 |
+| **Combinazione** | `[10, 18, 26, 33, 39, 45]` |
+| **Jolly** | 89 |
 | **SuperStar** | 48 |
-| **Prossimo concorso** | N. 154 del 25/09/2026 |
-| **Jackpot attuale** | EUR 31,700,000 |
+| **Prossimo concorso** | N. 155 del 26/09/2026 |
+| **Jackpot attuale** | EUR 32,600,000 |
 
 ---
 
 ## Procedura aggiornamento (2 minuti)
 
-### STEP 1 - Trova i numeri veri del concorso 154
+### STEP 1 - Trova i numeri veri del concorso 155
 
 Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
 - 6 numeri vincenti
@@ -38,15 +38,15 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 
 ```json
 {
-  "jackpot": 31700000,
+  "jackpot": 32600000,
   "last_draw": {
-    "concorso": 154,
-    "data": "25/09/2026",
+    "concorso": 155,
+    "data": "26/09/2026",
     "combinazione": [0, 0, 0, 0, 0, 0],
     "jolly": 0,
     "superstar": 0
   },
-  "note": "Compila con i numeri reali del concorso 154"
+  "note": "Compila con i numeri reali del concorso 155"
 }
 ```
 
@@ -54,7 +54,7 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 - `[0, 0, 0, 0, 0, 0]` con i 6 numeri veri (ordine crescente)
 - `"jolly": 0` con il Jolly vero
 - `"superstar": 0` con il SuperStar vero
-- `"jackpot": 31700000` con il nuovo jackpot (o lascia invariato)
+- `"jackpot": 32600000` con il nuovo jackpot (o lascia invariato)
 
 ### STEP 4 - Commit changes
 
