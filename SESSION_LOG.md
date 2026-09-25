@@ -1,27 +1,29 @@
 # SESSION_LOG — Venus Vortex
 
 > Diario di bordo versionato. Aggiornare a ogni sessione significativa.
-> Ultimo aggiornamento: 2026-09-19
+> Ultimo aggiornamento: 2026-09-25
 
 ## 2026-09-19 — Ripartenza e creazione diario
 
 ### Stato attuale
 - Versione bot: v3.3.1
-- Database: 358 concorsi (208 del 2025 + 150 del 2026)
-- Ultimo concorso elaborato: 150 (18/09/2026)
-- Prossimo concorso: 151 (19/09/2026)
+- Database: 362 concorsi (208 del 2025 + 154 del 2026)
+- Ultimo concorso elaborato: 153 (24/09/2026)
+- Prossimo concorso: 154 (25/09/2026)
+- Jackpot corrente: 31.700.000 €
 - Personal stats: speso €4,00 / vinto €5,00 / bilancio +€1,00 / ROI +25,00%
-- Track record: 2 concorsi tracciati (+1 in attesa), 3+ punti: 0
-- Ultima giocata: [5, 30, 31, 34, 65, 80]
-- Firma: VX-2026-151-XXXXXX (da rigenerare)
-- Concorso: 151
+- Track record: 5 concorsi completati (+1 in attesa), 3+ punti: 0
+- Ultima giocata user: [5, 30, 31, 34, 65, 80] (concorso 151)
+- Sestina bot attuale: [4, 5, 22, 49, 79, 87] (concorso 154)
+- Firma: VX-2026-154-45B90B
+- Concorso: 154
 
 ### Workflow GitHub attivi
 - TITAN Engine Automated Execution (cron Mar/Gio/Ven/Sab)
 - Manual Update
 - Backtest End-to-End
 - Generate PWA Icons
-- Build History 2026
+- Build History 2026 (validator)
 - Import External History
 - Generate Manual PDF
 
@@ -33,20 +35,22 @@
 - venus_track_record.py
 - manual_update.py
 - fetch_latest_draw.py
+- build_history_2026.py (validator)
 - MANUALE_VENUS_VORTEX.md
 - generate_manual_pdf.py
 
 ### Lavoro in sospeso
 1. ~~Lanciare workflow "Generate Manual PDF" e scaricare il PDF.~~ ✅
-2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅ (già presente, verificato)
-3. ~~Pulire requirements.txt.~~ ✅ (finalizzato con requests e beautifulsoup4)
+2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅
+3. ~~Pulire requirements.txt.~~ ✅
 4. ~~Rimuovere file diagnostici residui.~~ ✅
-5. ~~Valutare fix True Mimic (range 240-310).~~ ✅ (verificato sul campo)
+5. ~~Valutare fix True Mimic (range 240-310).~~ ✅
+6. ~~Analisi Blocco 6: data samples.~~ ✅
 
 ### Problemi noti
+- `fetch_latest_draw.py` scrape un jackpot errato (119M invece di 31,7M). Ignorato perché l'override manuale vince. Da indagare in futuro.
 - Errore Telegram 400 risolto: caption troppo lunga, ora troncata.
-- File diagnostici "orfani" rimossi.
-- True Mimic: fix applicato e verificato (sestina somma 269).
+- True Mimic: fix applicato e verificato.
 
 ---
 
@@ -256,15 +260,13 @@
 - Aggiornato `SESSION_LOG.md`:
   - Personal stats: speso €4,00 (2+1+1) / vinto €5,00 / bilancio +€1,00 / ROI +25,00%.
   - Ultima giocata: `[5, 30, 31, 34, 65, 80]`.
-  - Firma: `VX-2026-151-XXXXXX` (placeholder, da rigenerare al prossimo run).
 
 **Problemi:**
-- Discrepanza tra SESSION_LOG (ultima giocata registrata sotto 151) e played.json (sotto 150).
+- Discrepanza tra SESSION_LOG e played.json.
 - Nessun dato storico mancante.
 
 **Decisioni:**
 - `venus_played.json` è la fonte di verità per le giocate reali.
-- La firma della sestina 151 sarà rigenerata automaticamente dal bot al prossimo run.
 
 **Prossimo:**
 - Monitorare l'esito dei concorsi 150 e 151.
@@ -336,127 +338,6 @@
 
 ---
 
-## # SESSION_LOG — Venus Vortex
-
-> Diario di bordo versionato. Aggiornare a ogni sessione significativa.
-> Ultimo aggiornamento: 2026-09-19
-
-## 2026-09-19 — Ripartenza e creazione diario
-
-### Stato attuale
-- Versione bot: v3.3.1
-- Database: 358 concorsi (208 del 2025 + 150 del 2026)
-- Ultimo concorso elaborato: 150 (18/09/2026)
-- Prossimo concorso: 151 (19/09/2026)
-- Jackpot corrente: 29.500.000 € (da override manuale)
-- Personal stats: speso €4,00 / vinto €5,00 / bilancio +€1,00 / ROI +25,00%
-- Track record: 2 concorsi tracciati (+1 in attesa), 3+ punti: 0
-- Ultima giocata: [5, 30, 31, 34, 65, 80]
-- Firma: VX-2026-151-938394
-- Concorso: 151
-
-### Workflow GitHub attivi
-- TITAN Engine Automated Execution (cron Mar/Gio/Ven/Sab)
-- Manual Update
-- Backtest End-to-End
-- Generate PWA Icons
-- Build History 2026 (validator)
-- Import External History
-- Generate Manual PDF
-
-### File principali nel repo
-- scraper.py
-- vortex_opportunity.py
-- true_mimic_generator.py
-- personal_stats.py
-- venus_track_record.py
-- manual_update.py
-- fetch_latest_draw.py
-- build_history_2026.py (validator)
-- MANUALE_VENUS_VORTEX.md
-- generate_manual_pdf.py
-
-### Lavoro in sospeso
-1. ~~Lanciare workflow "Generate Manual PDF" e scaricare il PDF.~~ ✅
-2. ~~Riprendere setup PWA: manifest.json, sw.js, icone.~~ ✅
-3. ~~Pulire requirements.txt.~~ ✅
-4. ~~Rimuovere file diagnostici residui.~~ ✅
-5. ~~Valutare fix True Mimic (range 240-310).~~ ✅
-6. ~~Analisi Blocco 6: data samples.~~ ✅
-
-### Problemi noti
-- `fetch_latest_draw.py` scrape un jackpot errato (119M invece di 29,5M). Ignorato perché l'override manuale vince. Da indagare in futuro.
-- Errore Telegram 400 risolto: caption troppo lunga, ora troncata.
-- True Mimic: fix applicato e verificato.
-
----
-
-## 2026-09-19 — Cronologia sessioni
-
-### Fix generazione PDF (matina)
-**Obiettivo:** Risolvere errore `CSSParseError` nel workflow `Generate Manual PDF`.
-**Fatto:** Rimosse regole `@page` annidate, rilanciato workflow, PDF generato.
-**Prossimo:** Setup PWA.
-
-### PDF risolto definitivamente
-**Fatto:** Tentato `baileyjm02/markdown-to-pdf` (fallito per permessi Docker), ripristinato `xhtml2pdf` ottimizzato (rimosse `toc` e `nl2br`, copertina ridotta).
-**Decisione:** `xhtml2pdf` è la soluzione stabile.
-
-### Pulizia requirements.txt e file diagnostici
-**Fatto:** Verificato `requirements.txt`, rimossi `check_history_gaps.py` e `check_gaps.yml`.
-**Errore a catena:** `fetch_latest_draw.py` falliva con `ModuleNotFoundError: requests` e poi `bs4`. Aggiunti a `requirements.txt`.
-
-### Fix True Mimic (range 240-310)
-**Fatto:** Aggiunte costanti `SUM_HARD_MIN=240` / `SUM_HARD_MAX=310`, modificato check #1 in `validate_sestina`, migliorato fallback.
-
-### Verifica end-to-end TITAN
-**Fatto:** Sestina generata `[5,30,34,48,65,87]` (somma 269), firma `VX-2026-150-9D1CEE`, tutti i moduli attivi.
-**Decisione:** `requirements.txt` stabile, True Mimic affidabile.
-
-### Fix PWA: rebranding manifest + service worker
-**Fatto:** Rebranding "TITAN God Mode" → "Venus Vortex", cache `titan-cache-v1` → `venus-vortex-cache-v1`, aggiunto meta `mobile-web-app-capable`, sostituito placeholder bot Telegram.
-
-### Fix backtest_e2e (sort cronologico)
-**Fatto:** Sort per data invece che per concorso. Aggiunto `parse_date()`.
-
-### Fix workflow + manual_update
-**Fatto:** Bump azioni GitHub (`checkout@v5`, `setup-python@v6`), aggiunto `cache: 'pip'`, `timeout-minutes`. Fix bug: sestine giocate registrate sotto `concorso + 1`.
-
-### Correzione dati giocate reali
-**Fatto:** Aggiunta giocata concorso 151 `[5,30,31,34,65,80]` in `venus_played.json`. Allineato SESSION_LOG.
-
-### Blocco 5: bump azioni GitHub su tutti i workflow
-**Fatto:** 7 workflow aggiornati (venus_sync, manual_update, backtest, generate_icons, generate_manual, build_history, import_history).
-
-### Fix backtest_e2e + manual_update
-**Fatto:** Bug sort corretto, manual_update registra sestine sotto concorso+1.
-
-### Fix track_record (bug 6 punti + notifiche duplicate)
-**Fatto:** `get_stats()` include il caso 6 punti; `detect_wins()` ha check `result is None`.
-
-### Blocco 6: analisi data samples
-**Fatto:**
-- **venus_played.json:** coerente, aggiunta giocata 151.
-- **venus_history.json:** 358 entry totali (208 del 2025 + 150 del 2026). Pattern offset +1000 rispettato. Nessun duplicato.
-- **venus_database.json:** completo e coerente. Sestina concorso 151 = `[5,30,31,34,65,80]`, somma 245, in range 240-310.
-- **venus_track_record.json:** coerente. Fix applicato a `venus_track_record.py` per bug 6 punti e notifiche duplicate.
-- **venus_jackpot.json:** valore 119M errato/stale ma ignorato (override manuale vince).
-- **venus_manual_override.json:** corretto. Jackpot 29,5M confermato.
-
-**Problemi:**
-- `fetch_latest_draw.py` scrape un jackpot errato (119M invece di 29,5M). Da indagare in futuro.
-
-**Decisioni:**
-- `venus_history.json` è la **fonte di verità** per i dati storici.
-- `venus_manual_override.json` ha priorità su `venus_jackpot.json`.
-- `build_history_2026.py` è diventato **validator** (non inietta più dati stale).
-
-**Prossimo:**
-- Generazione `PROJECT_CONTEXT.md` come "bibbia" del progetto.
-- (Futuro) Indagare il parser di `fetch_latest_draw.py` per il jackpot.
-
----
-
 ## 2026-09-20 — Esito concorso 151
 
 **Fatto:**
@@ -471,3 +352,61 @@
 
 **Prossimo:**
 - Concorso 152 (martedì 22/09/2026).
+
+---
+
+## 2026-09-22 — Esito concorso 152
+
+**Fatto:**
+- Estrazione: `[12, 42, 57, 65, 76, 77]` (jolly 21, superstar 54)
+- Sestina bot: `[5, 22, 30, 34, 65, 84]` → **1 punto**
+- Bilancio: +€1,00 (invariato)
+
+**Note:**
+- Nessuna vincita (serve 2+ punti).
+
+**Prossimo:**
+- Concorso 153 (mercoledì 24/09/2026).
+
+---
+
+## 2026-09-24 — Esito concorso 153
+
+**Fatto:**
+- Estrazione: `[1, 28, 31, 50, 63, 85]` (jolly 86, superstar 48)
+- Sestina bot: `[5, 22, 30, 34, 62, 87]` → **0 punti**
+- Bilancio: +€1,00 (invariato)
+
+**Note:**
+- Concorso giocato solo dal bot, non dall'utente (non presente in `venus_played.json`).
+
+**Prossimo:**
+- Concorso 154 (venerdì 25/09/2026).
+
+---
+
+## 2026-09-25 — Sestina per concorso 154
+
+**Fatto:**
+- Bot ha generato: `[4, 5, 22, 49, 79, 87]` (somma 246, Z -0.62)
+- Firma: `VX-2026-154-45B90B`
+- Jackpot: €31.700.000
+- Budget: MINIMO (1 sestina, €1,00)
+- Vortex Numerical Field: `[4, 5, 22, 27, 30, 34, 49, 62, 79, 80, 87, 88]`
+
+**Problemi:**
+- Nessuno.
+
+**Prossimo:**
+- Attendere esito concorso 154 (25/09/2026).
+
+---
+
+## Template nuova sessione
+
+### YYYY-MM-DD — Titolo
+**Obiettivo:**
+**Fatto:**
+**Problemi:**
+**Decisioni:**
+**Prossimo:**
