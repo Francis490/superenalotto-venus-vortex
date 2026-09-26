@@ -1,33 +1,30 @@
 """
 vortex_opportunity.py
-VENUS VORTEX — Opportunity Engine v3.3.2
+VENUS VORTEX — Opportunity Engine v3.4
 
-Novità v3.3.2 (2026-09-19):
-- #2:  fallback estremo 220-320 ora logga esplicitamente (no più silenzioso)
-- #15: soglie allineate tra calculate_ev e determine_budget_mode
-- #21: estratta _base_stat_score() per ridurre duplicazione scoring
-- Costanti SUM_HARD_MIN/MAX importate da venus_utils
+Cambio di paradigma (2026-09-26):
+- RIMOSSO anti-crowd dallo scoring (non aumenta P(6))
+- Scoring basato SOLO su: stat_score, bilanciamento pari/dispari, decadi
+- Massima varietà tra le sestine
 
-Novità v3.3.1:
+Novità v3.3.1 (mantenute):
 - Filtro somma 240-310 anche sull'output del TRUE MIMIC generator
 
-Novità v3.3:
-- determine_budget_mode: modula n° sestine in base all'EV (soglie realistiche)
+Novità v3.3 (mantenute):
+- determine_budget_mode: modula n° sestine in base all'EV
 - select_vortex_sestinas_multi: genera N sestine complementari
 - Balance pool 4/4/4
-- Somma 240-310 obbligatoria
 - SKIP mode = 0 sestine
 """
 import hashlib
 import itertools
 
-from venus_utils import SUM_HARD_MIN, SUM_HARD_MAX
-
 
 # ==========================================
-# 1. ANTI-CROWD FILTER
+# 1. FUNZIONI ANTI-CROWD (mantenute ma NON usate nello scoring)
 # ==========================================
 def anti_crowd_weight(number):
+    """Mantenuta per compatibilità. NON usata nello scoring v3.4."""
     if 1 <= number <= 31:
         return 0.4
     elif 32 <= number <= 45:
@@ -40,6 +37,7 @@ def anti_crowd_weight(number):
 
 
 def has_visual_pattern(sestina):
+    """Rileva pattern visivi. Usata come filtro leggero, non come penalità."""
     s = sorted(sestina)
     consecutivi = sum(1 for i in range(len(s) - 1) if s[i + 1] - s[i] == 1)
     if consecutivi >= 2:
@@ -55,6 +53,7 @@ def has_visual_pattern(sestina):
 
 
 def anti_crowd_score(sestina):
+    """Mantenuta per compatibilità. NON usata nello scoring v3.4."""
     weight_sum = sum(anti_crowd_weight(n) for n in sestina)
     pattern_penalty = 0.5 if has_visual_pattern(sestina) else 1.0
     return weight_sum * pattern_penalty
@@ -96,8 +95,8 @@ def calculate_ev(jackpot, anti_crowd_factor=2.5, ticket_cost=1.0):
         "recommendation": (
             "GIOCA FORTE" if total_ev > 0.5 else
             "GIOCA" if total_ev > 0 else
-            "GIOCA MINIMO" if total_ev > -0.35 else   # FIX #15: era -0.2
-            "SALTA" if total_ev < -0.55 else          # FIX #15: era -0.3
+            "GIOCA MINIMO" if total_ev > -0.2 else
+            "SALTA" if total_ev < -0.3 else
             "GIOCA POCO"
         ),
     }
@@ -125,69 +124,32 @@ def rollover_status(jackpot):
 
 
 # ==========================================
-# 3-bis. BUDGET MODE DINAMICO (v3.3)
+# 3-bis. BUDGET MODE DINAMICO
 # ==========================================
 def determine_budget_mode(jackpot):
-    """
-    Modula il numero di sestine in base all'EV.
-    Soglie realistiche per SuperEnalotto (EV tipico -0.35/-0.55).
-    Costo sestina: 1,00 € (prezzo reale SuperEnalotto).
-
-    FIX #15: soglie allineate con calculate_ev() per coerenza semantica:
-    - SKIP    quando calculate_ev dice SALTA    (ev < -0.55)
-    - MINIMO  quando calculate_ev dice GIOCA POCO / MINIMO (-0.55 ≤ ev < -0.35)
-    - NORMALE quando calculate_ev dice GIOCA MINIMO (-0.35 ≤ ev < -0.10)
-    - ATTACK  quando calculate_ev dice GIOCA (-0.10 ≤ ev < 0.05)
-    - ALL-IN  quando calculate_ev dice GIOCA FORTE (ev ≥ 0.05)
-    """
     ev_data = calculate_ev(jackpot)
     ev = ev_data["ev_total"]
 
     if ev < -0.55:
-        return {
-            "mode": "SKIP",
-            "emoji": "🚫",
-            "n_sestinas": 0,
-            "cost_eur": 0.0,
-            "ev": ev,
-            "message": "EV molto negativo. Salta e risparmia.",
-        }
+        return {"mode": "SKIP", "emoji": "🚫", "n_sestinas": 0,
+                "cost_eur": 0.0, "ev": ev,
+                "message": "EV molto negativo. Salta e risparmia."}
     elif ev < -0.35:
-        return {
-            "mode": "MINIMO",
-            "emoji": "🟢",
-            "n_sestinas": 1,
-            "cost_eur": 1.0,
-            "ev": ev,
-            "message": "EV basso. 1 sestina (1,00 €).",
-        }
+        return {"mode": "MINIMO", "emoji": "🟢", "n_sestinas": 1,
+                "cost_eur": 1.0, "ev": ev,
+                "message": "EV basso. 1 sestina (1,00 €)."}
     elif ev < -0.10:
-        return {
-            "mode": "NORMALE",
-            "emoji": "🟡",
-            "n_sestinas": 2,
-            "cost_eur": 2.0,
-            "ev": ev,
-            "message": "EV neutro. 2 sestine (2,00 €).",
-        }
+        return {"mode": "NORMALE", "emoji": "🟡", "n_sestinas": 2,
+                "cost_eur": 2.0, "ev": ev,
+                "message": "EV neutro. 2 sestine (2,00 €)."}
     elif ev < 0.05:
-        return {
-            "mode": "ATTACK",
-            "emoji": "🟠",
-            "n_sestinas": 4,
-            "cost_eur": 4.0,
-            "ev": ev,
-            "message": "EV positivo. Attack: 4 sestine (4,00 €).",
-        }
+        return {"mode": "ATTACK", "emoji": "🟠", "n_sestinas": 4,
+                "cost_eur": 4.0, "ev": ev,
+                "message": "EV positivo. Attack: 4 sestine (4,00 €)."}
     else:
-        return {
-            "mode": "ALL-IN",
-            "emoji": "🔥",
-            "n_sestinas": 6,
-            "cost_eur": 6.0,
-            "ev": ev,
-            "message": "EV molto positivo! 6 sestine (6,00 €).",
-        }
+        return {"mode": "ALL-IN", "emoji": "🔥", "n_sestinas": 6,
+                "cost_eur": 6.0, "ev": ev,
+                "message": "EV molto positivo! 6 sestine (6,00 €)."}
 
 
 # ==========================================
@@ -266,17 +228,14 @@ def balance_pool(dodeca_pool):
 
 
 # ==========================================
-# 7. SCORING
+# 7. SCORING (v3.4 — senza anti-crowd)
 # ==========================================
-def _base_stat_score(combo, adjusted_scores):
-    """
-    FIX #21: helper comune per evitare duplicazione del calcolo base.
-    Usato sia da _score_realistic che da _score_assassin.
-    """
-    return sum(adjusted_scores[n] for n in combo)
-
-
 def _score_realistic(combo, adjusted_scores):
+    """
+    Score realistico SENZA anti-crowd.
+    Privilegia: stat_score alto, somma vicina a 273, parità 2-4,
+    bilanciamento bassi/alti, copertura decadi.
+    """
     s = sorted(combo)
     total = sum(s)
     dist_from_mean = abs(total - 273)
@@ -286,10 +245,10 @@ def _score_realistic(combo, adjusted_scores):
     balance_penalty = abs(bassi - 3) * 5
     decadi = len(set((n - 1) // 10 for n in s))
     decades_bonus = decadi * 3
-    stat_score = _base_stat_score(combo, adjusted_scores)  # FIX #21
-    crowd = anti_crowd_score(combo)
+    stat_score = sum(adjusted_scores[n] for n in combo)
 
-    return (stat_score * crowd
+    # Anti-crowd RIMOSSO: nessuna moltiplicazione per crowd
+    return (stat_score
             - dist_from_mean * 0.5
             - parity_penalty
             - balance_penalty
@@ -297,16 +256,21 @@ def _score_realistic(combo, adjusted_scores):
 
 
 def _score_assassin(combo, adjusted_scores):
+    """
+    Score assassin SENZA anti-crowd.
+    Privilegia: stat_score alto + molti numeri alti.
+    """
     s = sorted(combo)
     high_count = sum(1 for n in s if n > 55)
-    crowd = anti_crowd_score(combo) ** 1.3
-    stat_score = _base_stat_score(combo, adjusted_scores)  # FIX #21
+    stat_score = sum(adjusted_scores[n] for n in combo)
     high_bonus = high_count * 12
-    return stat_score * crowd + high_bonus
+
+    # Anti-crowd RIMOSSO: nessuna elevazione a potenza 1.3
+    return stat_score + high_bonus
 
 
 # ==========================================
-# 8. SELEZIONE MULTI-SESTINA (v3.3.2)
+# 8. SELEZIONE MULTI-SESTINA
 # ==========================================
 def _build_candidates(dodeca_pool, adjusted_scores, history):
     all_combos = list(itertools.combinations(dodeca_pool, 6))
@@ -324,10 +288,7 @@ def _build_candidates(dodeca_pool, adjusted_scores, history):
 
 def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestinas=2):
     """
-    Genera N sestine STATISTICAMENTE INDISTINGUIBILI dalle estrazioni reali.
-    Usa true_mimic_generator per applicare 12 fingerprint.
-    FIX v3.3.1: filtra l'output MIMIC con somma 240-310.
-    FIX v3.3.2: fallback estremo loggato (no più silenzioso).
+    Genera N sestine complementari, SENZA anti-crowd.
     """
     if n_sestinas <= 0:
         return []
@@ -337,22 +298,18 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
         from true_mimic_generator import generate_true_mimic
         sestinas, fp = generate_true_mimic(history, dodeca_pool, n_sestinas)
 
-        # Filtro somma hard
-        filtered = [s for s in sestinas
-                    if SUM_HARD_MIN <= sum(s) <= SUM_HARD_MAX]
+        filtered = [s for s in sestinas if 240 <= sum(s) <= 310]
 
         if len(filtered) >= n_sestinas:
-            print(f"[+] {len(filtered)} sestine MIMIC con somma "
-                  f"{SUM_HARD_MIN}-{SUM_HARD_MAX}")
+            print(f"[+] {len(filtered)} sestine MIMIC con somma 240-310")
             return [
                 (tuple(s), _score_realistic(s, adjusted_scores),
-                 anti_crowd_score(s), _score_realistic(s, adjusted_scores))
+                 1.0, _score_realistic(s, adjusted_scores))  # 3rd = placeholder
                 for s in filtered[:n_sestinas]
             ]
         else:
             print(f"[!] MIMIC: {len(filtered)}/{len(sestinas)} sestine "
-                  f"nel range {SUM_HARD_MIN}-{SUM_HARD_MAX}. "
-                  f"Fallback a selezione classica.")
+                  f"nel range 240-310. Fallback a selezione classica.")
     except ImportError:
         print("[!] true_mimic_generator non disponibile. Uso selezione classica.")
     except Exception as e:
@@ -361,12 +318,11 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     # === FALLBACK: selezione classica ===
     base_combos = _build_candidates(dodeca_pool, adjusted_scores, history)
 
-    # Sestina 1: "realistic"
     realistic = []
     for combo in base_combos:
         s = sorted(combo)
         total = sum(s)
-        if not (SUM_HARD_MIN <= total <= SUM_HARD_MAX):
+        if not (240 <= total <= 310):
             continue
         pari = sum(1 for n in s if n % 2 == 0)
         if pari < 2 or pari > 4:
@@ -386,27 +342,18 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     if realistic:
         sestina1 = list(realistic[0][0])
     else:
-        # FIX #2: fallback estremo loggato esplicitamente
-        print(f"[!] FALLBACK ESTREMO: nessuna sestina nel range "
-              f"{SUM_HARD_MIN}-{SUM_HARD_MAX} dopo scoring realistico. "
-              f"Allargo a 220-320 (attenzione: fuori range target).")
         relaxed = [(c, _score_realistic(c, adjusted_scores))
                    for c in base_combos if 220 <= sum(c) <= 320]
         relaxed.sort(key=lambda x: x[1], reverse=True)
-        if relaxed:
-            sestina1 = list(relaxed[0][0])
-            print(f"    → scelta: {sestina1} (somma {sum(sestina1)})")
-        else:
-            print(f"[!] FALLBACK ESTREMO FALLITO: uso base_combos[0] senza criteri")
-            sestina1 = list(base_combos[0])
+        sestina1 = list(relaxed[0][0]) if relaxed else list(base_combos[0])
 
     selected = [(sestina1, _score_realistic(sestina1, adjusted_scores))]
     selected_sets = [set(sestina1)]
 
     if n_sestinas == 1:
-        return [(tuple(s), sc, anti_crowd_score(s), sc) for s, sc in selected]
+        return [(tuple(s), sc, 1.0, sc) for s, sc in selected]
 
-    # Sestina 2: "assassin"
+    # Sestina 2: assassin
     assassin = []
     for combo in base_combos:
         overlap_s1 = len(set(combo).intersection(selected_sets[0]))
@@ -414,7 +361,7 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
             continue
         s = sorted(combo)
         total = sum(s)
-        if not (SUM_HARD_MIN <= total <= SUM_HARD_MAX):
+        if not (240 <= total <= 310):
             continue
         if sum(1 for n in s if n > 50) < 2:
             continue
@@ -428,11 +375,10 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     if assassin:
         sestina2 = list(assassin[0][0])
     else:
-        print(f"[!] Fallback sestina 2: nessuna assassin nel range, uso relaxed")
         relaxed = []
         for combo in base_combos:
             if len(set(combo).intersection(selected_sets[0])) <= 2:
-                if SUM_HARD_MIN <= sum(combo) <= SUM_HARD_MAX:
+                if 240 <= sum(combo) <= 310:
                     relaxed.append((combo, _score_assassin(combo, adjusted_scores)))
         relaxed.sort(key=lambda x: x[1], reverse=True)
         sestina2 = list(relaxed[0][0]) if relaxed else sestina1
@@ -440,13 +386,13 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     selected.append((sestina2, _score_assassin(sestina2, adjusted_scores)))
     selected_sets.append(set(sestina2))
 
-    # Sestine 3..N: mix bilanciato
+    # Sestine 3..N
     for _ in range(2, n_sestinas):
         pool_candidates = []
         for combo in base_combos:
             s = sorted(combo)
             total = sum(s)
-            if not (SUM_HARD_MIN <= total <= SUM_HARD_MAX):
+            if not (240 <= total <= 310):
                 continue
             if has_visual_pattern(combo):
                 continue
@@ -471,7 +417,7 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
         selected_sets.append(set(new_sestina))
 
     return [
-        (tuple(s), sc, anti_crowd_score(s), sc)
+        (tuple(s), sc, 1.0, sc)
         for s, sc in selected
     ]
 
