@@ -10,7 +10,9 @@
         [5, 25, 30, 31, 46, 57],
         [5, 35, 46, 48, 65, 80]
       ],
-      "note": "Concorso 149: 2 sestine (1 recuperata + 1 nuova MIMIC)"
+      "premio_reale": 5.00,
+      "esito": "2 punti (35, 46)",
+      "note": "Concorso 149: 2 sestine (1 recuperata + 1 nuova MIMIC) → €5 vinti"
     },
     {
       "concorso": 150,
@@ -31,6 +33,36 @@
         [5, 30, 31, 34, 65, 80]
       ],
       "note": "Concorso 151: 1 sestina"
+    },
+    {
+      "concorso": 154,
+      "data": "24/09/2026",
+      "giocata_il": "24/09/2026",
+      "costo_eur": 1.00,
+      "sestine": [
+        [4, 5, 22, 49, 79, 87]
+      ],
+      "note": "Concorso 154: 1 sestina"
+    },
+    {
+      "concorso": 155,
+      "data": "26/09/2026",
+      "giocata_il": "26/09/2026",
+      "costo_eur": 1.00,
+      "sestine": [
+        [5, 11, 15, 34, 87, 88]
+      ],
+      "note": "Concorso 155: 1 sestina"
+    },
+    {
+      "concorso": 156,
+      "data": "29/09/2026",
+      "giocata_il": "28/09/2026",
+      "costo_eur": 1.00,
+      "sestine": [
+        [5, 11, 15, 34, 87, 88]
+      ],
+      "note": "Concorso 156: 1 sestina (in attesa)"
     }
   ],
   "config": {
