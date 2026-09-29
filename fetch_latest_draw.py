@@ -1,13 +1,15 @@
 """
 fetch_latest_draw.py
 Scarica le ultime estrazioni SuperEnalotto e il jackpot corrente.
-Usa proxy intermedi (r.jina.ai, allorigins, corsproxy) per bypassare
-i blocchi IP di GitHub Actions verso i siti italiani.
 
-FIX (2026-09-19):
-- Parser jackpot riscritto: privilegia numeri vicini alla keyword "jackpot"
-  ed esclude il montepremi totale (range ristretto a 10M-200M).
-- Import utility condivise da venus_utils.
+VERSIONE DIAGNOSTICA (2026-09-29):
+- Logging pesante: per ogni fonte e ogni proxy, salva su file:
+  - URL tentato
+  - Status HTTP
+  - Lunghezza risposta
+  - Primi 2000 char della risposta (per capire se HTML è cambiato)
+- Al termine, scrive `fetch_debug.log` con tutto lo storico.
+- Il log viene committato dal workflow, così possiamo ispezionarlo.
 """
 import json
 import os
@@ -24,6 +26,7 @@ from venus_utils import load_json, save_json
 
 HISTORY_FILE = "venus_history.json"
 JACKPOT_FILE = "venus_jackpot.json"
+DEBUG_LOG_FILE = "fetch_debug.log"
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -37,12 +40,31 @@ HEADERS = {
     "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
 }
 
+# Buffer diagnostico globale (viene scritto su file a fine esecuzione)
+DIAG = []
+
+
+def diag(msg):
+    """Aggiunge una riga al buffer diagnostico e la stampa subito."""
+    line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
+    DIAG.append(line)
+    print(line)
+
+
+def flush_diag():
+    """Scrive il buffer diagnostico su file."""
+    try:
+        with open(DEBUG_LOG_FILE, "w", encoding="utf-8") as f:
+            f.write("\n".join(DIAG))
+        print(f"[+] Diagnostica salvata in {DEBUG_LOG_FILE} ({len(DIAG)} righe)")
+    except Exception as e:
+        print(f"[!] Errore salvataggio diagnostica: {e}")
+
 
 # ==========================================
-# UTILITY LOCALI
+# UTILITY
 # ==========================================
 def load_history():
-    """Wrapper che garantisce una lista come ritorno."""
     data = load_json(HISTORY_FILE, [])
     return data if isinstance(data, list) else []
 
@@ -82,20 +104,9 @@ def normalize_date(raw):
 
 
 def parse_jackpot_text(text, verbose=False):
-    """
-    Cerca un importo jackpot plausibile (10M-200M €).
-
-    FIX (2026-09-19):
-    - Prima strategia: numeri VICINI alla keyword "jackpot" (contesto).
-    - Fallback: numero più alto nel testo che cade nel range.
-    - Range ristretto a 10M-200M (esclude montepremi totali, che di solito
-      sono più alti del jackpot corrente).
-    """
     if not text:
         return None
 
-    # === STRATEGIA 1: contesto "jackpot ... numero" ===
-    # Cerca "jackpot" seguito (entro 80 caratteri) da un numero
     pattern_context = r"jackpot[^\d]{0,80}(\d{1,3}(?:[.,\s]\d{3}){1,3}|\d{7,9})"
     matches_context = re.findall(pattern_context, text, re.IGNORECASE)
 
@@ -110,12 +121,11 @@ def parse_jackpot_text(text, verbose=False):
             candidates_context.append(val)
 
     if verbose:
-        print(f"    [debug] Candidati con contesto 'jackpot': {candidates_context}")
+        diag(f"    [jackpot] contesto: {candidates_context}")
 
     if candidates_context:
         return max(candidates_context)
 
-    # === STRATEGIA 2: fallback generico sul testo ===
     pattern_generic = r"(\d{1,3}(?:[.,\s]\d{3}){1,3}|\d{7,9})"
     matches_generic = re.findall(pattern_generic, text)
 
@@ -130,7 +140,7 @@ def parse_jackpot_text(text, verbose=False):
             candidates_generic.append(val)
 
     if verbose:
-        print(f"    [debug] Candidati fallback: {candidates_generic}")
+        diag(f"    [jackpot] fallback: {candidates_generic}")
 
     if not candidates_generic:
         return None
@@ -138,57 +148,61 @@ def parse_jackpot_text(text, verbose=False):
 
 
 # ==========================================
-# FETCH MULTI-PROXY
+# FETCH MULTI-PROXY (con logging dettagliato)
 # ==========================================
+def _do_fetch(url, proxy_name, timeout=25):
+    """Esegue una richiesta HTTP con logging dettagliato. Ritorna (text, ok)."""
+    try:
+        diag(f"    → {proxy_name}: GET {url[:100]}...")
+        r = requests.get(url, headers=HEADERS, timeout=timeout)
+        diag(f"      status={r.status_code} len={len(r.text)} bytes")
+        if r.status_code != 200:
+            diag(f"      BODY[:500]: {r.text[:500]}")
+            return None, False
+        return r.text, True
+    except requests.Timeout:
+        diag(f"      TIMEOUT dopo {timeout}s")
+        return None, False
+    except requests.ConnectionError as e:
+        diag(f"      CONNECTION ERROR: {str(e)[:200]}")
+        return None, False
+    except Exception as e:
+        diag(f"      ERRORE: {type(e).__name__}: {str(e)[:200]}")
+        return None, False
+
+
 def fetch_via_jina(url, timeout=30):
-    """r.jina.ai renderizza JS e restituisce markdown pulito."""
     proxy_url = f"https://r.jina.ai/{url}"
-    print(f"    → tentativo jina.ai...")
-    r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
-    r.raise_for_status()
-    return r.text, "text"
+    return _do_fetch(proxy_url, "jina.ai", timeout)
 
 
 def fetch_via_allorigins(url, timeout=25):
     proxy_url = f"https://api.allorigins.win/raw?url={url}"
-    print(f"    → tentativo allorigins.win...")
-    r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
-    r.raise_for_status()
-    return r.text, "html"
+    return _do_fetch(proxy_url, "allorigins.win", timeout)
 
 
 def fetch_via_corsproxy(url, timeout=25):
     proxy_url = f"https://corsproxy.io/?{url}"
-    print(f"    → tentativo corsproxy.io...")
-    r = requests.get(proxy_url, headers=HEADERS, timeout=timeout)
-    r.raise_for_status()
-    return r.text, "html"
+    return _do_fetch(proxy_url, "corsproxy.io", timeout)
 
 
 def fetch_via_direct(url, timeout=20):
-    print(f"    → tentativo diretto...")
-    r = requests.get(url, headers=HEADERS, timeout=timeout)
-    r.raise_for_status()
-    return r.text, "html"
+    return _do_fetch(url, "diretto", timeout)
 
 
 def smart_fetch(url):
-    """
-    Prova tutti i metodi in cascata.
-    Ritorna (contenuto, tipo) dove tipo è 'html' o 'text'. None se tutto fallisce.
-    """
+    """Prova tutti i metodi in cascata. Ritorna (content, kind) o (None, None)."""
+    diag(f"[*] smart_fetch: {url}")
     for fn in (fetch_via_jina, fetch_via_allorigins,
                fetch_via_corsproxy, fetch_via_direct):
-        try:
-            content, kind = fn(url)
-            if content and len(content) > 500:
-                print(f"    ✓ successo ({len(content)} byte, {kind})")
-                return content, kind
-            else:
-                print(f"    ✗ risposta troppo corta")
-        except Exception as e:
-            print(f"    ✗ errore: {e}")
+        content, ok = fn(url)
+        if ok and content and len(content) > 500:
+            diag(f"    ✓ successo ({len(content)} byte)")
+            return content, "html"
+        elif ok:
+            diag(f"    ✗ risposta troppo corta ({len(content) if content else 0} byte)")
         time.sleep(1)
+    diag(f"    ✗ TUTTI I METODI FALLITI per {url}")
     return None, None
 
 
@@ -196,18 +210,23 @@ def smart_fetch(url):
 # PARSING — Estrazioni
 # ==========================================
 def parse_draws_from_text(text):
-    """
-    Parser generico: cerca pattern 'Concorso N. XXX del GG/MM/AAAA'
-    seguito da 6 numeri + jolly + superstar.
-    """
+    """Parser generico: cerca pattern 'Concorso N. XXX del GG/MM/AAAA'."""
     results = []
-    text = re.sub(r"\s+", " ", text)
+    text_norm = re.sub(r"\s+", " ", text)
+
+    # Log: cerchiamo le keyword
+    kw_count = len(re.findall(r"concorso", text_norm, re.IGNORECASE))
+    diag(f"    [parse] occorrenze 'concorso' nel testo: {kw_count}")
+
     pattern = re.compile(
         r"concorso\s*n[°.]?\s*(\d{2,4})\s*(?:del\s*)?(\d{2}[/\-.]\d{2}[/\-.]\d{4})"
         r"(.{0,400}?)(?=concorso\s*n|$)",
         re.IGNORECASE
     )
-    for m in pattern.finditer(text):
+    matches = list(pattern.finditer(text_norm))
+    diag(f"    [parse] match regex: {len(matches)}")
+
+    for m in matches:
         concorso = int(m.group(1))
         data = normalize_date(m.group(2))
         chunk = m.group(3)
@@ -227,6 +246,12 @@ def parse_draws_from_text(text):
                 "jolly": unique_nums[6],
                 "superstar": unique_nums[7],
             })
+            diag(f"    [parse] ✓ concorso {concorso} del {data}: "
+                 f"{unique_nums[:6]} | jolly {unique_nums[6]} | ss {unique_nums[7]}")
+        else:
+            diag(f"    [parse] ✗ concorso {concorso} del {data}: "
+                 f"solo {len(unique_nums)} numeri trovati")
+
     return results
 
 
@@ -239,24 +264,36 @@ def fetch_all_draws():
     ]
     all_results = []
     for url in sources:
-        print(f"[*] Estrazioni da: {url}")
+        diag(f"\n[*] === FONTE: {url} ===")
         content, kind = smart_fetch(url)
         if not content:
-            print(f"    [!] Fonte non raggiungibile.")
+            diag(f"    [!] Fonte non raggiungibile.")
             continue
+
         if kind == "html":
             soup = BeautifulSoup(content, "html.parser")
             text = soup.get_text(" ", strip=True)
+            diag(f"    [html] testo estratto: {len(text)} char")
         else:
             text = content
+
+        # Salva un sample del testo per ispezione
+        sample = text[:1500].replace("\n", " ")
+        diag(f"    [sample] primi 1500 char: {sample}")
+
         draws = parse_draws_from_text(text)
-        print(f"    ✓ {len(draws)} estrazioni estratte.")
+        diag(f"    ✓ {len(draws)} estrazioni estratte da questa fonte.")
         if draws:
             all_results.append(draws)
         time.sleep(1)
+
     if not all_results:
+        diag("[!] Nessuna fonte ha restituito estrazioni.")
         return []
+
     best = max(all_results, key=len)
+    diag(f"[+] Fonte migliore: {len(best)} estrazioni")
+
     seen = set()
     clean = []
     for item in sorted(best, key=lambda x: x["concorso"]):
@@ -271,20 +308,13 @@ def fetch_all_draws():
 # PARSING — Jackpot
 # ==========================================
 def fetch_jackpot():
-    """
-    Cerca il jackpot corrente su più siti.
-
-    FIX (2026-09-19):
-    - Usa il parser migliorato che privilegia il contesto "jackpot".
-    - Log di debug attivo per capire cosa viene scartato.
-    """
     sources = [
         "https://www.superenalotto.net/",
         "https://www.estrazionedelotto.it/estrazione-superenalotto",
         "https://www.lottologia.com/superenalotto/",
     ]
     for url in sources:
-        print(f"[*] Jackpot da: {url}")
+        diag(f"\n[*] === JACKPOT da: {url} ===")
         content, kind = smart_fetch(url)
         if not content:
             continue
@@ -296,7 +326,7 @@ def fetch_jackpot():
 
         val = parse_jackpot_text(text, verbose=True)
         if val:
-            print(f"    ✓ Jackpot trovato: {val:,} €")
+            diag(f"    ✓ Jackpot trovato: {val:,} €")
             return val
 
         time.sleep(1)
@@ -328,34 +358,48 @@ def merge_history(existing, fetched):
 # MAIN
 # ==========================================
 def main():
-    print("=== FETCH LATEST DRAW + JACKPOT (PROXY MODE) ===")
+    diag("=== FETCH LATEST DRAW + JACKPOT (DIAGNOSTIC MODE) ===")
+    diag(f"Python: {sys.version}")
+    diag(f"requests: {requests.__version__}")
+    diag(f"Now: {datetime.now().isoformat()}")
 
-    # 1) Estrazioni
-    history = load_history()
-    print(f"[*] Storico attuale: {len(history)} estrazioni.")
-    if history:
-        last = history[-1]
-        print(f"[*] Ultima: concorso {last.get('concorso')} del {last.get('data')}")
+    try:
+        # 1) Estrazioni
+        history = load_history()
+        diag(f"\n[*] Storico attuale: {len(history)} estrazioni.")
+        if history:
+            last = history[-1]
+            diag(f"[*] Ultima: concorso {last.get('concorso')} del {last.get('data')}")
 
-    fetched = fetch_all_draws()
-    if fetched:
-        print(f"[*] Totale estrazioni recuperate: {len(fetched)}")
-        merged, added = merge_history(history, fetched)
-        if added > 0:
-            save_history(merged)
-            print(f"[+] Aggiunte {added} nuove estrazioni. Totale: {len(merged)}")
+        fetched = fetch_all_draws()
+        if fetched:
+            diag(f"\n[*] Totale estrazioni recuperate: {len(fetched)}")
+            merged, added = merge_history(history, fetched)
+            if added > 0:
+                save_history(merged)
+                diag(f"[+] Aggiunte {added} nuove estrazioni. Totale: {len(merged)}")
+            else:
+                diag("[*] Nessuna nuova estrazione. Storico invariato.")
         else:
-            print("[*] Nessuna nuova estrazione. Storico invariato.")
-    else:
-        print("[!] Nessuna estrazione recuperata.")
+            diag("[!] Nessuna estrazione recuperata.")
 
-    # 2) Jackpot
-    print()
-    jackpot = fetch_jackpot()
-    if jackpot:
-        save_jackpot(jackpot)
-    else:
-        print("[!] Impossibile recuperare il jackpot.")
+        # 2) Jackpot
+        diag("")
+        jackpot = fetch_jackpot()
+        if jackpot:
+            save_jackpot(jackpot)
+        else:
+            diag("[!] Impossibile recuperare il jackpot.")
+
+    except Exception as e:
+        diag(f"[!!!] ECCEZIONE NON GESTITA: {type(e).__name__}: {e}")
+        import traceback
+        diag(traceback.format_exc())
+
+    finally:
+        flush_diag()
+
+    diag("=== FETCH COMPLETATO ===")
 
 
 if __name__ == "__main__":
