@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-26T19:48:24",
+  "updated_at": "2026-09-29T19:53:43",
   "next_contest": {
     "number": 156,
     "date": "29/09/2026",
@@ -61,7 +61,7 @@
       "sum": 240,
       "z_score": -0.76,
       "confidence": 21.2,
-      "signature": "VX-2026-156-E53F40"
+      "signature": "VX-2026-156-C567D8"
     }
   ],
   "vortex": {
