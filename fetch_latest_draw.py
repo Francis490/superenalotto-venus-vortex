@@ -10,6 +10,10 @@ VERSIONE DIAGNOSTICA (2026-09-29):
   - Primi 2000 char della risposta (per capire se HTML è cambiato)
 - Al termine, scrive `fetch_debug.log` con tutto lo storico.
 - Il log viene committato dal workflow, così possiamo ispezionarlo.
+
+FIX (2026-09-29 v2):
+- flush_diag() ora chiamato DOPO l'ultimo diag(), così la riga
+  "=== FETCH COMPLETATO ===" finisce nel file.
 """
 import json
 import os
@@ -396,10 +400,11 @@ def main():
         import traceback
         diag(traceback.format_exc())
 
-    finally:
-        flush_diag()
-
+    # Riga finale DENTRO il flusso, prima del flush
     diag("=== FETCH COMPLETATO ===")
+
+    # Flush finale: scrive TUTTO il buffer, inclusa la riga sopra
+    flush_diag()
 
 
 if __name__ == "__main__":
