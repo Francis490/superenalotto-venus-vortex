@@ -1,6 +1,6 @@
-# Aggiorna Venus Vortex - Concorso N. 156
+# Aggiorna Venus Vortex - Concorso N. 157
 
-> Ultima generazione automatica: **2026-09-29 21:24:59**
+> Ultima generazione automatica: **2026-09-29 21:38:15**
 
 ---
 
@@ -8,18 +8,18 @@
 
 | Campo | Valore |
 |---|---|
-| **Ultima estrazione** | Concorso N. 155 del 26/09/2026 |
-| **Combinazione** | `[52, 54, 55, 64, 68, 78]` |
-| **Jolly** | 31 |
-| **SuperStar** | 6 |
-| **Prossimo concorso** | N. 156 del 29/09/2026 |
+| **Ultima estrazione** | Concorso N. 156 del 29/09/2026 |
+| **Combinazione** | `[16, 26, 28, 30, 43, 72]` |
+| **Jolly** | 5 |
+| **SuperStar** | 32 |
+| **Prossimo concorso** | N. 157 del 01/10/2026 |
 | **Jackpot attuale** | EUR 33,400,000 |
 
 ---
 
 ## Procedura aggiornamento (2 minuti)
 
-### STEP 1 - Trova i numeri veri del concorso 156
+### STEP 1 - Trova i numeri veri del concorso 157
 
 Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
 - 6 numeri vincenti
@@ -40,13 +40,13 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 {
   "jackpot": 33400000,
   "last_draw": {
-    "concorso": 156,
-    "data": "29/09/2026",
+    "concorso": 157,
+    "data": "01/10/2026",
     "combinazione": [0, 0, 0, 0, 0, 0],
     "jolly": 0,
     "superstar": 0
   },
-  "note": "Compila con i numeri reali del concorso 156"
+  "note": "Compila con i numeri reali del concorso 157"
 }
 ```
 

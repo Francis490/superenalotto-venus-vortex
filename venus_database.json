@@ -1,23 +1,23 @@
 {
-  "updated_at": "2026-09-29T21:24:53",
+  "updated_at": "2026-09-29T21:38:08",
   "next_contest": {
-    "number": 156,
-    "date": "29/09/2026",
+    "number": 157,
+    "date": "01/10/2026",
     "jackpot": 33400000
   },
   "last_draw": {
-    "contest_number": 155,
-    "date": "26/09/2026",
+    "contest_number": 156,
+    "date": "29/09/2026",
     "numbers": [
-      52,
-      54,
-      55,
-      64,
-      68,
-      78
+      16,
+      26,
+      28,
+      30,
+      43,
+      72
     ],
-    "jolly": 31,
-    "superstar": 6
+    "jolly": 5,
+    "superstar": 32
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
@@ -37,12 +37,12 @@
     5,
     11,
     15,
+    21,
     22,
-    30,
     34,
     49,
-    67,
-    71,
+    60,
+    73,
     80,
     87,
     88
@@ -52,16 +52,16 @@
       "id": "VORTEX 1",
       "numbers": [
         15,
-        30,
+        21,
+        22,
         34,
-        49,
-        67,
-        80
+        73,
+        87
       ],
-      "sum": 275,
-      "z_score": 0.05,
-      "confidence": 24.75,
-      "signature": "VX-2026-156-A95498"
+      "sum": 252,
+      "z_score": -0.48,
+      "confidence": 22.6,
+      "signature": "VX-2026-157-6BB12C"
     }
   ],
   "vortex": {
