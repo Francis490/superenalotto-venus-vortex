@@ -15,6 +15,10 @@ Novità v3.3 (mantenute):
 - select_vortex_sestinas_multi: genera N sestine complementari
 - Balance pool 4/4/4
 - SKIP mode = 0 sestine
+
+FIX (2026-09-29):
+- Propagazione parametro `seed` a true_mimic_generator.generate_true_mimic
+  per garantire varietà tra concorsi consecutivi (fix sestina duplicata).
 """
 import hashlib
 import itertools
@@ -247,7 +251,6 @@ def _score_realistic(combo, adjusted_scores):
     decades_bonus = decadi * 3
     stat_score = sum(adjusted_scores[n] for n in combo)
 
-    # Anti-crowd RIMOSSO: nessuna moltiplicazione per crowd
     return (stat_score
             - dist_from_mean * 0.5
             - parity_penalty
@@ -265,7 +268,6 @@ def _score_assassin(combo, adjusted_scores):
     stat_score = sum(adjusted_scores[n] for n in combo)
     high_bonus = high_count * 12
 
-    # Anti-crowd RIMOSSO: nessuna elevazione a potenza 1.3
     return stat_score + high_bonus
 
 
@@ -286,9 +288,14 @@ def _build_candidates(dodeca_pool, adjusted_scores, history):
     return base
 
 
-def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestinas=2):
+def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history,
+                                  n_sestinas=2, seed=None):
     """
     Genera N sestine complementari, SENZA anti-crowd.
+
+    FIX (2026-09-29):
+    - Aggiunto parametro `seed` propagato a true_mimic_generator per
+      garantire varietà tra concorsi consecutivi.
     """
     if n_sestinas <= 0:
         return []
@@ -296,7 +303,9 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     # === TENTA MIMIC GENERATOR ===
     try:
         from true_mimic_generator import generate_true_mimic
-        sestinas, fp = generate_true_mimic(history, dodeca_pool, n_sestinas)
+        sestinas, fp = generate_true_mimic(
+            history, dodeca_pool, n_sestinas, seed=seed
+        )
 
         filtered = [s for s in sestinas if 240 <= sum(s) <= 310]
 
@@ -304,7 +313,7 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
             print(f"[+] {len(filtered)} sestine MIMIC con somma 240-310")
             return [
                 (tuple(s), _score_realistic(s, adjusted_scores),
-                 1.0, _score_realistic(s, adjusted_scores))  # 3rd = placeholder
+                 1.0, _score_realistic(s, adjusted_scores))
                 for s in filtered[:n_sestinas]
             ]
         else:
@@ -422,5 +431,8 @@ def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, n_sestin
     ]
 
 
-def select_vortex_sestinas(dodeca_pool, adjusted_scores, history, top_n=2):
-    return select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history, top_n)
+def select_vortex_sestinas(dodeca_pool, adjusted_scores, history,
+                            top_n=2, seed=None):
+    return select_vortex_sestinas_multi(
+        dodeca_pool, adjusted_scores, history, n_sestinas=top_n, seed=seed
+    )
