@@ -4,6 +4,12 @@ Genera sestine statisticamente INDISTINGUIBILI dalle estrazioni reali.
 Applica 12 fingerprint estratti dai dati storici.
 
 NON è una previsione. È una fedele riproduzione della distribuzione reale.
+
+FIX (2026-09-29):
+- Determinismo del generatore portava a sestina identica tra concorsi consecutivi
+  quando il pool rimaneva stabile. Aggiunto tie-breaker random con seed
+  deterministico (seed = numero concorso) per garantire varietà tra concorsi
+  mantenendo la riproducibilità.
 """
 import json
 import os
@@ -229,9 +235,16 @@ def validate_sestina(sestina, fp):
 # ==========================================
 # GENERATOR
 # ==========================================
-def generate_mimic_sestinas(pool, fp, n_sestinas=2, candidates=5000):
+def generate_mimic_sestinas(pool, fp, n_sestinas=2, candidates=5000, seed=None):
     """
     Genera N sestine che rispettano TUTTI i 12 fingerprint.
+
+    FIX (2026-09-29):
+    - Aggiunto parametro `seed` per tie-breaking deterministico tra combo
+      con score identico. Senza seed, il generatore era completamente
+      deterministico e restituiva sempre la prima combo valida in ordine
+      lessicografico del pool → sestina identica tra concorsi consecutivi
+      quando il pool rimaneva stabile.
     """
     if len(pool) < 6:
         return []
@@ -256,9 +269,17 @@ def generate_mimic_sestinas(pool, fp, n_sestinas=2, candidates=5000):
         scored.sort(key=lambda x: x[1], reverse=True)
         valid = scored[:candidates]
 
-    # Diversifica: prendi le migliori con overlap minimo
-    valid.sort(key=lambda x: x[1], reverse=True)
+    # FIX: tie-breaker random deterministico basato su seed.
+    # Tutte le combo valide hanno score 1.0, quindi il sort per score
+    # è un no-op. Aggiungiamo un tie-breaker che dipende dal seed
+    # (= numero concorso) per garantire varietà tra concorsi, mantenendo
+    # la riproducibilità (stesso concorso → stessa sestina).
+    rng = random.Random(seed) if seed is not None else random.Random()
+    valid_with_tiebreak = [(c, s, rng.random()) for c, s in valid]
+    valid_with_tiebreak.sort(key=lambda x: (x[1], x[2]), reverse=True)
+    valid = [(c, s) for c, s, _ in valid_with_tiebreak]
 
+    # Diversifica: prendi le migliori con overlap minimo
     selected = []
     for combo, score in valid:
         if len(selected) >= n_sestinas:
@@ -277,9 +298,13 @@ def generate_mimic_sestinas(pool, fp, n_sestinas=2, candidates=5000):
 # ==========================================
 # API PRINCIPALE
 # ==========================================
-def generate_true_mimic(history, pool, n_sestinas=2):
+def generate_true_mimic(history, pool, n_sestinas=2, seed=None):
     """
     API principale: genera sestine indistinguibili da estrazioni reali.
+
+    FIX (2026-09-29):
+    - Aggiunto parametro `seed` (tipicamente il numero del concorso target)
+      per garantire varietà tra concorsi mantenendo la riproducibilità.
     """
     fp = extract_fingerprints(history)
     print(f"[+] Fingerprint estratti da {fp['n_samples']} estrazioni")
@@ -290,6 +315,8 @@ def generate_true_mimic(history, pool, n_sestinas=2):
     print(f"    • Ultimo: {fp['last_min']}-{fp['last_max']} (μ={fp['last_mean']})")
     print(f"    • Gap max osservato: {fp['gap_max']}")
     print(f"    • Spread: {fp['spread_min']}-{fp['spread_max']}")
+    if seed is not None:
+        print(f"    • Seed (deterministico): {seed}")
 
-    sestinas = generate_mimic_sestinas(pool, fp, n_sestinas)
+    sestinas = generate_mimic_sestinas(pool, fp, n_sestinas, seed=seed)
     return sestinas, fp
