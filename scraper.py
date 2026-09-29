@@ -11,6 +11,15 @@ FIX (2026-09-19):
 - #18: report Telegram splittato automaticamente se > 3500 char
 - #23: send_telegram_photo/message ritornano bool per gestione errori
 - Import utility da venus_utils
+
+FIX (2026-09-29):
+- #30: passaggio `seed=next_concorso` a select_vortex_sestinas_multi per
+       garantire varietà tra concorsi consecutivi (era la causa della sestina
+       duplicata 155→156).
+- #31: consumo dell'override manuale dopo l'uso (il campo `last_draw` viene
+       azzerato per evitare che resti a inquinare run future).
+- #32: safety net anti-duplicato — warning esplicito se la sestina generata
+       è identica a quella del concorso precedente.
 """
 import json
 import os
@@ -81,6 +90,7 @@ try:
         format_win_notification,
         get_stats as get_track_stats,
         format_stats_for_report as format_track_report,
+        load_track,
     )
     TRACK_AVAILABLE = True
     print("[+] Venus Vortex — Track Record: ATTIVO")
@@ -258,8 +268,12 @@ def read_runtime_config():
                 config["source"] = "manual_override"
             if isinstance(mdata.get("last_draw"), dict):
                 config["override_last_draw"] = mdata["last_draw"]
-            print(f"[+] Config: jackpot da OVERRIDE MANUALE = "
-                  f"{config['jackpot']:,} €" if config["jackpot"] else "")
+            if config["jackpot"]:
+                print(f"[+] Config: jackpot da OVERRIDE MANUALE = "
+                      f"{config['jackpot']:,} €")
+            if config["override_last_draw"]:
+                print(f"[+] Config: override last_draw presente "
+                      f"(concorso {config['override_last_draw'].get('concorso')})")
         except Exception as e:
             print(f"[!] Errore lettura {MANUAL_OVERRIDE_FILE}: {e}")
 
@@ -282,6 +296,27 @@ def read_runtime_config():
         print(f"[!] Config: uso jackpot DEFAULT = {config['jackpot']:,} €")
 
     return config
+
+
+def consume_manual_override(remaining_jackpot=None):
+    """
+    FIX #31: dopo che l'override è stato applicato con successo, azzera
+    il campo `last_draw` per evitare che resti a inquinare run future.
+    Mantiene il jackpot (se presente) come override permanente.
+    """
+    try:
+        payload = {}
+        if isinstance(remaining_jackpot, int) and remaining_jackpot > 0:
+            payload["jackpot"] = remaining_jackpot
+        payload["last_draw"] = None
+        payload["note"] = (
+            f"last_draw consumato il {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        )
+        with open(MANUAL_OVERRIDE_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+        print(f"[+] Override consumato: last_draw rimosso da {MANUAL_OVERRIDE_FILE}")
+    except Exception as e:
+        print(f"[!] Errore consumo override: {e}")
 
 
 # ==========================================
@@ -448,6 +483,28 @@ def find_last_2026_draw(history):
     if not candidates:
         return None
     return max(candidates, key=lambda x: x["concorso"])
+
+
+def get_previous_sestina(next_concorso):
+    """
+    FIX #32: recupera la sestina del concorso precedente dal track record,
+    per il safety net anti-duplicato.
+    Ritorna una lista di 6 int oppure None.
+    """
+    if not TRACK_AVAILABLE:
+        return None
+    try:
+        track = load_track()
+        records = track.get("records", [])
+        prev_records = [r for r in records
+                        if r.get("target_concorso") == next_concorso - 1]
+        if prev_records:
+            sestinas = prev_records[0].get("sestinas", [])
+            if sestinas and len(sestinas[0]) == 6:
+                return list(sestinas[0])
+    except Exception as e:
+        print(f"[!] Errore recupero sestina precedente: {e}")
+    return None
 
 
 # ==========================================
@@ -757,7 +814,6 @@ def send_telegram_report_smart(report_text):
     if len(report_text) <= TELEGRAM_SPLIT_THRESHOLD:
         return send_telegram_message(report_text)
 
-    # Cerca un punto di taglio: doppio newline più vicino a metà
     mid = len(report_text) // 2
     split_pos = report_text.rfind("\n\n", 0, mid + 500)
     if split_pos < 1000:
@@ -795,7 +851,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
 
     jackpot_value = config["jackpot"]
 
-    # Vortex analysis
     vortex_data = {}
     ev_data = {}
     if VORTEX_ENGINE_AVAILABLE and jackpot_value > 0:
@@ -817,8 +872,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
         except Exception as e:
             print(f"[!] Errore VORTEX analysis: {e}")
 
-    # Titan predictions
-    # FIX #14: rimosso ev_score hardcoded 1.0
     titan_predictions = []
     for i, sestina in enumerate(all_sestinas):
         s_sum = sum(sestina)
@@ -839,7 +892,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
             "signature": sig,
         })
 
-    # FIX #13: ev_for_risk non più hardcoded -0.957
     ev_for_risk = ev_data.get("ev_total") if ev_data else None
 
     payload = {
@@ -876,7 +928,6 @@ def build_database_payload(history, dodeca_pool, all_sestinas,
 def main():
     print("=== VENUS VORTEX — COSMIC PATTERN ENGINE ===")
 
-    # FIX #4: legge config una sola volta
     config = read_runtime_config()
 
     raw_history = load_json(HISTORY_FILE, [])
@@ -896,7 +947,7 @@ def main():
         ]
         save_json(HISTORY_FILE, history)
 
-    # === OVERRIDE MANUALE (usa config già letto) ===
+    # === OVERRIDE MANUALE ===
     if config.get("override_last_draw"):
         try:
             manual_draw = config["override_last_draw"]
@@ -905,7 +956,8 @@ def main():
 
             if (isinstance(manual_concorso, int) and manual_concorso > 0
                     and isinstance(manual_comb, list) and len(manual_comb) == 6
-                    and all(isinstance(n, int) and 1 <= n <= 90 for n in manual_comb)):
+                    and all(isinstance(n, int) and 1 <= n <= 90
+                            for n in manual_comb)):
 
                 existing_ids = {item.get("concorso") for item in history
                                 if isinstance(item.get("concorso"), int)}
@@ -922,8 +974,18 @@ def main():
                     history = sort_history_by_date(history)
                     save_json(HISTORY_FILE, history)
                     print(f"[+] OVERRIDE: aggiunto concorso {manual_concorso}")
+
+                    # FIX #31: consuma override dopo l'uso
+                    consume_manual_override(
+                        remaining_jackpot=config.get("jackpot")
+                    )
                 else:
-                    print(f"[*] Override: concorso {manual_concorso} già presente.")
+                    print(f"[*] Override: concorso {manual_concorso} già presente. "
+                          f"Consumo override.")
+                    # Consuma comunque (era già applicato in run precedenti)
+                    consume_manual_override(
+                        remaining_jackpot=config.get("jackpot")
+                    )
             else:
                 print("[*] Override manuale: nessuna estrazione valida.")
         except Exception as e:
@@ -947,7 +1009,6 @@ def main():
         except Exception as e:
             print(f"[!] Errore bilanciamento pool: {e}")
 
-    # Budget mode (usa config già letto)
     jackpot_for_mode = config["jackpot"]
     budget_mode = {
         "mode": "NORMALE", "emoji": "🟡", "n_sestinas": 2,
@@ -958,50 +1019,15 @@ def main():
         try:
             budget_mode = determine_budget_mode(jackpot_for_mode)
             print(f"[+] Budget mode: {budget_mode['emoji']} {budget_mode['mode']} "
-                  f"({budget_mode['n_sestinas']} sestine · {budget_mode['cost_eur']}€)")
+                  f"({budget_mode['n_sestinas']} sestine · "
+                  f"{budget_mode['cost_eur']}€)")
         except Exception as e:
             print(f"[!] Errore budget mode: {e}")
 
     n_sestinas = int(budget_mode.get("n_sestinas", 2))
     skip_mode = (n_sestinas == 0)
 
-    all_sestinas = []
-
-    if skip_mode:
-        print("[*] BUDGET MODE = SKIP: nessuna sestina generata.")
-    else:
-        if VORTEX_ENGINE_AVAILABLE:
-            try:
-                vortex_sel = select_vortex_sestinas_multi(
-                    dodeca_pool, adjusted_scores, history, n_sestinas=n_sestinas
-                )
-                all_sestinas = [list(s[0]) for s in vortex_sel]
-                print(f"[+] {len(all_sestinas)} sestine selezionate con VORTEX ENGINE")
-            except Exception as e:
-                print(f"[!] Errore VORTEX multi: {e}. Fallback a 2 sestine.")
-                vortex_sel = select_vortex_sestinas(dodeca_pool, adjusted_scores,
-                                                    history, top_n=2)
-                all_sestinas = [list(vortex_sel[0][0])]
-                if len(vortex_sel) > 1:
-                    all_sestinas.append(list(vortex_sel[1][0]))
-        else:
-            t1, t2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
-            all_sestinas = [t1, t2]
-            print("[*] Sestine selezionate con TITAN classico (fallback)")
-
-    # === VALIDAZIONE FINGERPRINT ===
-    if MIMIC_AVAILABLE and all_sestinas:
-        try:
-            fp = extract_fingerprints(history)
-            for i, s in enumerate(all_sestinas, 1):
-                ok, score, checks = validate_sestina(s, fp)
-                status = "OK" if ok else "PARZIALE"
-                passed = int(round(score * 12))
-                print(f"[+] Sestina {i}: {status} - {passed}/12 fingerprint")
-        except Exception as e:
-            print(f"[!] Validazione fingerprint saltata: {e}")
-
-    # === ULTIMA ESTRAZIONE 2026 ===
+    # === CALCOLA next_concorso PRIMA di generare sestine (serve come seed) ===
     last_draw = last_2026 if last_2026 else (history[-1] if history else {})
     last_concorso = last_draw.get("concorso", "N/A")
     last_comb = last_draw.get("combinazione") or []
@@ -1014,6 +1040,62 @@ def main():
         next_concorso = 150
 
     next_date_str = calculate_next_draw_date(last_draw.get("data", "N/A"))
+
+    all_sestinas = []
+
+    if skip_mode:
+        print("[*] BUDGET MODE = SKIP: nessuna sestina generata.")
+    else:
+        if VORTEX_ENGINE_AVAILABLE:
+            try:
+                # FIX #30: passa seed=next_concorso per garantire varietà
+                vortex_sel = select_vortex_sestinas_multi(
+                    dodeca_pool, adjusted_scores, history,
+                    n_sestinas=n_sestinas, seed=next_concorso
+                )
+                all_sestinas = [list(s[0]) for s in vortex_sel]
+                print(f"[+] {len(all_sestinas)} sestine selezionate con "
+                      f"VORTEX ENGINE (seed={next_concorso})")
+            except Exception as e:
+                print(f"[!] Errore VORTEX multi: {e}. Fallback a 2 sestine.")
+                vortex_sel = select_vortex_sestinas(
+                    dodeca_pool, adjusted_scores, history,
+                    top_n=2, seed=next_concorso
+                )
+                all_sestinas = [list(vortex_sel[0][0])]
+                if len(vortex_sel) > 1:
+                    all_sestinas.append(list(vortex_sel[1][0]))
+        else:
+            t1, t2 = select_titan_sestinas(dodeca_pool, adjusted_scores, history)
+            all_sestinas = [t1, t2]
+            print("[*] Sestine selezionate con TITAN classico (fallback)")
+
+    # === FIX #32: SAFETY NET ANTI-DUPLICATO ===
+    if all_sestinas:
+        prev_sestina = get_previous_sestina(next_concorso)
+        if prev_sestina:
+            curr_set = set(all_sestinas[0])
+            prev_set = set(prev_sestina)
+            if curr_set == prev_set:
+                print(f"[!!!] ATTENZIONE: sestina identica a concorso "
+                      f"{next_concorso - 1}. Possibile regressione del "
+                      f"generatore o pool troppo stabile.")
+            else:
+                overlap = len(curr_set & prev_set)
+                print(f"[+] Differenziata da concorso {next_concorso - 1} "
+                      f"(overlap {overlap}/6)")
+
+    # === VALIDAZIONE FINGERPRINT ===
+    if MIMIC_AVAILABLE and all_sestinas:
+        try:
+            fp = extract_fingerprints(history)
+            for i, s in enumerate(all_sestinas, 1):
+                ok, score, checks = validate_sestina(s, fp)
+                status = "OK" if ok else "PARZIALE"
+                passed = int(round(score * 12))
+                print(f"[+] Sestina {i}: {status} - {passed}/12 fingerprint")
+        except Exception as e:
+            print(f"[!] Validazione fingerprint saltata: {e}")
 
     # === TRACK RECORD: registra sestine ===
     if TRACK_AVAILABLE and all_sestinas:
@@ -1072,7 +1154,6 @@ def main():
         except Exception as e:
             print(f"[!] Errore test statistici: {e}")
 
-    # === PERSONAL STATS ===
     personal_block = "—"
     if PERSONAL_AVAILABLE:
         try:
@@ -1091,7 +1172,8 @@ def main():
             print(f"[!] Errore track stats: {e}")
 
     # === REPORT TELEGRAM ===
-    jackpot_for_report = payload.get("next_contest", {}).get("jackpot", DEFAULT_JACKPOT)
+    jackpot_for_report = payload.get("next_contest", {}).get(
+        "jackpot", DEFAULT_JACKPOT)
     vortex_data = payload.get("vortex", {})
     ev_data = vortex_data.get("ev", {})
     rollover_data = vortex_data.get("rollover", {})
@@ -1099,11 +1181,13 @@ def main():
 
     ev_line = "—"
     if ev_data:
-        ev_line = f"{ev_data.get('ev_total', 0):+.4f} € · {ev_data.get('recommendation', '—')}"
+        ev_line = (f"{ev_data.get('ev_total', 0):+.4f} € · "
+                   f"{ev_data.get('recommendation', '—')}")
 
     rollover_line = "—"
     if rollover_data:
-        rollover_line = f"{rollover_data.get('emoji', '')} {rollover_data.get('level', '—')}"
+        rollover_line = (f"{rollover_data.get('emoji', '')} "
+                         f"{rollover_data.get('level', '—')}")
 
     bt_line = "—"
     if bt_data and bt_data.get("total", 0) > 0:
@@ -1170,22 +1254,17 @@ def main():
         f"🏠 <a href='{DASHBOARD_URL}'>Apri Dashboard Principale</a>"
     )
 
-    # === INVIO GRAFICO (senza caption) + REPORT ===
     send_telegram_photo(CHART_FILE, "")
-    # FIX #18: split intelligente
     send_telegram_report_smart(report_text)
 
-    # === INVIA HEATMAP ===
     if heatmap_path and os.path.exists(heatmap_path):
         send_telegram_photo(heatmap_path,
                             "🔥 Vortex Heatmap — Numeri caldi/freddi")
 
-    # === INVIA GRAFICO DISTRIBUZIONE ===
     if dist_path and os.path.exists(dist_path):
         send_telegram_photo(dist_path,
                             "📊 Analisi Distribuzione — Somme, Decadi, Parità")
 
-    # === INVIA MESSAGGIO LINK ===
     links_msg = (
         "📊 <b>ANALYTICS DASHBOARD</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -1196,12 +1275,12 @@ def main():
     )
     send_telegram_message(links_msg)
 
-    # === NOTIFICA VINCITA (URGENTE) ===
     if win_info:
         win_msg = format_win_notification(win_info)
         if win_msg:
             send_telegram_message(win_msg)
-            print(f"[!] Notifica VINCITA inviata per concorso {win_info['concorso']}")
+            print(f"[!] Notifica VINCITA inviata per concorso "
+                  f"{win_info['concorso']}")
 
     print("=== VENUS VORTEX — COMPLETATO ===")
 
