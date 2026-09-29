@@ -145,3 +145,116 @@ L'anomalia è temporalmente sospetta: `vortex_opportunity.py` è stato modificat
 - Investigare bug sestina
 - Preparare concorso 157 (giovedì 01/10)
 - Valutare revisione pesi generatore se il trend 0-hit continua
+
+---
+
+## 2026-09-29 (sera) — Fix sestina duplicata + override consumed
+
+**Obiettivo:** Diagnosticare e risolvere l'anomalia della sestina duplicata
+tra concorso 155 e 156.
+
+### Diagnosi
+
+**Root cause identificata:** `true_mimic_generator.generate_mimic_sestinas`
+era completamente **deterministico**. Tutte le combo valide hanno score 1.0,
+quindi il `sort(key=lambda x: x[1], reverse=True)` era un no-op e veniva
+sempre scelta la prima combo in ordine lessicografico del pool. Quando il
+pool rimaneva stabile tra due concorsi consecutivi, la sestina risultava
+identica.
+
+**Non era** un bug di persistenza. Verificati e scartati:
+- ❌ `venus_history.json` non aggiornato → falso, arrivava al 155
+- ❌ `next_concorso` sbagliato → falso, era 156
+- ❌ `record_predictions` non sovrascrive → falso, funzionava correttamente
+- ❌ Rebase git ha perso commit → falso
+- ❌ Override non consumato → vero, ma bug collaterale (non causa del duplicato)
+
+**Bug collaterale scoperto:** `venus_manual_override.json` non veniva
+consumato dopo l'uso → rimaneva a inquinare la diagnostica delle run future
+(es. "override: concorso 155 già presente" ad ogni run).
+
+### Fix applicati
+
+**`true_mimic_generator.py`:**
+- Aggiunto parametro `seed` a `generate_mimic_sestinas` e `generate_true_mimic`
+- Implementato tie-breaker random deterministico basato su seed:
+  `rng = random.Random(seed)` → `rng.random()` come chiave secondaria di sort
+- Stesso concorso → stessa sestina (riproducibile). Concorso diverso → sestina diversa.
+
+**`vortex_opportunity.py`:**
+- Propagazione parametro `seed` a `select_vortex_sestinas_multi` e `select_vortex_sestinas`
+- Passaggio `seed` a `generate_true_mimic`
+
+**`scraper.py`:**
+- Passaggio `seed=next_concorso` alla pipeline di generazione sestine
+- Nuova funzione `consume_manual_override()`: azzera `last_draw` dopo l'uso
+  (mantiene `jackpot` come override permanente)
+- Nuova funzione `get_previous_sestina()`: safety net anti-duplicato
+- Log esplicito overlap con sestina del concorso precedente
+
+**`venus_sync.yml`:**
+- Aggiunto `venus_manual_override.json` alla commit list
+- Aggiunto step "Verifica avanzamento history": fail esplicito se l'ultimo
+  concorso 2026 in history ha più di 8 giorni (rileva fetch rotto silenzioso)
+
+### Test (run #154 del 29/09)
+
+**Setup:** override manuale con concorso 156, track record ripristinato con
+la sestina originale 156 ([5,11,15,34,87,88]).
+
+**Risultato:**
+- ✅ `[+] Config: override last_draw presente (concorso 156)`
+- ✅ `[+] OVERRIDE: aggiunto concorso 156`
+- ✅ `[+] Override consumato: last_draw rimosso`
+- ✅ `[+] Ultima estrazione 2026: concorso 156 del 29/09/2026`
+- ✅ `Seed (deterministico): 157`
+- ✅ `[+] Differenziata da concorso 156 (overlap 3/6)`
+- ✅ `[+] Track: concorso 156 -> miglior esito = 0 punti`
+- ✅ `[+] Track record: registrato concorso 157 (1 sestine)`
+- ✅ `Concorso di riferimento: 157 del 01/10/2026`
+- ✅ Nessuna regressione su concorsi 149-155
+
+**Sestina generata per il 157:** nuova (non più [5,11,15,34,87,88]).
+
+### Anomalia residua: `fetch_latest_draw.py`
+
+**Sintomo:** gira per 2m06s e non aggiunge nulla a history. Il concorso 156
+è stato aggiunto solo grazie all'override manuale.
+
+**Diagnosi in corso:**
+- Riscritto `fetch_latest_draw.py` in versione diagnostica con logging
+  pesante (status HTTP, len risposta, sample primi 1500 char per ogni fonte
+  e ogni proxy)
+- Aggiunto `fetch_debug.log` come output committato dal workflow
+- Al prossimo run (giovedì 01/10) il log rivelerà la causa esatta
+
+### Stato attuale
+
+- Versione bot: **v3.4.1** (con seed fix)
+- Database: **364 concorsi** (208 del 2025 + 156 del 2026)
+- Ultimo concorso elaborato: **156** (29/09/2026)
+- Prossimo concorso: **157** (01/10/2026)
+- Jackpot corrente: **€33.400.000**
+- Personal stats: speso **€8,00** / vinto **€5,00** / bilancio **−€3,00** / ROI **−37,5%**
+- Track record: **8 concorsi completati** (+1 in attesa), 3+ punti: **0**
+- Ultima giocata: `[5, 11, 15, 34, 87, 88]` (concorso 156, 0 punti)
+- Sestina bot attuale: **nuova per il 157** (generata con seed=157)
+- Override manuale: **consumato e pulito** ✅
+
+### Lavoro in sospeso
+
+- ~~Fix True Mimic (range 240-310)~~ ✅
+- ~~Setup PWA~~ ✅
+- ~~Rimozione anti-crowd~~ ✅
+- ~~Fix sestina duplicata~~ ✅
+- **Debug `fetch_latest_draw.py`** ← prossimo
+- Monitoraggio concorsi 157+
+- Valutare revisione pesi generatore se trend 0-hit continua
+
+### Problemi noti
+
+- `fetch_latest_draw.py` **completamente rotto** (non aggiunge estrazioni).
+  Workaround attuale: override manuale. Versione diagnostica deployata,
+  in attesa di log per diagnosi definitiva.
+- 8 concorsi consecutivi senza hit ≥3 punti. Atteso statisticamente
+  ≈1 hit ogni 10-12 giocate. Non ancora conclusivo ma da monitorare.
