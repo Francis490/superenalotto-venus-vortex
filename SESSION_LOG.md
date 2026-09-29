@@ -108,11 +108,40 @@
 
 ---
 
-## Template nuova sessione
+## 2026-09-29 — Esito concorso 156
 
-### YYYY-MM-DD — Titolo
-**Obiettivo:**
-**Fatto:**
+**Estrazione:** `[16, 26, 28, 30, 43, 72]` (jolly 5, superstar 32)
+**Sestina giocata:** `[5, 11, 15, 34, 87, 88]` → **0 punti**
+**Costo:** €1
+
+**Note:**
+- Il numero **5** è uscito solo come **Jolly** → non valido ai fini del punteggio.
+- Estrazione concentrata nella fascia 16-72, sestina concentrata su estremi (5, 87, 88) → zero overlap.
+- **Secondo concorso consecutivo a 0 punti** (155, 156).
+
+**🚩 Anomalia rilevata:**
+La sestina del 156 (`[5, 11, 15, 34, 87, 88]`) è **identica** a quella del 155. Va verificato se:
+- (a) è una scelta deliberata (replay fino a hit), oppure
+- (b) è un **bug** del generatore che non ha rigenerato la sestina dopo il concorso 155.
+L'anomalia è temporalmente sospetta: `vortex_opportunity.py` è stato modificato a v3.4 (rimozione anti-crowd) il 28/09, cioè **dopo** la giocata 155 e **prima** della 156. Possibile regressione introdotta dal refactor.
+
+**Personal stats aggiornate:**
+- Speso: €8,00
+- Vinto: €5,00
+- Bilancio: **−€3,00**
+- ROI: **−37,5%**
+- Concorsi completati: 8
+- Hit ≥ 3 punti: 0
+
 **Problemi:**
+- Sospetto bug generazione sestina (vedi sopra)
+- 8 concorsi consecutivi senza hit ≥3 punti (atteso statisticamente ≈1 hit ogni 10-12 giocate)
+
 **Decisioni:**
+- Aprire investigazione sul flusso di generazione/persistenza della sestina.
+- Verificare `vortex_opportunity.py` v3.4 e workflow TITAN.
+
 **Prossimo:**
+- Investigare bug sestina
+- Preparare concorso 157 (giovedì 01/10)
+- Valutare revisione pesi generatore se il trend 0-hit continua
