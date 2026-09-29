@@ -1,11 +1,5 @@
 {
   "jackpot": 33400000,
-  "last_draw": {
-    "concorso": 155,
-    "data": "26/09/2026",
-    "combinazione": [52, 54, 55, 64, 68, 78],
-    "jolly": 31,
-    "superstar": 6
-  },
-  "note": "Concorso 155 - aggiornato manualmente"
+  "last_draw": null,
+  "note": "reset manuale pre-fix 2026-09-29 - concorso 155 già in history"
 }
