@@ -216,36 +216,20 @@
     },
     {
       "target_concorso": 156,
-      "generated_at": "2026-09-29T21:24:53.637068",
+      "generated_at": "2026-09-26T19:48:24.853867",
       "mode": "MINIMO",
       "sestinas": [
         [
+          5,
+          11,
           15,
-          30,
           34,
-          49,
-          67,
-          80
+          87,
+          88
         ]
       ],
       "result": null,
-      "history_versions": [
-        {
-          "sestinas": [
-            [
-              5,
-              11,
-              15,
-              34,
-              87,
-              88
-            ]
-          ],
-          "mode": "MINIMO",
-          "generated_at": "2026-09-26T19:48:24.853867",
-          "replaced_at": "2026-09-29T21:24:53.637058"
-        }
-      ]
+      "history_versions": []
     }
   ]
 }
