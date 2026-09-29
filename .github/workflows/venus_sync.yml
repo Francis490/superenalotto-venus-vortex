@@ -145,10 +145,12 @@ jobs:
 
           # FIX (2026-09-29): aggiunto venus_manual_override.json per
           # non perdere l'eventuale consumo dell'override.
+          # FIX (2026-09-29 v2): aggiunto fetch_debug.log per diagnostica fetch.
           for file in venus_database.json vortex_chart.png vortex_heatmap.png \
                       vortex_distribution.png venus_history.json \
                       venus_jackpot.json venus_track_record.json \
-                      venus_manual_override.json UPDATE_HERE.md; do
+                      venus_manual_override.json UPDATE_HERE.md \
+                      fetch_debug.log; do
             if [ -f "$file" ]; then
               git add "$file"
             fi
