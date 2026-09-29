@@ -1,5 +1,11 @@
 {
   "jackpot": 33400000,
-  "last_draw": null,
-  "note": "reset manuale pre-fix 2026-09-29 - concorso 155 già in history"
+  "last_draw": {
+    "concorso": 156,
+    "data": "29/09/2026",
+    "combinazione": [16, 26, 28, 30, 43, 72],
+    "jolly": 5,
+    "superstar": 32
+  },
+  "note": "concorso 156 - fetch fallito, aggiunto manualmente"
 }
