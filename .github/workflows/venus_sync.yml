@@ -88,6 +88,46 @@ jobs:
         run: python fetch_latest_draw.py
         continue-on-error: true
 
+      # FIX (2026-09-29): check di avanzamento history.
+      # Se l'ultimo concorso 2026 in history ha più di 8 giorni,
+      # qualcosa è rotto nel fetch → fail esplicito.
+      - name: Verifica avanzamento history
+        run: |
+          python << 'PYEOF'
+          import json
+          from datetime import datetime
+
+          with open("venus_history.json", "r", encoding="utf-8") as f:
+              h = json.load(f)
+
+          candidates = [
+              d for d in h
+              if isinstance(d.get("concorso"), int)
+              and 1 <= d["concorso"] <= 999
+          ]
+          if not candidates:
+              print("[!] Nessun concorso 2026 in history. Skip check.")
+              raise SystemExit(0)
+
+          last = max(candidates, key=lambda x: x["concorso"])
+          date_str = last.get("data", "")
+          try:
+              d = datetime.strptime(date_str, "%d/%m/%Y")
+          except Exception:
+              print(f"[!] Data non parsabile: {date_str}. Skip check.")
+              raise SystemExit(0)
+
+          age = (datetime.now() - d).days
+          print(f"[*] Ultimo concorso: {last['concorso']} del {date_str} "
+                f"({age} giorni fa)")
+
+          if age > 8:
+              print(f"[ERROR] History ferma da {age} giorni. "
+                    f"Fetch probabilmente rotto. Interrompo.")
+              raise SystemExit(1)
+          print("[OK] History aggiornata.")
+          PYEOF
+
       - name: Esecuzione TITAN Engine
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -103,7 +143,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          for file in venus_database.json vortex_chart.png vortex_heatmap.png vortex_distribution.png venus_history.json venus_jackpot.json venus_track_record.json UPDATE_HERE.md; do
+          # FIX (2026-09-29): aggiunto venus_manual_override.json per
+          # non perdere l'eventuale consumo dell'override.
+          for file in venus_database.json vortex_chart.png vortex_heatmap.png \
+                      vortex_distribution.png venus_history.json \
+                      venus_jackpot.json venus_track_record.json \
+                      venus_manual_override.json UPDATE_HERE.md; do
             if [ -f "$file" ]; then
               git add "$file"
             fi
