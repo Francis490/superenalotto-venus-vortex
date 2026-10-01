@@ -1,70 +1,23 @@
 """
 vortex_opportunity.py
-VENUS VORTEX — Opportunity Engine v3.4
+VENUS VORTEX — Opportunity Engine v4.0 (SIMPLIFIED)
 
-Cambio di paradigma (2026-09-26):
-- RIMOSSO anti-crowd dallo scoring (non aumenta P(6))
-- Scoring basato SOLO su: stat_score, bilanciamento pari/dispari, decadi
-- Massima varietà tra le sestine
-
-Novità v3.3.1 (mantenute):
-- Filtro somma 240-310 anche sull'output del TRUE MIMIC generator
-
-Novità v3.3 (mantenute):
-- determine_budget_mode: modula n° sestine in base all'EV
-- select_vortex_sestinas_multi: genera N sestine complementari
-- Balance pool 4/4/4
-- SKIP mode = 0 sestine
-
-FIX (2026-09-29):
-- Propagazione parametro `seed` a true_mimic_generator.generate_true_mimic
-  per garantire varietà tra concorsi consecutivi (fix sestina duplicata).
+Cambio di paradigma (2026-10-01):
+- RIMOSSI tutti i filtri complessi (anti-crowd, scoring, tiered pool).
+- Generatore semplice: sestina con somma 240-310, seed per determinismo.
+- Mantiene: EV calculator, rollover detector, budget mode, signature, backtest.
+- Coerente con l'approccio di Aurora Engine v5.5.
 """
 import hashlib
-import itertools
+import random
+
+
+SUM_MIN = 240
+SUM_MAX = 310
 
 
 # ==========================================
-# 1. FUNZIONI ANTI-CROWD (mantenute ma NON usate nello scoring)
-# ==========================================
-def anti_crowd_weight(number):
-    """Mantenuta per compatibilità. NON usata nello scoring v3.4."""
-    if 1 <= number <= 31:
-        return 0.4
-    elif 32 <= number <= 45:
-        return 0.7
-    elif 46 <= number <= 60:
-        return 1.2
-    elif 61 <= number <= 90:
-        return 1.5
-    return 1.0
-
-
-def has_visual_pattern(sestina):
-    """Rileva pattern visivi. Usata come filtro leggero, non come penalità."""
-    s = sorted(sestina)
-    consecutivi = sum(1 for i in range(len(s) - 1) if s[i + 1] - s[i] == 1)
-    if consecutivi >= 2:
-        return True
-    decadi = set((n - 1) // 10 for n in s)
-    if len(decadi) <= 2:
-        return True
-    if all(n % 5 == 0 for n in s):
-        return True
-    if all(n % 10 == 0 for n in s):
-        return True
-    return False
-
-
-def anti_crowd_score(sestina):
-    """Mantenuta per compatibilità. NON usata nello scoring v3.4."""
-    weight_sum = sum(anti_crowd_weight(n) for n in sestina)
-    pattern_penalty = 0.5 if has_visual_pattern(sestina) else 1.0
-    return weight_sum * pattern_penalty
-
-
-# ==========================================
-# 2. EV CALCULATOR
+# 1. EV CALCULATOR
 # ==========================================
 def estimate_players(jackpot):
     if jackpot < 30_000_000:
@@ -107,7 +60,7 @@ def calculate_ev(jackpot, anti_crowd_factor=2.5, ticket_cost=1.0):
 
 
 # ==========================================
-# 3. ROLLOVER DETECTOR
+# 2. ROLLOVER DETECTOR
 # ==========================================
 def rollover_status(jackpot):
     if jackpot < 30_000_000:
@@ -128,7 +81,7 @@ def rollover_status(jackpot):
 
 
 # ==========================================
-# 3-bis. BUDGET MODE DINAMICO
+# 3. BUDGET MODE
 # ==========================================
 def determine_budget_mode(jackpot):
     ev_data = calculate_ev(jackpot)
@@ -167,9 +120,9 @@ def vortex_signature(sestina, concorso, data_str):
 
 
 # ==========================================
-# 5. BACKTEST ENGINE
+# 5. BACKTEST
 # ==========================================
-def backtest(history, sestina1, sestina2, last_n=30):
+def backtest(history, sestina1, sestina2=None, last_n=30):
     if not history or len(history) < 2:
         return None
     if len(history) < last_n + 1:
@@ -178,7 +131,8 @@ def backtest(history, sestina1, sestina2, last_n=30):
         return None
 
     results = {"3_hits": 0, "4_hits": 0, "5_hits": 0, "total": 0}
-    s1, s2 = set(sestina1), set(sestina2)
+    s1 = set(sestina1)
+    s2 = set(sestina2) if sestina2 else s1
 
     for i in range(len(history) - last_n, len(history)):
         if i < 0:
@@ -210,229 +164,66 @@ def backtest(history, sestina1, sestina2, last_n=30):
 
 
 # ==========================================
-# 6. BALANCE POOL
+# 6. BALANCE POOL (no-op per compatibilità)
 # ==========================================
 def balance_pool(dodeca_pool):
-    bassi = sorted([n for n in dodeca_pool if 1 <= n <= 30])
-    medi = sorted([n for n in dodeca_pool if 31 <= n <= 60])
-    alti = sorted([n for n in dodeca_pool if 61 <= n <= 90])
-
-    target = 4
-    balanced = []
-    balanced.extend(bassi[:target])
-    balanced.extend(medi[:target])
-    balanced.extend(alti[:target])
-
-    if len(balanced) < 12:
-        restanti = [n for n in dodeca_pool if n not in balanced]
-        restanti.sort()
-        balanced.extend(restanti[:12 - len(balanced)])
-
-    return sorted(balanced[:12])
+    """Mantenuta per compatibilità. Ritorna il pool così com'è."""
+    return list(dodeca_pool)
 
 
 # ==========================================
-# 7. SCORING (v3.4 — senza anti-crowd)
+# 7. GENERATORE SEMPLICE
 # ==========================================
-def _score_realistic(combo, adjusted_scores):
-    """
-    Score realistico SENZA anti-crowd.
-    Privilegia: stat_score alto, somma vicina a 273, parità 2-4,
-    bilanciamento bassi/alti, copertura decadi.
-    """
-    s = sorted(combo)
-    total = sum(s)
-    dist_from_mean = abs(total - 273)
-    pari = sum(1 for n in s if n % 2 == 0)
-    parity_penalty = abs(pari - 3) * 5
-    bassi = sum(1 for n in s if n <= 45)
-    balance_penalty = abs(bassi - 3) * 5
-    decadi = len(set((n - 1) // 10 for n in s))
-    decades_bonus = decadi * 3
-    stat_score = sum(adjusted_scores[n] for n in combo)
+def _generate_simple_sestina(pool, seed, verbose=False):
+    """Una sestina con somma 240-310. Nessun filtro."""
+    if len(pool) < 6:
+        return None
 
-    return (stat_score
-            - dist_from_mean * 0.5
-            - parity_penalty
-            - balance_penalty
-            + decades_bonus)
+    rng = random.Random(seed)
+    candidates = []
+    attempts = 0
+    max_attempts = 500_000
 
+    while len(candidates) < 10_000 and attempts < max_attempts:
+        attempts += 1
+        try:
+            combo = tuple(sorted(rng.sample(pool, 6)))
+        except ValueError:
+            break
+        if SUM_MIN <= sum(combo) <= SUM_MAX:
+            candidates.append(combo)
 
-def _score_assassin(combo, adjusted_scores):
-    """
-    Score assassin SENZA anti-crowd.
-    Privilegia: stat_score alto + molti numeri alti.
-    """
-    s = sorted(combo)
-    high_count = sum(1 for n in s if n > 55)
-    stat_score = sum(adjusted_scores[n] for n in combo)
-    high_bonus = high_count * 12
+    if not candidates:
+        return None
 
-    return stat_score + high_bonus
+    chosen = rng.choice(candidates)
+    if verbose:
+        print(f"[*] Sestina (seed={seed}): {list(chosen)} somma {sum(chosen)}")
+    return chosen
 
 
 # ==========================================
 # 8. SELEZIONE MULTI-SESTINA
 # ==========================================
-def _build_candidates(dodeca_pool, adjusted_scores, history):
-    all_combos = list(itertools.combinations(dodeca_pool, 6))
-    t1_set = set(history[-1].get("combinazione", [])) if history else set()
-
-    base = []
-    for combo in all_combos:
-        overlap_t1 = len(set(combo).intersection(t1_set))
-        if overlap_t1 <= 2:
-            base.append(combo)
-    if not base:
-        base = all_combos
-    return base
-
-
 def select_vortex_sestinas_multi(dodeca_pool, adjusted_scores, history,
                                   n_sestinas=2, seed=None):
-    """
-    Genera N sestine complementari, SENZA anti-crowd.
-
-    FIX (2026-09-29):
-    - Aggiunto parametro `seed` propagato a true_mimic_generator per
-      garantire varietà tra concorsi consecutivi.
-    """
+    """Genera N sestine indipendenti con seed = seed + i."""
     if n_sestinas <= 0:
         return []
 
-    # === TENTA MIMIC GENERATOR ===
-    try:
-        from true_mimic_generator import generate_true_mimic
-        sestinas, fp = generate_true_mimic(
-            history, dodeca_pool, n_sestinas, seed=seed
-        )
+    if seed is None:
+        seed = 1000
 
-        filtered = [s for s in sestinas if 240 <= sum(s) <= 310]
-
-        if len(filtered) >= n_sestinas:
-            print(f"[+] {len(filtered)} sestine MIMIC con somma 240-310")
-            return [
-                (tuple(s), _score_realistic(s, adjusted_scores),
-                 1.0, _score_realistic(s, adjusted_scores))
-                for s in filtered[:n_sestinas]
-            ]
-        else:
-            print(f"[!] MIMIC: {len(filtered)}/{len(sestinas)} sestine "
-                  f"nel range 240-310. Fallback a selezione classica.")
-    except ImportError:
-        print("[!] true_mimic_generator non disponibile. Uso selezione classica.")
-    except Exception as e:
-        print(f"[!] Errore MIMIC generator: {e}")
-
-    # === FALLBACK: selezione classica ===
-    base_combos = _build_candidates(dodeca_pool, adjusted_scores, history)
-
-    realistic = []
-    for combo in base_combos:
-        s = sorted(combo)
-        total = sum(s)
-        if not (240 <= total <= 310):
-            continue
-        pari = sum(1 for n in s if n % 2 == 0)
-        if pari < 2 or pari > 4:
-            continue
-        bassi = sum(1 for n in s if n <= 45)
-        if bassi < 2 or bassi > 4:
-            continue
-        decadi = len(set((n - 1) // 10 for n in s))
-        if decadi < 4:
-            continue
-        consecutivi = sum(1 for i in range(len(s) - 1) if s[i + 1] - s[i] == 1)
-        if consecutivi > 1:
-            continue
-        realistic.append((combo, _score_realistic(combo, adjusted_scores)))
-
-    realistic.sort(key=lambda x: x[1], reverse=True)
-    if realistic:
-        sestina1 = list(realistic[0][0])
-    else:
-        relaxed = [(c, _score_realistic(c, adjusted_scores))
-                   for c in base_combos if 220 <= sum(c) <= 320]
-        relaxed.sort(key=lambda x: x[1], reverse=True)
-        sestina1 = list(relaxed[0][0]) if relaxed else list(base_combos[0])
-
-    selected = [(sestina1, _score_realistic(sestina1, adjusted_scores))]
-    selected_sets = [set(sestina1)]
-
-    if n_sestinas == 1:
-        return [(tuple(s), sc, 1.0, sc) for s, sc in selected]
-
-    # Sestina 2: assassin
-    assassin = []
-    for combo in base_combos:
-        overlap_s1 = len(set(combo).intersection(selected_sets[0]))
-        if overlap_s1 > 1:
-            continue
-        s = sorted(combo)
-        total = sum(s)
-        if not (240 <= total <= 310):
-            continue
-        if sum(1 for n in s if n > 50) < 2:
-            continue
-        if sum(1 for n in s if n < 35) < 1:
-            continue
-        if has_visual_pattern(combo):
-            continue
-        assassin.append((combo, _score_assassin(combo, adjusted_scores)))
-
-    assassin.sort(key=lambda x: x[1], reverse=True)
-    if assassin:
-        sestina2 = list(assassin[0][0])
-    else:
-        relaxed = []
-        for combo in base_combos:
-            if len(set(combo).intersection(selected_sets[0])) <= 2:
-                if 240 <= sum(combo) <= 310:
-                    relaxed.append((combo, _score_assassin(combo, adjusted_scores)))
-        relaxed.sort(key=lambda x: x[1], reverse=True)
-        sestina2 = list(relaxed[0][0]) if relaxed else sestina1
-
-    selected.append((sestina2, _score_assassin(sestina2, adjusted_scores)))
-    selected_sets.append(set(sestina2))
-
-    # Sestine 3..N
-    for _ in range(2, n_sestinas):
-        pool_candidates = []
-        for combo in base_combos:
-            s = sorted(combo)
-            total = sum(s)
-            if not (240 <= total <= 310):
-                continue
-            if has_visual_pattern(combo):
-                continue
-            max_overlap = max(len(set(combo).intersection(s_set))
-                              for s_set in selected_sets)
-            if max_overlap > 2:
-                continue
-            score = (_score_realistic(combo, adjusted_scores)
-                     + _score_assassin(combo, adjusted_scores)) / 2
-            score += (2 - max_overlap) * 10
-            pool_candidates.append((combo, score))
-
-        if not pool_candidates:
-            break
-
-        pool_candidates.sort(key=lambda x: x[1], reverse=True)
-        new_sestina = list(pool_candidates[0][0])
-        new_score = (_score_realistic(new_sestina, adjusted_scores)
-                     + _score_assassin(new_sestina, adjusted_scores)) / 2
-
-        selected.append((new_sestina, new_score))
-        selected_sets.append(set(new_sestina))
-
-    return [
-        (tuple(s), sc, 1.0, sc)
-        for s, sc in selected
-    ]
+    results = []
+    for i in range(n_sestinas):
+        combo = _generate_simple_sestina(dodeca_pool, seed + i, verbose=True)
+        if combo:
+            results.append((tuple(combo), 1.0, 1.0, 1.0))
+    return results
 
 
 def select_vortex_sestinas(dodeca_pool, adjusted_scores, history,
-                            top_n=2, seed=None):
+                            top_n=1, seed=None):
     return select_vortex_sestinas_multi(
         dodeca_pool, adjusted_scores, history, n_sestinas=top_n, seed=seed
     )
