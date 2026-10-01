@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-29T21:38:08",
+  "updated_at": "2026-10-01T11:56:09",
   "next_contest": {
     "number": 157,
     "date": "01/10/2026",
@@ -22,7 +22,7 @@
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
     "ev": -0.5159,
-    "level": "PRUDENTE (Reset Post-Vincita Jackpot)",
+    "level": "PRUDENTE",
     "advice": "EV basso. 1 sestina (1,00 €)."
   },
   "budget_mode": {
@@ -34,34 +34,34 @@
     "message": "EV basso. 1 sestina (1,00 €)."
   },
   "dodeca_pool": [
-    5,
-    11,
-    15,
-    21,
-    22,
-    34,
-    49,
-    60,
-    73,
-    80,
-    87,
-    88
+    2,
+    7,
+    8,
+    12,
+    16,
+    18,
+    26,
+    28,
+    39,
+    59,
+    64,
+    85
   ],
   "titan_predictions": [
     {
       "id": "VORTEX 1",
       "numbers": [
-        15,
-        21,
-        22,
-        34,
-        73,
-        87
+        13,
+        35,
+        44,
+        52,
+        57,
+        71
       ],
-      "sum": 252,
-      "z_score": -0.48,
-      "confidence": 22.6,
-      "signature": "VX-2026-157-6BB12C"
+      "sum": 272,
+      "z_score": -0.02,
+      "confidence": 24.9,
+      "signature": "VX-2026-157-28F9B6"
     }
   ],
   "vortex": {
