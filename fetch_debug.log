@@ -1,103 +1,35 @@
-[11:54:34] === FETCH LATEST DRAW + JACKPOT (DIAGNOSTIC MODE) ===
-[11:54:34] Python: 3.10.21 (main, Aug 13 2026, 02:42:48) [GCC 13.3.0]
-[11:54:34] requests: 2.31.0
-[11:54:34] Now: 2026-10-01T11:54:34.134381
-[11:54:34] 
+[19:51:37] === FETCH LATEST DRAW + JACKPOT (DIAGNOSTIC MODE) ===
+[19:51:37] Python: 3.10.21 (main, Aug 13 2026, 02:42:48) [GCC 13.3.0]
+[19:51:37] requests: 2.31.0
+[19:51:37] Now: 2026-10-01T19:51:37.529165
+[19:51:37] 
 [*] Storico attuale: 364 estrazioni.
-[11:54:34] [*] Ultima: concorso 156 del 29/09/2026
-[11:54:34] 
+[19:51:37] [*] Ultima: concorso 156 del 29/09/2026
+[19:51:37] 
 [*] === FONTE: https://www.estrazionedelotto.it/estrazione-superenalotto ===
-[11:54:34] [*] smart_fetch: https://www.estrazionedelotto.it/estrazione-superenalotto
-[11:54:34]     → jina.ai: GET https://r.jina.ai/https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:54:34]       status=403 len=5954 bytes
-[11:54:34]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-1Y1JrqtHJpl5FadQ37ElXk&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
-[11:54:35]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:54:54]       status=522 len=7258 bytes
-[11:54:54]       BODY[:500]: <!DOCTYPE html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en-US"> <!--<![endif]-->
-<head>
-
-<title>allorigins.win | 522: Connection timed out</title>
-<meta charset="UTF-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta http-equiv="X-UA-C
-[11:54:55]     → corsproxy.io: GET https://corsproxy.io/?https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:54:55]       status=403 len=322 bytes
-[11:54:55]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
-[11:54:56]     → diretto: GET https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:54:57]       CONNECTION ERROR: HTTPSConnectionPool(host='www.estrazionedelotto.it', port=443): Max retries exceeded with url: /estrazione-superenalotto (Caused by NameResolutionError("HTTPSConnection(host='www.estrazionedelotto.it'
-[11:54:58]     ✗ TUTTI I METODI FALLITI per https://www.estrazionedelotto.it/estrazione-superenalotto
-[11:54:58]     [!] Fonte non raggiungibile.
-[11:54:58] 
+[19:51:37] [*] smart_fetch: https://www.estrazionedelotto.it/estrazione-superenalotto
+[19:51:37]     → jina.ai: GET https://r.jina.ai/https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:51:37]       status=403 len=5954 bytes
+[19:51:37]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-mv9fQYgLsjFGVbWIVpzl2k&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
+[19:51:38]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:51:40]       status=400 len=65 bytes
+[19:51:40]       BODY[:500]: {"error":"Error: internal error","stack":"Error: internal error"}
+[19:51:41]     → corsproxy.io: GET https://corsproxy.io/?https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:51:41]       status=403 len=322 bytes
+[19:51:41]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
+[19:51:42]     → diretto: GET https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:51:42]       CONNECTION ERROR: HTTPSConnectionPool(host='www.estrazionedelotto.it', port=443): Max retries exceeded with url: /estrazione-superenalotto (Caused by NameResolutionError("HTTPSConnection(host='www.estrazionedelotto.it'
+[19:51:43]     ✗ TUTTI I METODI FALLITI per https://www.estrazionedelotto.it/estrazione-superenalotto
+[19:51:43]     [!] Fonte non raggiungibile.
+[19:51:43] 
 [*] === FONTE: https://www.superenalotto.net/estrazioni ===
-[11:54:58] [*] smart_fetch: https://www.superenalotto.net/estrazioni
-[11:54:58]     → jina.ai: GET https://r.jina.ai/https://www.superenalotto.net/estrazioni...
-[11:54:58]       status=403 len=5882 bytes
-[11:54:58]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-V0QzeG9RYK3EeTBoiPr5Gl&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
-[11:54:59]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.superenalotto.net/estrazioni...
-[11:55:05]       status=200 len=76265 bytes
-[11:55:05]     ✓ successo (76265 byte)
-[11:55:05]     [html] testo estratto: 5382 char
-[11:55:05]     [sample] primi 1500 char: Estrazioni del SuperEnalotto | Risultati SuperEnalotto Italiano Italiano English Deutsch Español Français 中文 Русский Giochi Slot Gratta e Vinci Casinò Giochi Slot Gratta e Vinci Casinò Estrazioni Ultime estrazioni 156/26 - martedì 29 settembre 2026 155/26 - sabato 26 settembre 2026 154/26 - venerdì 25 settembre 2026 Estrazioni speciali Tutti i risultati Estrazioni di altre lotterie SiVinceTutto Lotto 10eLotto MillionDay VinciCasa Play Your Date Simbolotto Eurojackpot Lotteria Italia Verifica Informazioni Giocare al SuperEnalotto Come si gioca Probabilità di vincita Jolly SuperStar WinBox Vincite immediate Domande frequenti Premi Vincitori Estrazioni riprogrammate App SuperEnalotto Hai vinto? Controlla il tuo biglietto Come riscuotere Tasse Come identificare un tentativo di frode Notorietà I più alti jackpot vinti Suggerimenti e consigli Suggerimenti e consigli Sistemi e strategie Giocate di gruppo Sogni e numeri La smorfia Altre lotterie SiVinceTutto Lotto 10eLotto MillionDay VinciCasa Play Your Date Simbolotto Lotteria Italia Lotteria degli scontrini Eurojackpot Win For Life Play Six SuperEna Max Visualizza tutte le pagine di informazione Statistiche Generatore numeri Notizie Info gioca online Home Estrazioni Estrazioni del SuperEnalotto I risultati delle estrazioni del SuperEnalotto vengono pubblicati qui subito dopo ogni estrazione, che inizia alle ore 20:00 CET. Clicca sul pulsante Vedi dettagli accanto a ciascun risultato per visualizzare i premi assegnati e i vincitori 
-[11:55:05]     [parse] occorrenze 'concorso' nel testo: 2
-[11:55:05]     [parse] match regex: 0
-[11:55:05]     ✓ 0 estrazioni estratte da questa fonte.
-[11:55:06] 
-[*] === FONTE: https://www.lottologia.com/superenalotto/estrazioni/ ===
-[11:55:06] [*] smart_fetch: https://www.lottologia.com/superenalotto/estrazioni/
-[11:55:06]     → jina.ai: GET https://r.jina.ai/https://www.lottologia.com/superenalotto/estrazioni/...
-[11:55:06]       status=403 len=5918 bytes
-[11:55:06]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-1w0O79Iufe4tZ65FH9FiBD&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
-[11:55:07]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.lottologia.com/superenalotto/estrazioni/...
-[11:55:16]       status=520 len=7362 bytes
-[11:55:16]       BODY[:500]: <!DOCTYPE html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en-US"> <!--<![endif]-->
-<head>
-
-<title>allorigins.win | 520: Web server is returning an unknown error</title>
-<meta charset="UTF-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<met
-[11:55:17]     → corsproxy.io: GET https://corsproxy.io/?https://www.lottologia.com/superenalotto/estrazioni/...
-[11:55:17]       status=403 len=322 bytes
-[11:55:17]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
-[11:55:18]     → diretto: GET https://www.lottologia.com/superenalotto/estrazioni/...
-[11:55:18]       status=200 len=228410 bytes
-[11:55:18]     ✓ successo (228410 byte)
-[11:55:19]     [html] testo estratto: 12285 char
-[11:55:19]     [sample] primi 1500 char: Archivio Estrazioni SuperEnalotto Vai al contenuto Lotto logia Chiedi all’IA Prossima: --:-- Lotterie 10eLotto ogni 5 minuti Lotto 10eLotto SuperEnalotto Million Day EuroJackpot Fai 3 Fai 4 Chiedi all’IA Lotterie 10eLotto ogni 5 minuti Lotto 10eLotto SuperEnalotto Million Day EuroJackpot Fai 3 Fai 4 Home › SuperEnalotto › Estrazioni ☰ SuperEnalotto Fai una domanda all’intelligenza artificiale su statistiche, calcolo probabilistico, sogni e altro. Chiedi all’IA SuperEnalotto Archivio Archivio Estrazioni Ultima Estrazione Ricerca Ritardi Statistiche Ritardatari Frequenti Gruppi Omogenei - Patterns Capogioco Capogioco - Ritardi Capogioco - Frequenze Sincroni Tabellone Analitico Sincroni di Livello Sincroni Determinati Sincroni Diagonali Massimi Ritardi Massimi Ritardi Massimi Ritardi - Ambi Massimi Ritardi - Terni Massime Frequenze Massime Frequenze Massime Frequenze - Ambi Massime Frequenze - Terni Sistemi Sistemi Integrali Sistemi Ridotti Economia Verifica Vincite Calcola Vincite Quote e Premi Progressioni Economiche Calcolo Combinatorio Previsioni Previsioni Previsioni - Gruppi Omogenei Previsioni - Massimi Ritardi Previsioni - Sincroni Personale Portfolio Virtuale Sistemi Personali Aggiornato all'estrazione del 29 Settembre 2026. Archivio Estrazioni SuperEnalotto Archivio completo delle estrazioni del SuperEnalotto con numeri principali, Jolly e SuperStar. Navigazione per data. Anno precedente 2026 Seleziona Numeri Mostra ▼ Cancella selezione Inverti selezione 1 2 3 4 5 6 7 
-[11:55:19]     [parse] occorrenze 'concorso' nel testo: 0
-[11:55:19]     [parse] match regex: 0
-[11:55:19]     ✓ 0 estrazioni estratte da questa fonte.
-[11:55:20] [!] Nessuna fonte ha restituito estrazioni.
-[11:55:20] [!] Nessuna estrazione recuperata.
-[11:55:20] 
-[11:55:20] 
-[*] === JACKPOT da: https://www.superenalotto.net/ ===
-[11:55:20] [*] smart_fetch: https://www.superenalotto.net/
-[11:55:20]     → jina.ai: GET https://r.jina.ai/https://www.superenalotto.net/...
-[11:55:20]       status=403 len=5831 bytes
-[11:55:20]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-Cb9xXTgytYr9hQbVPA7t2s&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
-[11:55:21]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.superenalotto.net/...
-[11:55:28]       status=200 len=24699 bytes
-[11:55:28]     ✓ successo (24699 byte)
-[11:55:28]     [jackpot] contesto: []
-[11:55:28]     [jackpot] fallback: []
-[11:55:29] 
-[*] === JACKPOT da: https://www.estrazionedelotto.it/estrazione-superenalotto ===
-[11:55:29] [*] smart_fetch: https://www.estrazionedelotto.it/estrazione-superenalotto
-[11:55:29]     → jina.ai: GET https://r.jina.ai/https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:55:29]       status=403 len=5954 bytes
-[11:55:29]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-bVPr61cGFzS0qdCiao4I5c&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
-[11:55:30]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:55:50]       status=522 len=7258 bytes
-[11:55:50]       BODY[:500]: <!DOCTYPE html>
+[19:51:43] [*] smart_fetch: https://www.superenalotto.net/estrazioni
+[19:51:43]     → jina.ai: GET https://r.jina.ai/https://www.superenalotto.net/estrazioni...
+[19:51:43]       status=403 len=5882 bytes
+[19:51:43]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-ioNeE8Xy6InbpZSppy53uG&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
+[19:51:44]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.superenalotto.net/estrazioni...
+[19:52:04]       status=522 len=7257 bytes
+[19:52:04]       BODY[:500]: <!DOCTYPE html>
 <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
 <!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
 <!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <![endif]-->
@@ -108,21 +40,43 @@
 <meta charset="UTF-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="X-UA-C
-[11:55:51]     → corsproxy.io: GET https://corsproxy.io/?https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:55:51]       status=403 len=322 bytes
-[11:55:51]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
-[11:55:52]     → diretto: GET https://www.estrazionedelotto.it/estrazione-superenalotto...
-[11:55:52]       CONNECTION ERROR: HTTPSConnectionPool(host='www.estrazionedelotto.it', port=443): Max retries exceeded with url: /estrazione-superenalotto (Caused by NameResolutionError("HTTPSConnection(host='www.estrazionedelotto.it'
-[11:55:53]     ✗ TUTTI I METODI FALLITI per https://www.estrazionedelotto.it/estrazione-superenalotto
-[11:55:53] 
-[*] === JACKPOT da: https://www.lottologia.com/superenalotto/ ===
-[11:55:53] [*] smart_fetch: https://www.lottologia.com/superenalotto/
-[11:55:53]     → jina.ai: GET https://r.jina.ai/https://www.lottologia.com/superenalotto/...
-[11:55:53]       status=403 len=5885 bytes
-[11:55:53]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-aCxqXBJrq7oYZGjFGDuws9&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
-[11:55:54]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.lottologia.com/superenalotto/...
-[11:56:04]       status=500 len=579 bytes
-[11:56:04]       BODY[:500]: <html>
+[19:52:05]     → corsproxy.io: GET https://corsproxy.io/?https://www.superenalotto.net/estrazioni...
+[19:52:05]       status=403 len=322 bytes
+[19:52:05]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
+[19:52:06]     → diretto: GET https://www.superenalotto.net/estrazioni...
+[19:52:06]       status=200 len=77401 bytes
+[19:52:06]     ✓ successo (77401 byte)
+[19:52:06]     [html] testo estratto: 5454 char
+[19:52:06]     [sample] primi 1500 char: Estrazioni del SuperEnalotto | Risultati SuperEnalotto Italiano Italiano English Deutsch Español Français 中文 Русский Giochi Slot Gratta e Vinci Casinò Giochi Slot Gratta e Vinci Casinò Estrazioni Ultime estrazioni 157/26 - giovedì 1 ottobre 2026 156/26 - martedì 29 settembre 2026 155/26 - sabato 26 settembre 2026 Estrazioni speciali Tutti i risultati Estrazioni di altre lotterie SiVinceTutto Lotto 10eLotto MillionDay VinciCasa Play Your Date Simbolotto Eurojackpot Lotteria Italia Verifica Informazioni Giocare al SuperEnalotto Come si gioca Probabilità di vincita Jolly SuperStar WinBox Vincite immediate Domande frequenti Premi Vincitori Estrazioni riprogrammate App SuperEnalotto Hai vinto? Controlla il tuo biglietto Come riscuotere Tasse Come identificare un tentativo di frode Notorietà I più alti jackpot vinti Suggerimenti e consigli Suggerimenti e consigli Sistemi e strategie Giocate di gruppo Sogni e numeri La smorfia Altre lotterie SiVinceTutto Lotto 10eLotto MillionDay VinciCasa Play Your Date Simbolotto Lotteria Italia Lotteria degli scontrini Eurojackpot Win For Life Play Six SuperEna Max Visualizza tutte le pagine di informazione Statistiche Generatore numeri Notizie Info gioca online Home Estrazioni Estrazioni del SuperEnalotto I risultati delle estrazioni del SuperEnalotto vengono pubblicati qui subito dopo ogni estrazione, che inizia alle ore 20:00 CET. Clicca sul pulsante Vedi dettagli accanto a ciascun risultato per visualizzare i premi assegnati e i vincitori di 
+[19:52:06]     [parse] occorrenze 'concorso' nel testo: 2
+[19:52:06]     [parse] match regex: 0
+[19:52:06]     ✓ 0 estrazioni estratte da questa fonte.
+[19:52:07] 
+[*] === FONTE: https://www.lottologia.com/superenalotto/estrazioni/ ===
+[19:52:07] [*] smart_fetch: https://www.lottologia.com/superenalotto/estrazioni/
+[19:52:07]     → jina.ai: GET https://r.jina.ai/https://www.lottologia.com/superenalotto/estrazioni/...
+[19:52:07]       status=403 len=5918 bytes
+[19:52:07]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-YN8w6NLb8D7fBf2GBABhET&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
+[19:52:08]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.lottologia.com/superenalotto/estrazioni/...
+[19:52:15]       status=200 len=229811 bytes
+[19:52:15]     ✓ successo (229811 byte)
+[19:52:15]     [html] testo estratto: 12335 char
+[19:52:15]     [sample] primi 1500 char: Archivio Estrazioni SuperEnalotto Vai al contenuto Lotto logia Chiedi all’IA Prossima: --:-- Lotterie 10eLotto ogni 5 minuti Lotto 10eLotto SuperEnalotto Million Day EuroJackpot Fai 3 Fai 4 Chiedi all’IA Lotterie 10eLotto ogni 5 minuti Lotto 10eLotto SuperEnalotto Million Day EuroJackpot Fai 3 Fai 4 Home › SuperEnalotto › Estrazioni ☰ SuperEnalotto Fai una domanda all’intelligenza artificiale su statistiche, calcolo probabilistico, sogni e altro. Chiedi all’IA SuperEnalotto Archivio Archivio Estrazioni Ultima Estrazione Ricerca Ritardi Statistiche Ritardatari Frequenti Gruppi Omogenei - Patterns Capogioco Capogioco - Ritardi Capogioco - Frequenze Sincroni Tabellone Analitico Sincroni di Livello Sincroni Determinati Sincroni Diagonali Massimi Ritardi Massimi Ritardi Massimi Ritardi - Ambi Massimi Ritardi - Terni Massime Frequenze Massime Frequenze Massime Frequenze - Ambi Massime Frequenze - Terni Sistemi Sistemi Integrali Sistemi Ridotti Economia Verifica Vincite Calcola Vincite Quote e Premi Progressioni Economiche Calcolo Combinatorio Previsioni Previsioni Previsioni - Gruppi Omogenei Previsioni - Massimi Ritardi Previsioni - Sincroni Personale Portfolio Virtuale Sistemi Personali Aggiornato all'estrazione del 1 Ottobre 2026. Archivio Estrazioni SuperEnalotto Archivio completo delle estrazioni del SuperEnalotto con numeri principali, Jolly e SuperStar. Navigazione per data. Anno precedente 2026 Seleziona Numeri Mostra ▼ Cancella selezione Inverti selezione 1 2 3 4 5 6 7 8 9
+[19:52:15]     [parse] occorrenze 'concorso' nel testo: 0
+[19:52:15]     [parse] match regex: 0
+[19:52:15]     ✓ 0 estrazioni estratte da questa fonte.
+[19:52:16] [!] Nessuna fonte ha restituito estrazioni.
+[19:52:16] [!] Nessuna estrazione recuperata.
+[19:52:16] 
+[19:52:16] 
+[*] === JACKPOT da: https://www.superenalotto.net/ ===
+[19:52:16] [*] smart_fetch: https://www.superenalotto.net/
+[19:52:16]     → jina.ai: GET https://r.jina.ai/https://www.superenalotto.net/...
+[19:52:17]       status=403 len=5831 bytes
+[19:52:17]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-6SuU9nipQJKMbyl9kNnPdW&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
+[19:52:18]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.superenalotto.net/...
+[19:52:18]       status=500 len=579 bytes
+[19:52:18]       BODY[:500]: <html>
 <head><title>500 Internal Server Error</title></head>
 <body>
 <center><h1>500 Internal Server Error</h1></center>
@@ -134,13 +88,45 @@
 <!-- a padding to disable MSIE and Chrome friendly error page -->
 <!-- a padding to disable MSIE and Chrome friendly error page -->
 <!-- a padding to disable MSIE and Chrome friendly erro
-[11:56:05]     → corsproxy.io: GET https://corsproxy.io/?https://www.lottologia.com/superenalotto/...
-[11:56:05]       status=403 len=322 bytes
-[11:56:05]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
-[11:56:06]     → diretto: GET https://www.lottologia.com/superenalotto/...
-[11:56:07]       status=200 len=65391 bytes
-[11:56:07]     ✓ successo (65391 byte)
-[11:56:07]     [jackpot] contesto: []
-[11:56:07]     [jackpot] fallback: [119361900]
-[11:56:07]     ✓ Jackpot trovato: 119,361,900 €
-[11:56:07] === FETCH COMPLETATO ===
+[19:52:19]     → corsproxy.io: GET https://corsproxy.io/?https://www.superenalotto.net/...
+[19:52:19]       status=403 len=322 bytes
+[19:52:19]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
+[19:52:20]     → diretto: GET https://www.superenalotto.net/...
+[19:52:20]       status=200 len=24687 bytes
+[19:52:20]     ✓ successo (24687 byte)
+[19:52:20]     [jackpot] contesto: []
+[19:52:20]     [jackpot] fallback: []
+[19:52:21] 
+[*] === JACKPOT da: https://www.estrazionedelotto.it/estrazione-superenalotto ===
+[19:52:21] [*] smart_fetch: https://www.estrazionedelotto.it/estrazione-superenalotto
+[19:52:21]     → jina.ai: GET https://r.jina.ai/https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:52:21]       status=403 len=5954 bytes
+[19:52:21]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-KtodVMjXkggkagqufUlPQu&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
+[19:52:22]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:52:24]       status=400 len=65 bytes
+[19:52:24]       BODY[:500]: {"error":"Error: internal error","stack":"Error: internal error"}
+[19:52:25]     → corsproxy.io: GET https://corsproxy.io/?https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:52:25]       status=403 len=322 bytes
+[19:52:25]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
+[19:52:26]     → diretto: GET https://www.estrazionedelotto.it/estrazione-superenalotto...
+[19:52:27]       CONNECTION ERROR: HTTPSConnectionPool(host='www.estrazionedelotto.it', port=443): Max retries exceeded with url: /estrazione-superenalotto (Caused by NameResolutionError("HTTPSConnection(host='www.estrazionedelotto.it'
+[19:52:28]     ✗ TUTTI I METODI FALLITI per https://www.estrazionedelotto.it/estrazione-superenalotto
+[19:52:28] 
+[*] === JACKPOT da: https://www.lottologia.com/superenalotto/ ===
+[19:52:28] [*] smart_fetch: https://www.lottologia.com/superenalotto/
+[19:52:28]     → jina.ai: GET https://r.jina.ai/https://www.lottologia.com/superenalotto/...
+[19:52:28]       status=403 len=5885 bytes
+[19:52:28]       BODY[:500]: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-udaVglbk8TbbAGhSGcRRgS&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-s
+[19:52:29]     → allorigins.win: GET https://api.allorigins.win/raw?url=https://www.lottologia.com/superenalotto/...
+[19:52:37]       status=408 len=24 bytes
+[19:52:37]       BODY[:500]: Oops... Request Timeout.
+[19:52:38]     → corsproxy.io: GET https://corsproxy.io/?https://www.lottologia.com/superenalotto/...
+[19:52:38]       status=403 len=322 bytes
+[19:52:38]       BODY[:500]: {"success":false,"status":403,"error":"keyless_legacy_url","message":"Anonymous legacy proxy URLs are no longer supported. Use the CORSPROXY API with an API key.","example":"https://corsproxy.io/?key=YOUR_API_KEY&url=https%3A%2F%2Fexample.com","console":"https://console.corsproxy.io/","docs":"https://corsproxy.io/docs/"}
+[19:52:39]     → diretto: GET https://www.lottologia.com/superenalotto/...
+[19:52:40]       status=200 len=65356 bytes
+[19:52:40]     ✓ successo (65356 byte)
+[19:52:40]     [jackpot] contesto: []
+[19:52:40]     [jackpot] fallback: [119361900]
+[19:52:40]     ✓ Jackpot trovato: 119,361,900 €
+[19:52:40] === FETCH COMPLETATO ===
