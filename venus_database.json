@@ -1,27 +1,27 @@
 {
-  "updated_at": "2026-10-02T19:55:28",
+  "updated_at": "2026-10-02T21:01:48",
   "next_contest": {
-    "number": 158,
-    "date": "02/10/2026",
-    "jackpot": 34800000
+    "number": 159,
+    "date": "03/10/2026",
+    "jackpot": 35700000
   },
   "last_draw": {
-    "contest_number": 157,
-    "date": "01/10/2026",
+    "contest_number": 158,
+    "date": "02/10/2026",
     "numbers": [
-      5,
-      12,
-      28,
-      41,
+      2,
+      31,
+      55,
       56,
-      66
+      73,
+      84
     ],
-    "jolly": 73,
-    "superstar": 42
+    "jolly": 77,
+    "superstar": 41
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
-    "ev": -0.5103,
+    "ev": -0.5067,
     "level": "PRUDENTE",
     "advice": "EV basso. 1 sestina (1,00 €)."
   },
@@ -30,7 +30,7 @@
     "emoji": "🟢",
     "n_sestinas": 1,
     "cost_eur": 1.0,
-    "ev": -0.5103,
+    "ev": -0.5067,
     "message": "EV basso. 1 sestina (1,00 €)."
   },
   "dodeca_pool": [
@@ -51,27 +51,27 @@
     {
       "id": "VORTEX 1",
       "numbers": [
-        14,
-        21,
-        27,
-        48,
+        25,
+        26,
+        49,
         52,
-        87
+        67,
+        81
       ],
-      "sum": 249,
-      "z_score": -0.55,
-      "confidence": 22.25,
-      "signature": "VX-2026-158-D02834"
+      "sum": 300,
+      "z_score": 0.62,
+      "confidence": 21.9,
+      "signature": "VX-2026-159-3062F9"
     }
   ],
   "vortex": {
     "ev": {
-      "jackpot": 34800000,
+      "jackpot": 35700000,
       "players_estimated": 50000000,
       "expected_winners": 1.0,
-      "effective_jackpot": 87000000.0,
-      "ev_6_solo": 0.1397,
-      "ev_total": -0.5103,
+      "effective_jackpot": 89250000.0,
+      "ev_6_solo": 0.1433,
+      "ev_total": -0.5067,
       "profitable": false,
       "recommendation": "SALTA"
     },

@@ -8019,6 +8019,28 @@
       66
     ],
     "jolly": 73,
-    "superstar": 42
+    "superstar": 42,
+    "sestina": [
+      5,
+      12,
+      28,
+      41,
+      56,
+      66
+    ]
+  },
+  {
+    "concorso": 158,
+    "data": "02/10/2026",
+    "combinazione": [
+      2,
+      31,
+      55,
+      56,
+      73,
+      84
+    ],
+    "jolly": 77,
+    "superstar": 41
   }
 ]
