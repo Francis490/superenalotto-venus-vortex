@@ -1,6 +1,6 @@
-# Aggiorna Venus Vortex - Concorso N. 157
+# Aggiorna Venus Vortex - Concorso N. 158
 
-> Ultima generazione automatica: **2026-10-01 19:52:47**
+> Ultima generazione automatica: **2026-10-02 19:55:34**
 
 ---
 
@@ -8,18 +8,18 @@
 
 | Campo | Valore |
 |---|---|
-| **Ultima estrazione** | Concorso N. 156 del 29/09/2026 |
-| **Combinazione** | `[16, 26, 28, 30, 43, 72]` |
-| **Jolly** | 5 |
-| **SuperStar** | 32 |
-| **Prossimo concorso** | N. 157 del 01/10/2026 |
-| **Jackpot attuale** | EUR 33,400,000 |
+| **Ultima estrazione** | Concorso N. 157 del 01/10/2026 |
+| **Combinazione** | `[5, 12, 28, 41, 56, 66]` |
+| **Jolly** | 73 |
+| **SuperStar** | 42 |
+| **Prossimo concorso** | N. 158 del 02/10/2026 |
+| **Jackpot attuale** | EUR 34,800,000 |
 
 ---
 
 ## Procedura aggiornamento (2 minuti)
 
-### STEP 1 - Trova i numeri veri del concorso 157
+### STEP 1 - Trova i numeri veri del concorso 158
 
 Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
 - 6 numeri vincenti
@@ -38,15 +38,15 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 
 ```json
 {
-  "jackpot": 33400000,
+  "jackpot": 34800000,
   "last_draw": {
-    "concorso": 157,
-    "data": "01/10/2026",
+    "concorso": 158,
+    "data": "02/10/2026",
     "combinazione": [0, 0, 0, 0, 0, 0],
     "jolly": 0,
     "superstar": 0
   },
-  "note": "Compila con i numeri reali del concorso 157"
+  "note": "Compila con i numeri reali del concorso 158"
 }
 ```
 
@@ -54,7 +54,7 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 - `[0, 0, 0, 0, 0, 0]` con i 6 numeri veri (ordine crescente)
 - `"jolly": 0` con il Jolly vero
 - `"superstar": 0` con il SuperStar vero
-- `"jackpot": 33400000` con il nuovo jackpot (o lascia invariato)
+- `"jackpot": 34800000` con il nuovo jackpot (o lascia invariato)
 
 ### STEP 4 - Commit changes
 
