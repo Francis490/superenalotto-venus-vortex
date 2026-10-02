@@ -259,7 +259,21 @@
           71
         ]
       ],
-      "result": null,
+      "result": {
+        "real_numbers": [
+          5,
+          12,
+          28,
+          41,
+          56,
+          66
+        ],
+        "hits_per_sestina": [
+          0
+        ],
+        "best_hits": 0,
+        "checked_at": "2026-10-02T00:06:22.350487"
+      },
       "history_versions": [
         {
           "sestinas": [
@@ -277,6 +291,23 @@
           "replaced_at": "2026-10-01T11:56:09.538781"
         }
       ]
+    },
+    {
+      "target_concorso": 158,
+      "generated_at": "2026-10-02T00:06:22.350062",
+      "mode": "MINIMO",
+      "sestinas": [
+        [
+          14,
+          21,
+          27,
+          48,
+          52,
+          87
+        ]
+      ],
+      "result": null,
+      "history_versions": []
     }
   ]
 }
