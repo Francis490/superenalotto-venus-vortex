@@ -337,6 +337,37 @@
           81
         ]
       ],
+      "result": {
+        "real_numbers": [
+          5,
+          12,
+          18,
+          25,
+          28,
+          42
+        ],
+        "hits_per_sestina": [
+          1
+        ],
+        "best_hits": 1,
+        "checked_at": "2026-10-03T22:44:23.998522"
+      },
+      "history_versions": []
+    },
+    {
+      "target_concorso": 160,
+      "generated_at": "2026-10-03T22:44:23.997918",
+      "mode": "MINIMO",
+      "sestinas": [
+        [
+          7,
+          33,
+          53,
+          57,
+          60,
+          90
+        ]
+      ],
       "result": null,
       "history_versions": []
     }
