@@ -286,10 +286,18 @@
         }
     }
 
+    // FIX (2026-10-05): sort per (anno, concorso), non solo per concorso.
+    // Prima i concorsi 2026 (1-159) venivano ordinati PRIMA dei 2025 (1001-1208),
+    // invertendo la timeline reale. Ora usiamo la data per dedurre l'anno.
     function computeSums(history) {
         return history
             .filter(d => d.combinazione && d.combinazione.length === 6)
-            .sort((a, b) => a.concorso - b.concorso)
+            .sort((a, b) => {
+                const yearA = parseInt((a.data || "").split("/")[2], 10) || 0;
+                const yearB = parseInt((b.data || "").split("/")[2], 10) || 0;
+                if (yearA !== yearB) return yearA - yearB;
+                return (a.concorso || 0) - (b.concorso || 0);
+            })
             .map(d => ({
                 concorso: d.concorso,
                 somma: d.combinazione.reduce((a, b) => a + b, 0),
