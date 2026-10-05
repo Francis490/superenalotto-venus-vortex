@@ -10,6 +10,14 @@ RISCRITTURA (2026-10-05):
 - Fail esplicito (exit 1) se nessun draw recuperato.
 - Rimosso completamente il fetch del jackpot (dato gestito via override manuale).
 
+FIX (2026-10-05 v2):
+- Aggiunta normalizzazione Unicode NFC prima del parsing.
+  Il carattere "ì" di "venerdì" può essere composto (U+00EC) o decomposto
+  (i + U+0300). Il regex matchava solo la forma composta, causando
+  "marker trovati: 0" con testo che invece li conteneva visivamente.
+- Semplificato pattern del giorno della settimana: \w+ invece di
+  elenco esplicito (più robusto a variazioni di encoding).
+
 Uso:
     python fetch_latest_draw.py
 """
@@ -18,6 +26,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 from datetime import datetime
 
 import requests
@@ -177,17 +186,28 @@ def parse_draws_from_text(text):
         "158/26 - venerdì 2 ottobre 2026"
         seguito dai numeri (6 + jolly + superstar)
 
+    FIX (2026-10-05 v2):
+    - Normalizzazione Unicode NFC applicata PRIMA del regex.
+      Il carattere "ì" può essere composto o decomposto: normalizzare
+      evita falsi negativi (marker visibili ma non matchati).
+    - Pattern del giorno semplificato a \\w+ (meno fragile).
+
     Strategia:
     1. Trova tutti i marker "NNN/YY - weekday DD mese YYYY"
     2. Per ciascuno, prende i ~600 char successivi
     3. Estrae i primi 8 numeri 1-90 distinti (6 + jolly + superstar)
     """
     results = []
+
+    # FIX: normalizza Unicode (NFC = forma composta)
+    text = unicodedata.normalize("NFC", text)
     text_norm = re.sub(r"\s+", " ", text)
 
+    # Pattern marker: "158/26 - venerdì 2 ottobre 2026"
+    # \w+ matcha qualsiasi parola (anche con accenti normalizzati)
     marker_pattern = re.compile(
         r"(\d{2,4})/(\d{2})\s*-\s*"
-        r"(?:luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica)\s+"
+        r"\w+\s+"
         r"(\d{1,2})\s+"
         r"(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+"
         r"(\d{4})",
@@ -265,7 +285,10 @@ def fetch_all_draws():
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(" ", strip=True)
     diag(f"    [html] testo estratto: {len(text)} char")
-    diag(f"    [html] sample: {text[:300]}...")
+
+    # FIX: mostra un sample più ampio (3000 char) per diagnostica
+    sample = text[:3000].replace("\n", " ")
+    diag(f"    [html] sample (3000 char): {sample}")
 
     draws = parse_draws_from_text(text)
     diag(f"    [+] {len(draws)} estrazioni estratte")
