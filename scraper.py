@@ -3,6 +3,11 @@ scraper.py
 VENUS VORTEX — Cosmic Pattern Engine
 Orchestratore principale (TITAN Engine).
 
+FIX (2026-10-05):
+- detect_wins ora viene chiamato PRIMA di update_with_result.
+  Prima era il contrario, quindi result era già settato e
+  detect_wins ritornava sempre None -> nessuna notifica di vincita.
+
 FIX (2026-10-01):
 - Generazione sestina da pool 1-90 (non più dodeca 12 numeri).
 - n_sestinas forzato a 1 (tranne SKIP mode).
@@ -754,6 +759,7 @@ def main():
                         "combinazione": manual_comb,
                         "jolly": manual_draw.get("jolly"),
                         "superstar": manual_draw.get("superstar"),
+                        "sestina": manual_comb,
                     }
                     history.append(new_entry)
                     history = sort_history_by_date(history)
@@ -835,20 +841,12 @@ def main():
             print("[!] VORTEX ENGINE non disponibile.")
 
     # === TRACK RECORD ===
-    if TRACK_AVAILABLE and all_sestinas:
-        try:
-            record_predictions(next_concorso, all_sestinas,
-                               budget_mode.get("mode", "NORMALE"))
-        except Exception as e:
-            print(f"[!] Errore track record: {e}")
-
+    # FIX (2026-10-05): detect_wins DEVE girare PRIMA di update_with_result,
+    # altrimenti result è già settato e detect_wins ritorna sempre None.
     win_info = None
     if TRACK_AVAILABLE and last_draw and last_draw.get("combinazione"):
         try:
-            update_with_result(
-                last_draw.get("concorso"),
-                last_draw.get("combinazione")
-            )
+            # 1) Rileva eventuali vincite sul concorso appena uscito
             win_info = detect_wins(
                 last_draw.get("concorso"),
                 last_draw.get("combinazione")
@@ -856,8 +854,22 @@ def main():
             if win_info:
                 print(f"[!] VINCITA RILEVATA! Concorso {win_info['concorso']} "
                       f"-> {win_info['best_hits']} punti")
+
+            # 2) Solo DOPO, aggiorna il track record con il risultato
+            update_with_result(
+                last_draw.get("concorso"),
+                last_draw.get("combinazione")
+            )
         except Exception as e:
-            print(f"[!] Errore update track: {e}")
+            print(f"[!] Errore track record: {e}")
+
+    # Registra le sestine per il prossimo concorso
+    if TRACK_AVAILABLE and all_sestinas:
+        try:
+            record_predictions(next_concorso, all_sestinas,
+                               budget_mode.get("mode", "NORMALE"))
+        except Exception as e:
+            print(f"[!] Errore track record (record): {e}")
 
     # === DATABASE ===
     payload = build_database_payload(
