@@ -39,7 +39,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: manual-update-${{ github.ref }}
+  group: venus-write-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -79,6 +79,10 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scraper.py
+
+      - name: Generazione guida aggiornamento
+        run: python generate_update_guide.py
+        continue-on-error: true
 
       - name: Salvataggio su GitHub
         run: |
