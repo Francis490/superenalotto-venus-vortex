@@ -353,23 +353,6 @@
         "checked_at": "2026-10-03T22:44:23.998522"
       },
       "history_versions": []
-    },
-    {
-      "target_concorso": 160,
-      "generated_at": "2026-10-03T22:44:23.997918",
-      "mode": "MINIMO",
-      "sestinas": [
-        [
-          7,
-          33,
-          53,
-          57,
-          60,
-          90
-        ]
-      ],
-      "result": null,
-      "history_versions": []
     }
   ]
 }
