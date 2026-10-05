@@ -90,7 +90,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           for file in venus_manual_override.json venus_played.json \
-                      venus_database.json venus_history.json venus_jackpot.json \
+                      venus_database.json venus_history.json \
                       venus_track_record.json vortex_chart.png \
                       vortex_heatmap.png vortex_distribution.png UPDATE_HERE.md; do
             if [ -f "$file" ]; then
