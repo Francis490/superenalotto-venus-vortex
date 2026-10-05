@@ -59,7 +59,7 @@ jobs:
 
           for file in venus_database.json vortex_chart.png vortex_heatmap.png \
                       vortex_distribution.png venus_history.json \
-                      venus_jackpot.json venus_track_record.json \
+                      venus_track_record.json \
                       venus_manual_override.json UPDATE_HERE.md \
                       fetch_debug.log; do
             if [ -f "$file" ]; then
