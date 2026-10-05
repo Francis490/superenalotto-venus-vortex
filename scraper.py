@@ -5,10 +5,10 @@ Orchestratore principale (TITAN Engine).
 
 FIX (2026-10-05):
 - detect_wins ora viene chiamato PRIMA di update_with_result.
-  Prima era il contrario, quindi result era già settato e
-  detect_wins ritornava sempre None -> nessuna notifica di vincita.
 - Rimosso venus_jackpot.json: il jackpot è gestito SOLO da
   venus_manual_override.json. Il fetch automatico era rotto.
+- SKIP mode: rimuove eventuali record pendenti nel track record
+  per il prossimo concorso (evita sestine fantasma "in attesa").
 
 FIX (2026-10-01):
 - Generazione sestina da pool 1-90 (non più dodeca 12 numeri).
@@ -79,6 +79,7 @@ try:
         record_predictions,
         update_with_result,
         detect_wins,
+        clear_pending_record,
         format_win_notification,
         get_stats as get_track_stats,
         format_stats_for_report as format_track_report,
@@ -218,9 +219,7 @@ def normalize_history(raw_data):
 def read_runtime_config():
     """
     Legge la configurazione da venus_manual_override.json.
-
-    Il jackpot è gestito SOLO da questo file. Non c'è più
-    fallback su venus_jackpot.json (rimosso).
+    Il jackpot è gestito SOLO da questo file.
     """
     config = {
         "jackpot": None,
@@ -830,7 +829,7 @@ def main():
             print("[!] VORTEX ENGINE non disponibile.")
 
     # === TRACK RECORD ===
-    # FIX (2026-10-05): detect_wins DEVE girare PRIMA di update_with_result.
+    # detect_wins PRIMA di update_with_result
     win_info = None
     if TRACK_AVAILABLE and last_draw and last_draw.get("combinazione"):
         try:
@@ -849,12 +848,17 @@ def main():
         except Exception as e:
             print(f"[!] Errore track record: {e}")
 
-    if TRACK_AVAILABLE and all_sestinas:
+    # FIX (2026-10-05): in SKIP mode rimuovi eventuali record pendenti
+    if TRACK_AVAILABLE:
         try:
-            record_predictions(next_concorso, all_sestinas,
-                               budget_mode.get("mode", "NORMALE"))
+            if all_sestinas:
+                record_predictions(next_concorso, all_sestinas,
+                                   budget_mode.get("mode", "NORMALE"))
+            else:
+                # SKIP mode: nessuna sestina da registrare per il prossimo concorso
+                clear_pending_record(next_concorso)
         except Exception as e:
-            print(f"[!] Errore track record (record): {e}")
+            print(f"[!] Errore track record (record/clear): {e}")
 
     # === DATABASE ===
     payload = build_database_payload(
