@@ -1,5 +1,5 @@
 {
-  "note": "Compila questo file con le sestine che giochi DAVVERO. Il bot analizzerà i tuoi risultati reali.",
+  "note": "Registro delle sestine giocate. Il bot confronta con venus_history.json per calcolare i risultati reali.",
   "played": [
     {
       "concorso": 149,
@@ -12,6 +12,8 @@
       ],
       "premio_reale": 5.00,
       "esito": "2 punti (35, 46)",
+      "esito_verificato": true,
+      "esito_verificato_il": "2026-09-18T22:00:00",
       "note": "Concorso 149: 2 sestine (1 recuperata + 1 nuova MIMIC) → €5 vinti"
     },
     {
@@ -22,6 +24,10 @@
       "sestine": [
         [5, 30, 34, 48, 65, 87]
       ],
+      "premio_reale": 0.0,
+      "esito": "0 punti",
+      "esito_verificato": true,
+      "esito_verificato_il": "2026-09-19T22:00:00",
       "note": "Concorso 150: 1 sestina (VX-2026-150-9D1CEE)"
     },
     {
@@ -32,6 +38,10 @@
       "sestine": [
         [5, 30, 31, 34, 65, 80]
       ],
+      "premio_reale": 0.0,
+      "esito": "0 punti",
+      "esito_verificato": true,
+      "esito_verificato_il": "2026-09-20T22:00:00",
       "note": "Concorso 151: 1 sestina"
     },
     {
@@ -42,6 +52,10 @@
       "sestine": [
         [4, 5, 22, 49, 79, 87]
       ],
+      "premio_reale": 0.0,
+      "esito": "0 punti",
+      "esito_verificato": true,
+      "esito_verificato_il": "2026-09-25T22:00:00",
       "note": "Concorso 154: 1 sestina"
     },
     {
@@ -52,6 +66,10 @@
       "sestine": [
         [5, 11, 15, 34, 87, 88]
       ],
+      "premio_reale": 0.0,
+      "esito": "0 punti",
+      "esito_verificato": true,
+      "esito_verificato_il": "2026-09-27T22:00:00",
       "note": "Concorso 155: 1 sestina"
     },
     {
@@ -62,7 +80,11 @@
       "sestine": [
         [5, 11, 15, 34, 87, 88]
       ],
-      "note": "Concorso 156: 1 sestina (in attesa)"
+      "premio_reale": 0.0,
+      "esito": "0 punti",
+      "esito_verificato": true,
+      "esito_verificato_il": "2026-09-30T22:00:00",
+      "note": "Concorso 156: 1 sestina"
     }
   ],
   "config": {
