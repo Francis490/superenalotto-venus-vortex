@@ -1,19 +1,17 @@
 """
 fetch_latest_draw.py
-Scarica le ultime estrazioni SuperEnalotto e il jackpot corrente.
+VENUS VORTEX — Recupero estrazioni SuperEnalotto + jackpot.
 
-VERSIONE DIAGNOSTICA (2026-09-29):
-- Logging pesante: per ogni fonte e ogni proxy, salva su file:
-  - URL tentato
-  - Status HTTP
-  - Lunghezza risposta
-  - Primi 2000 char della risposta (per capire se HTML è cambiato)
-- Al termine, scrive `fetch_debug.log` con tutto lo storico.
-- Il log viene committato dal workflow, così possiamo ispezionarlo.
+RISCRITTURA (2026-10-05):
+- Rimossi proxy morti (jina.ai 403, allorigins 522, corsproxy 403).
+- Uso esclusivo di lottologia.com (unica fonte stabile).
+- Parser specifico per formato "NNN/YY - weekday DD mese YYYY".
+- Retry con backoff esponenziale (3 tentativi).
+- Fail esplicito (exit 1) se nessun draw recuperato.
+- Jackpot parsing ristretto (contesto + range 10M-200M).
 
-FIX (2026-09-29 v2):
-- flush_diag() ora chiamato DOPO l'ultimo diag(), così la riga
-  "=== FETCH COMPLETATO ===" finisce nel file.
+Uso:
+    python fetch_latest_draw.py
 """
 import json
 import os
@@ -44,19 +42,34 @@ HEADERS = {
     "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
 }
 
-# Buffer diagnostico globale (viene scritto su file a fine esecuzione)
+# ==========================================
+# FONTI
+# ==========================================
+DRAWS_URL = "https://www.lottologia.com/superenalotto/estrazioni/"
+JACKPOT_URL = "https://www.lottologia.com/superenalotto/"
+
+# Retry policy
+MAX_RETRIES = 3
+RETRY_DELAYS = [5, 15, 45]  # secondi
+
+# Mesi italiani
+MESI_IT = {
+    "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4,
+    "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
+    "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12,
+}
+
+# Buffer diagnostico
 DIAG = []
 
 
 def diag(msg):
-    """Aggiunge una riga al buffer diagnostico e la stampa subito."""
     line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
     DIAG.append(line)
     print(line)
 
 
 def flush_diag():
-    """Scrive il buffer diagnostico su file."""
     try:
         with open(DEBUG_LOG_FILE, "w", encoding="utf-8") as f:
             f.write("\n".join(DIAG))
@@ -107,233 +120,258 @@ def normalize_date(raw):
     return None
 
 
-def parse_jackpot_text(text, verbose=False):
-    if not text:
+def parse_italian_date(day, month_name, year):
+    """
+    Converte (2, 'ottobre', '2026') -> '02/10/2026'.
+    Ritorna None se mese non riconosciuto.
+    """
+    month_key = month_name.strip().lower()
+    if month_key not in MESI_IT:
         return None
-
-    pattern_context = r"jackpot[^\d]{0,80}(\d{1,3}(?:[.,\s]\d{3}){1,3}|\d{7,9})"
-    matches_context = re.findall(pattern_context, text, re.IGNORECASE)
-
-    candidates_context = []
-    for m in matches_context:
-        clean = re.sub(r"[.,\s]", "", m)
-        try:
-            val = int(clean)
-        except ValueError:
-            continue
-        if 10_000_000 <= val <= 200_000_000:
-            candidates_context.append(val)
-
-    if verbose:
-        diag(f"    [jackpot] contesto: {candidates_context}")
-
-    if candidates_context:
-        return max(candidates_context)
-
-    pattern_generic = r"(\d{1,3}(?:[.,\s]\d{3}){1,3}|\d{7,9})"
-    matches_generic = re.findall(pattern_generic, text)
-
-    candidates_generic = []
-    for m in matches_generic:
-        clean = re.sub(r"[.,\s]", "", m)
-        try:
-            val = int(clean)
-        except ValueError:
-            continue
-        if 10_000_000 <= val <= 200_000_000:
-            candidates_generic.append(val)
-
-    if verbose:
-        diag(f"    [jackpot] fallback: {candidates_generic}")
-
-    if not candidates_generic:
-        return None
-    return max(candidates_generic)
-
-
-# ==========================================
-# FETCH MULTI-PROXY (con logging dettagliato)
-# ==========================================
-def _do_fetch(url, proxy_name, timeout=25):
-    """Esegue una richiesta HTTP con logging dettagliato. Ritorna (text, ok)."""
     try:
-        diag(f"    → {proxy_name}: GET {url[:100]}...")
-        r = requests.get(url, headers=HEADERS, timeout=timeout)
-        diag(f"      status={r.status_code} len={len(r.text)} bytes")
-        if r.status_code != 200:
-            diag(f"      BODY[:500]: {r.text[:500]}")
-            return None, False
-        return r.text, True
-    except requests.Timeout:
-        diag(f"      TIMEOUT dopo {timeout}s")
-        return None, False
-    except requests.ConnectionError as e:
-        diag(f"      CONNECTION ERROR: {str(e)[:200]}")
-        return None, False
-    except Exception as e:
-        diag(f"      ERRORE: {type(e).__name__}: {str(e)[:200]}")
-        return None, False
+        d = int(day)
+        y = int(year)
+    except (ValueError, TypeError):
+        return None
+    if not (1 <= d <= 31 and 2000 <= y <= 2100):
+        return None
+    return f"{d:02d}/{MESI_IT[month_key]:02d}/{y}"
 
 
-def fetch_via_jina(url, timeout=30):
-    proxy_url = f"https://r.jina.ai/{url}"
-    return _do_fetch(proxy_url, "jina.ai", timeout)
+# ==========================================
+# HTTP CON RETRY
+# ==========================================
+def fetch_with_retry(url, timeout=30):
+    """
+    Fetch con retry esponenziale.
+    Ritorna testo HTML o None se tutti i tentativi falliscono.
+    """
+    diag(f"[*] Fetch: {url}")
 
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            diag(f"    → tentativo {attempt}/{MAX_RETRIES}")
+            r = requests.get(url, headers=HEADERS, timeout=timeout)
+            diag(f"      status={r.status_code} len={len(r.text)} bytes")
 
-def fetch_via_allorigins(url, timeout=25):
-    proxy_url = f"https://api.allorigins.win/raw?url={url}"
-    return _do_fetch(proxy_url, "allorigins.win", timeout)
+            if r.status_code == 200 and len(r.text) > 1000:
+                diag(f"      ✓ successo")
+                return r.text
 
+            diag(f"      ✗ status/len non validi")
 
-def fetch_via_corsproxy(url, timeout=25):
-    proxy_url = f"https://corsproxy.io/?{url}"
-    return _do_fetch(proxy_url, "corsproxy.io", timeout)
+        except requests.Timeout:
+            diag(f"      ✗ TIMEOUT dopo {timeout}s")
+        except requests.ConnectionError as e:
+            diag(f"      ✗ CONNECTION ERROR: {str(e)[:150]}")
+        except Exception as e:
+            diag(f"      ✗ ERRORE: {type(e).__name__}: {str(e)[:150]}")
 
+        if attempt < MAX_RETRIES:
+            delay = RETRY_DELAYS[attempt - 1]
+            diag(f"      → attendo {delay}s prima del prossimo tentativo")
+            time.sleep(delay)
 
-def fetch_via_direct(url, timeout=20):
-    return _do_fetch(url, "diretto", timeout)
-
-
-def smart_fetch(url):
-    """Prova tutti i metodi in cascata. Ritorna (content, kind) o (None, None)."""
-    diag(f"[*] smart_fetch: {url}")
-    for fn in (fetch_via_jina, fetch_via_allorigins,
-               fetch_via_corsproxy, fetch_via_direct):
-        content, ok = fn(url)
-        if ok and content and len(content) > 500:
-            diag(f"    ✓ successo ({len(content)} byte)")
-            return content, "html"
-        elif ok:
-            diag(f"    ✗ risposta troppo corta ({len(content) if content else 0} byte)")
-        time.sleep(1)
-    diag(f"    ✗ TUTTI I METODI FALLITI per {url}")
-    return None, None
+    diag(f"[!] Tutti i tentativi falliti per {url}")
+    return None
 
 
 # ==========================================
 # PARSING — Estrazioni
 # ==========================================
 def parse_draws_from_text(text):
-    """Parser generico: cerca pattern 'Concorso N. XXX del GG/MM/AAAA'."""
+    """
+    Parser per lottologia.com.
+
+    Formato osservato:
+        "158/26 - venerdì 2 ottobre 2026"
+        seguito dai numeri (6 + jolly + superstar)
+
+    Strategia:
+    1. Trova tutti i marker "NNN/YY - weekday DD mese YYYY"
+    2. Per ciascuno, prende i ~600 char successivi
+    3. Estrae i primi 8 numeri 1-90 distinti (6 + jolly + superstar)
+    """
     results = []
     text_norm = re.sub(r"\s+", " ", text)
 
-    # Log: cerchiamo le keyword
-    kw_count = len(re.findall(r"concorso", text_norm, re.IGNORECASE))
-    diag(f"    [parse] occorrenze 'concorso' nel testo: {kw_count}")
-
-    pattern = re.compile(
-        r"concorso\s*n[°.]?\s*(\d{2,4})\s*(?:del\s*)?(\d{2}[/\-.]\d{2}[/\-.]\d{4})"
-        r"(.{0,400}?)(?=concorso\s*n|$)",
+    # Pattern marker: "158/26 - venerdì 2 ottobre 2026"
+    # Cattura: concorso (158), 2-digit anno (26), giorno (2), mese (ottobre), anno (2026)
+    marker_pattern = re.compile(
+        r"(\d{2,4})/(\d{2})\s*-\s*"
+        r"(?:luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica)\s+"
+        r"(\d{1,2})\s+"
+        r"(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+"
+        r"(\d{4})",
         re.IGNORECASE
     )
-    matches = list(pattern.finditer(text_norm))
-    diag(f"    [parse] match regex: {len(matches)}")
 
-    for m in matches:
-        concorso = int(m.group(1))
-        data = normalize_date(m.group(2))
-        chunk = m.group(3)
-        nums = [int(n) for n in re.findall(r"\b(\d{1,2})\b", chunk)
-                if 1 <= int(n) <= 90]
-        seen = set()
-        unique_nums = []
-        for n in nums:
-            if n not in seen:
-                seen.add(n)
-                unique_nums.append(n)
-        if len(unique_nums) >= 8:
-            results.append({
-                "concorso": concorso,
-                "data": data,
-                "combinazione": unique_nums[:6],
-                "jolly": unique_nums[6],
-                "superstar": unique_nums[7],
-            })
-            diag(f"    [parse] ✓ concorso {concorso} del {data}: "
-                 f"{unique_nums[:6]} | jolly {unique_nums[6]} | ss {unique_nums[7]}")
+    matches = list(marker_pattern.finditer(text_norm))
+    diag(f"    [parse] marker trovati: {len(matches)}")
+
+    for i, m in enumerate(matches):
+        concorso_raw = m.group(1)
+        year_2digit = m.group(2)
+        day = m.group(3)
+        month_name = m.group(4)
+        year = m.group(5)
+
+        # Concorso: se è "158/26", il numero è 158
+        concorso = to_int(concorso_raw)
+        if concorso is None:
+            continue
+
+        # Data
+        data_str = parse_italian_date(day, month_name, year)
+        if data_str is None:
+            diag(f"    [parse] data non parsabile: {day} {month_name} {year}")
+            continue
+
+        # Blocco numeri: da fine marker al prossimo marker (o +600 char)
+        start = m.end()
+        if i + 1 < len(matches):
+            end = matches[i + 1].start()
         else:
-            diag(f"    [parse] ✗ concorso {concorso} del {data}: "
-                 f"solo {len(unique_nums)} numeri trovati")
+            end = min(start + 600, len(text_norm))
+
+        chunk = text_norm[start:end]
+
+        # Estrai numeri dal chunk
+        raw_nums = re.findall(r"\b(\d{1,2})\b", chunk)
+        nums = []
+        seen = set()
+        for ns in raw_nums:
+            n = to_int(ns)
+            if n is None:
+                continue
+            if not (1 <= n <= 90):
+                continue
+            if n in seen:
+                continue
+            seen.add(n)
+            nums.append(n)
+            if len(nums) == 8:
+                break
+
+        if len(nums) < 8:
+            diag(f"    [parse] concorso {concorso} ({data_str}): "
+                 f"solo {len(nums)} numeri trovati, scarto")
+            continue
+
+        results.append({
+            "concorso": concorso,
+            "data": data_str,
+            "combinazione": nums[:6],
+            "jolly": nums[6],
+            "superstar": nums[7],
+            "sestina": nums[:6],
+        })
+        diag(f"    [parse] ✓ concorso {concorso} ({data_str}): "
+             f"{nums[:6]} | J {nums[6]} | SS {nums[7]}")
 
     return results
 
 
 def fetch_all_draws():
-    """Prova più siti, ritorna la lista più lunga trovata."""
-    sources = [
-        "https://www.estrazionedelotto.it/estrazione-superenalotto",
-        "https://www.superenalotto.net/estrazioni",
-        "https://www.lottologia.com/superenalotto/estrazioni/",
-    ]
-    all_results = []
-    for url in sources:
-        diag(f"\n[*] === FONTE: {url} ===")
-        content, kind = smart_fetch(url)
-        if not content:
-            diag(f"    [!] Fonte non raggiungibile.")
-            continue
-
-        if kind == "html":
-            soup = BeautifulSoup(content, "html.parser")
-            text = soup.get_text(" ", strip=True)
-            diag(f"    [html] testo estratto: {len(text)} char")
-        else:
-            text = content
-
-        # Salva un sample del testo per ispezione
-        sample = text[:1500].replace("\n", " ")
-        diag(f"    [sample] primi 1500 char: {sample}")
-
-        draws = parse_draws_from_text(text)
-        diag(f"    ✓ {len(draws)} estrazioni estratte da questa fonte.")
-        if draws:
-            all_results.append(draws)
-        time.sleep(1)
-
-    if not all_results:
-        diag("[!] Nessuna fonte ha restituito estrazioni.")
+    """
+    Scarica l'archivio da lottologia.com.
+    Ritorna lista di estrazioni ordinate per concorso.
+    """
+    diag(f"\n[*] === ESTRAZIONI da {DRAWS_URL} ===")
+    html = fetch_with_retry(DRAWS_URL)
+    if not html:
+        diag(f"[!] Impossibile recuperare estrazioni.")
         return []
 
-    best = max(all_results, key=len)
-    diag(f"[+] Fonte migliore: {len(best)} estrazioni")
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text(" ", strip=True)
+    diag(f"    [html] testo estratto: {len(text)} char")
+    diag(f"    [html] sample: {text[:300]}...")
 
+    draws = parse_draws_from_text(text)
+    diag(f"    [+] {len(draws)} estrazioni estratte")
+
+    if not draws:
+        return []
+
+    # Dedup per concorso, ordina
     seen = set()
     clean = []
-    for item in sorted(best, key=lambda x: x["concorso"]):
-        c = item["concorso"]
-        if c not in seen:
-            seen.add(c)
-            clean.append(item)
+    for d in sorted(draws, key=lambda x: x["concorso"]):
+        if d["concorso"] in seen:
+            continue
+        seen.add(d["concorso"])
+        clean.append(d)
+
     return clean
 
 
 # ==========================================
 # PARSING — Jackpot
 # ==========================================
-def fetch_jackpot():
-    sources = [
-        "https://www.superenalotto.net/",
-        "https://www.estrazionedelotto.it/estrazione-superenalotto",
-        "https://www.lottologia.com/superenalotto/",
-    ]
-    for url in sources:
-        diag(f"\n[*] === JACKPOT da: {url} ===")
-        content, kind = smart_fetch(url)
-        if not content:
+def parse_jackpot_text(text):
+    """
+    Cerca il jackpot corrente. Range ristretto: 10M-200M.
+    Priorità: contesto "jackpot/montepremi" esplicito.
+    """
+    if not text:
+        return None
+
+    # Solo match con contesto "jackpot" o "montepremi"
+    context_pattern = re.compile(
+        r"(?:jackpot|montepremi|monte\s*premi)[^\d]{0,120}"
+        r"(\d{1,3}(?:[.\s]\d{3}){1,3}|\d{7,9})",
+        re.IGNORECASE
+    )
+
+    candidates = []
+    for m in context_pattern.finditer(text):
+        clean = re.sub(r"[.\s]", "", m.group(1))
+        try:
+            val = int(clean)
+        except ValueError:
             continue
-        if kind == "html":
-            soup = BeautifulSoup(content, "html.parser")
-            text = soup.get_text(" ", strip=True)
-        else:
-            text = content
+        if 10_000_000 <= val <= 200_000_000:
+            candidates.append(val)
 
-        val = parse_jackpot_text(text, verbose=True)
-        if val:
-            diag(f"    ✓ Jackpot trovato: {val:,} €")
-            return val
+    if candidates:
+        return max(candidates)
 
-        time.sleep(1)
+    # Fallback: numeri nel range 10M-200M, ma solo se chiaramente isolati
+    # (evita di pescare date, anni, ecc.)
+    fallback_pattern = re.compile(r"\b(\d{2}\.\d{3}\.\d{3})\b")
+    for m in fallback_pattern.finditer(text):
+        clean = m.group(1).replace(".", "")
+        try:
+            val = int(clean)
+        except ValueError:
+            continue
+        if 10_000_000 <= val <= 200_000_000:
+            candidates.append(val)
+
+    if candidates:
+        return max(candidates)
+
+    return None
+
+
+def fetch_jackpot():
+    diag(f"\n[*] === JACKPOT da {JACKPOT_URL} ===")
+    html = fetch_with_retry(JACKPOT_URL, timeout=25)
+    if not html:
+        diag("[!] Jackpot: fetch fallito.")
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text(" ", strip=True)
+    diag(f"    [html] testo: {len(text)} char")
+
+    val = parse_jackpot_text(text)
+    if val:
+        diag(f"    ✓ Jackpot trovato: {val:,} €")
+        return val
+
+    diag("    ✗ Jackpot non trovato.")
     return None
 
 
@@ -341,70 +379,98 @@ def fetch_jackpot():
 # MERGE
 # ==========================================
 def merge_history(existing, fetched):
+    """
+    Aggiunge estrazioni nuove. Gestisce anche buchi (concorsi mancanti).
+    """
     existing_ids = {item.get("concorso") for item in existing
                     if isinstance(item.get("concorso"), int)}
-    max_existing = max(existing_ids) if existing_ids else 0
+
     new_items = [f for f in fetched
                  if isinstance(f.get("concorso"), int)
-                 and f["concorso"] > max_existing]
+                 and f["concorso"] not in existing_ids]
+
     if not new_items:
         return existing, 0
+
     new_items.sort(key=lambda x: x["concorso"])
+
     for item in new_items:
         item["data"] = normalize_date(item.get("data")) or item.get("data", "N/A")
         item["combinazione"] = [int(n) for n in item["combinazione"]]
+        item["sestina"] = item["combinazione"]
         item["jolly"] = to_int(item.get("jolly"))
         item["superstar"] = to_int(item.get("superstar"))
-    return existing + new_items, len(new_items)
+
+    merged = existing + new_items
+
+    # Sort cronologico (per data, non per concorso — gestisce 2025/2026)
+    def sort_key(x):
+        try:
+            dt = datetime.strptime(x.get("data", ""), "%d/%m/%Y")
+            return (dt.year, dt.month, dt.day)
+        except Exception:
+            return (0, 0, 0)
+
+    merged = sorted(merged, key=sort_key)
+    return merged, len(new_items)
 
 
 # ==========================================
 # MAIN
 # ==========================================
 def main():
-    diag("=== FETCH LATEST DRAW + JACKPOT (DIAGNOSTIC MODE) ===")
+    diag("=== FETCH LATEST DRAW + JACKPOT ===")
     diag(f"Python: {sys.version}")
     diag(f"requests: {requests.__version__}")
     diag(f"Now: {datetime.now().isoformat()}")
 
+    exit_code = 0
+
     try:
-        # 1) Estrazioni
+        # 1) Storico attuale
         history = load_history()
         diag(f"\n[*] Storico attuale: {len(history)} estrazioni.")
         if history:
             last = history[-1]
-            diag(f"[*] Ultima: concorso {last.get('concorso')} del {last.get('data')}")
+            diag(f"[*] Ultima entry: concorso {last.get('concorso')} "
+                 f"del {last.get('data')}")
 
+        # 2) Estrazioni
         fetched = fetch_all_draws()
+
         if fetched:
             diag(f"\n[*] Totale estrazioni recuperate: {len(fetched)}")
             merged, added = merge_history(history, fetched)
             if added > 0:
                 save_history(merged)
-                diag(f"[+] Aggiunte {added} nuove estrazioni. Totale: {len(merged)}")
+                diag(f"[+] Aggiunte {added} nuove estrazioni. "
+                     f"Totale: {len(merged)}")
             else:
                 diag("[*] Nessuna nuova estrazione. Storico invariato.")
         else:
-            diag("[!] Nessuna estrazione recuperata.")
+            diag("[!!!] NESSUNA ESTRAZIONE RECUPERATA.")
+            exit_code = 1
 
-        # 2) Jackpot
+        # 3) Jackpot (indipendente, non blocca)
         diag("")
         jackpot = fetch_jackpot()
         if jackpot:
             save_jackpot(jackpot)
         else:
-            diag("[!] Impossibile recuperare il jackpot.")
+            diag("[!] Jackpot non aggiornato.")
 
     except Exception as e:
-        diag(f"[!!!] ECCEZIONE NON GESTITA: {type(e).__name__}: {e}")
+        diag(f"[!!!] ECCEZIONE: {type(e).__name__}: {e}")
         import traceback
         diag(traceback.format_exc())
+        exit_code = 1
 
-    # Riga finale DENTRO il flusso, prima del flush
     diag("=== FETCH COMPLETATO ===")
-
-    # Flush finale: scrive TUTTO il buffer, inclusa la riga sopra
     flush_diag()
+
+    if exit_code != 0:
+        print(f"\n[!!!] Fetch terminato con errori (exit code {exit_code})")
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
