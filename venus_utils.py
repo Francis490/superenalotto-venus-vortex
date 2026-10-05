@@ -1,53 +1,25 @@
 """
 venus_utils.py
-VENUS VORTEX — Utility condivise
+VENUS VORTEX — Utility condivise.
 
-Centralizza funzioni duplicate in più moduli:
-- load_json / save_json
-- parse_date (ordinamento cronologico)
-- sort_history_by_date
-- get_year_from_concorso / get_concorso_key
+FIX (2026-10-05 v3):
+- load_json e save_json ora sono importati da core_io.py (modulo condiviso
+  tra Aurora e Venus). Vedi CORE_SYNC.md.
+  Il file resta retrocompatibile: gli altri moduli che fanno
+  `from venus_utils import load_json, save_json` continuano a funzionare.
 
-FIX (2026-10-05):
-- get_year_from_concorso era hardcoded a `1 <= concorso <= 150` per il 2026.
-  Con l'avanzare dei concorsi (ora 159+), la funzione ritornava None per
-  tutto ciò che superava 150. Sostituito con dict YEAR_RANGES parametrico.
+FIX (2026-10-05 v2):
+- get_year_from_concorso parametrico via YEAR_RANGES.
+
+FIX (2026-10-05 v1):
 - Aggiunta get_year_from_date per il fallback dalla data.
-
-Cambio architetturale (2026-09-19):
-- Creato per ridurre duplicazione (parse_date era copiata in 6+ file)
-- Risolve dipendenza circolare backtest_e2e → scraper
 """
-import json
 import os
 from datetime import datetime
 
-
-# ==========================================
-# JSON I/O
-# ==========================================
-def load_json(filepath, default=None):
-    """Carica un file JSON. Ritorna `default` se non esiste o è corrotto."""
-    if not os.path.exists(filepath):
-        return default
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"[!] Errore lettura {filepath}: {e}")
-        return default
-
-
-def save_json(filepath, data):
-    """Salva un file JSON. Ritorna True se successo, False altrimenti."""
-    try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f"[+] Salvato: {filepath}")
-        return True
-    except Exception as e:
-        print(f"[!] Errore salvataggio {filepath}: {e}")
-        return False
+# Core condiviso: importiamo load_json/save_json da core_io.
+# Gli altri moduli possono continuare a importarli da venus_utils.
+from core_io import load_json, save_json, load_json_strict
 
 
 # ==========================================
@@ -90,8 +62,7 @@ YEAR_2025_MAX = 1208
 YEAR_2026_MIN = 1
 YEAR_2026_MAX = 999
 
-# Mappa anno -> (min, max). Ordine: dal range più alto al più basso,
-# così un concorso come 1001 non viene erroneamente classificato come 2026.
+# Mappa anno -> (min, max).
 YEAR_RANGES = {
     2025: (YEAR_2025_MIN, YEAR_2025_MAX),
     2026: (YEAR_2026_MIN, YEAR_2026_MAX),
@@ -112,17 +83,12 @@ def get_year_from_concorso(concorso, ranges=None):
     FIX (2026-10-05): prima era hardcoded a `1 <= concorso <= 150`.
     Ora usa YEAR_RANGES, ordinato dal range più alto al più basso per
     evitare collisioni (es. 1001 deve essere 2025, non 2026).
-
-    :param concorso: numero intero
-    :param ranges: dict opzionale {anno: (min, max)} per override.
-    :return: anno (int) o None se non classificabile.
     """
     if not isinstance(concorso, int):
         return None
 
     ranges = ranges or YEAR_RANGES
 
-    # Ordina i range dal più alto al più basso per evitare collisioni
     sorted_years = sorted(ranges.keys(), reverse=True)
     for year in sorted_years:
         lo, hi = ranges[year]
@@ -141,31 +107,20 @@ def get_concorso_key(concorso, data=None):
     """
     Ritorna una chiave univoca (anno, concorso) per evitare
     collisioni tra 2025 e 2026 con stesso numero.
-
-    Ordine di risoluzione:
-    1. Anno dedotto dal numero di concorso (via YEAR_RANGES)
-    2. Fallback: anno dedotto dalla data
-    3. Fallback finale: (None, concorso) con warning
-
-    Nota: se anno e data danno risultati diversi, prevale la data
-    (più affidabile). Es. concorso 5 con data "2025-..." → anno 2025.
     """
     year_concorso = get_year_from_concorso(concorso)
     year_data = get_year_from_date(data) if data else None
 
-    # Se entrambi disponibili e discordanti → prevale la data
     if year_concorso and year_data and year_concorso != year_data:
         print(f"[!] Discrepanza anno per concorso {concorso}: "
               f"range→{year_concorso}, data→{year_data}. Uso la data.")
         return (year_data, concorso)
 
-    # Se almeno uno è disponibile, usalo
     if year_data:
         return (year_data, concorso)
     if year_concorso:
         return (year_concorso, concorso)
 
-    # Nessuno dei due: warning e fallback
     print(f"[!] Impossibile dedurre anno per concorso {concorso} "
           f"(data='{data}'). Uso (None, {concorso}).")
     return (None, concorso)
