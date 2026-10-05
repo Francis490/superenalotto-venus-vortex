@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-03T22:44:23",
+  "updated_at": "2026-10-05T13:12:28",
   "next_contest": {
     "number": 160,
     "date": "06/10/2026",
@@ -21,17 +21,17 @@
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
-    "ev": -0.503,
+    "ev": -0.5912,
     "level": "PRUDENTE",
-    "advice": "EV basso. 1 sestina (1,00 €)."
+    "advice": "EV molto negativo. Salta e risparmia."
   },
   "budget_mode": {
-    "mode": "MINIMO",
-    "emoji": "🟢",
-    "n_sestinas": 1,
-    "cost_eur": 1.0,
-    "ev": -0.503,
-    "message": "EV basso. 1 sestina (1,00 €)."
+    "mode": "SKIP",
+    "emoji": "🚫",
+    "n_sestinas": 0,
+    "cost_eur": 0.0,
+    "ev": -0.5912,
+    "message": "EV molto negativo. Salta e risparmia."
   },
   "dodeca_pool": [
     2,
@@ -47,31 +47,15 @@
     59,
     64
   ],
-  "titan_predictions": [
-    {
-      "id": "VORTEX 1",
-      "numbers": [
-        7,
-        33,
-        53,
-        57,
-        60,
-        90
-      ],
-      "sum": 300,
-      "z_score": 0.62,
-      "confidence": 21.9,
-      "signature": "VX-2026-160-024297"
-    }
-  ],
+  "titan_predictions": [],
   "vortex": {
     "ev": {
       "jackpot": 36600000,
       "players_estimated": 50000000,
       "expected_winners": 1.0,
-      "effective_jackpot": 91500000.0,
-      "ev_6_solo": 0.147,
-      "ev_total": -0.503,
+      "effective_jackpot": 36600000.0,
+      "ev_6_solo": 0.0588,
+      "ev_total": -0.5912,
       "profitable": false,
       "recommendation": "SALTA"
     },
@@ -80,13 +64,6 @@
       "emoji": "🟡",
       "message": "EV quasi neutro. Puoi giocare 2 sestine."
     },
-    "backtest": {
-      "3_hits": 0,
-      "4_hits": 0,
-      "5_hits": 0,
-      "total": 30,
-      "hit_rate_3plus": 0.0,
-      "baseline_expected": 0.31
-    }
+    "backtest": null
   }
 }
