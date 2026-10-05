@@ -1,23 +1,23 @@
-[13:45:58] === FETCH LATEST DRAW ===
-[13:45:58] Python: 3.10.21 (main, Aug 13 2026, 02:42:48) [GCC 13.3.0]
-[13:45:58] requests: 2.31.0
-[13:45:58] Now: 2026-10-05T13:45:58.575535
-[13:45:58] 
+[14:49:19] === FETCH LATEST DRAW ===
+[14:49:19] Python: 3.10.21 (main, Aug 13 2026, 02:42:48) [GCC 13.3.0]
+[14:49:19] requests: 2.31.0
+[14:49:19] Now: 2026-10-05T14:49:19.887497
+[14:49:19] 
 [*] Storico attuale: 367 estrazioni.
-[13:45:58] [*] Ultima entry: concorso 159 del 03/10/2026
-[13:45:58] 
+[14:49:19] [*] Ultima entry: concorso 159 del 03/10/2026
+[14:49:19] 
 [*] === ESTRAZIONI da https://www.lottologia.com/superenalotto/estrazioni/ ===
-[13:45:58] [*] Fetch: https://www.lottologia.com/superenalotto/estrazioni/
-[13:45:58]     → tentativo 1/3
-[13:45:59]       status=200 len=231880 bytes
-[13:45:59]       ✓ successo
-[13:45:59]     [html] testo estratto: 12452 char
-[13:45:59]     [parse] marker trovati: 159
-[13:45:59]     [+] 159 estrazioni estratte
-[13:45:59]     [parse] recente: 01/10/2026 -> [5, 12, 28, 41, 56, 66] J 73 SS 42
-[13:45:59]     [parse] recente: 02/10/2026 -> [2, 31, 55, 56, 73, 84] J 77 SS 41
-[13:45:59]     [parse] recente: 03/10/2026 -> [5, 12, 18, 25, 28, 42] J 66 SS 76
-[13:45:59] 
+[14:49:19] [*] Fetch: https://www.lottologia.com/superenalotto/estrazioni/
+[14:49:19]     → tentativo 1/3
+[14:49:21]       status=200 len=231880 bytes
+[14:49:21]       ✓ successo
+[14:49:21]     [html] testo estratto: 12452 char
+[14:49:21]     [parse] marker trovati: 159
+[14:49:21]     [+] 159 estrazioni estratte
+[14:49:21]     [parse] recente: 01/10/2026 -> [5, 12, 28, 41, 56, 66] J 73 SS 42
+[14:49:21]     [parse] recente: 02/10/2026 -> [2, 31, 55, 56, 73, 84] J 77 SS 41
+[14:49:21]     [parse] recente: 03/10/2026 -> [5, 12, 18, 25, 28, 42] J 66 SS 76
+[14:49:21] 
 [*] Totale estrazioni recuperate: 159
-[13:45:59] [*] Nessuna nuova estrazione. Storico invariato.
-[13:45:59] === FETCH COMPLETATO ===
+[14:49:21] [*] Nessuna nuova estrazione. Storico invariato.
+[14:49:21] === FETCH COMPLETATO ===
