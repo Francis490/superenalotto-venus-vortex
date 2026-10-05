@@ -3,11 +3,16 @@ venus_track_record.py
 Gestisce il track record delle sestine generate.
 Include rilevamento vincite (3+, 4+, 5+, 6 punti).
 
+FIX (2026-10-05):
+- Aggiunta funzione clear_pending_record(concorso): rimuove un record
+  pendente (result=None) per un dato concorso. Usata quando il bot
+  è in SKIP mode e non deve registrare una sestina per il prossimo
+  concorso, evitando record "in attesa" fantasma.
+
 FIX (2026-09-19):
 - #12: record_predictions non sovrascrive più silenziosamente le sestine
   per lo stesso concorso. Salva la versione precedente in `history_versions`.
 - get_stats(): include correttamente il caso 6 punti in hits_3plus
-  (prima il dict escludeva la chiave "6" e la somma ignorava i 6 punti).
 - detect_wins(): aggiunto controllo `result is None` per evitare
   notifiche duplicate se il workflow gira due volte sullo stesso concorso.
 - Import utility condivise da venus_utils.
@@ -51,7 +56,6 @@ def record_predictions(target_concorso, sestinas, mode):
         if r.get("target_concorso") == target_concorso:
             existing = r.get("sestinas", [])
             if existing != sestinas:
-                # FIX #12: archivia versione precedente
                 if "history_versions" not in r:
                     r["history_versions"] = []
 
@@ -62,7 +66,6 @@ def record_predictions(target_concorso, sestinas, mode):
                     "replaced_at": datetime.now().isoformat(),
                 })
 
-                # Aggiorna il record principale
                 r["sestinas"] = sestinas
                 r["mode"] = mode
                 r["generated_at"] = datetime.now().isoformat()
@@ -86,6 +89,34 @@ def record_predictions(target_concorso, sestinas, mode):
     save_track(track)
     print(f"[+] Track record: registrato concorso {target_concorso} "
           f"({len(sestinas)} sestine)")
+
+
+def clear_pending_record(concorso):
+    """
+    Rimuove un record PENDENTE (result=None) per il concorso indicato.
+    Usato quando il bot è in SKIP mode e non deve registrare una sestina
+    per il prossimo concorso.
+
+    Non tocca i record già completati (result != None).
+    """
+    track = load_track()
+    records = track.get("records", [])
+    before = len(records)
+
+    track["records"] = [
+        r for r in records
+        if not (r.get("target_concorso") == concorso
+                and r.get("result") is None)
+    ]
+
+    after = len(track["records"])
+
+    if before != after:
+        save_track(track)
+        print(f"[+] Track record: rimosso record pendente per concorso {concorso} "
+              f"(SKIP mode)")
+    else:
+        print(f"[*] Track record: nessun record pendente per concorso {concorso}")
 
 
 def update_with_result(concorso, real_numbers):
@@ -135,7 +166,6 @@ def detect_wins(concorso, real_numbers):
 
     for r in records:
         if r.get("target_concorso") == concorso:
-            # Salta se il risultato è già stato processato
             if r.get("result") is not None:
                 return None
 
@@ -221,9 +251,6 @@ def format_win_notification(win_info):
 def get_stats():
     """
     Ritorna statistiche aggregate del track record.
-
-    FIX: il dict `dist` ora include la chiave "6". Inoltre hits_3plus somma
-    anche i 6 punti.
     """
     track = load_track()
     records = track.get("records", [])
@@ -240,13 +267,11 @@ def get_stats():
             "hit_rate_3plus": 0.0,
         }
 
-    # FIX: range(7) include 0..6
     dist = {str(i): 0 for i in range(7)}
     for r in completed:
         best = r["result"].get("best_hits", 0)
         dist[str(best)] = dist.get(str(best), 0) + 1
 
-    # FIX: include anche i 6 punti
     hits_3plus = dist["3"] + dist["4"] + dist["5"] + dist["6"]
 
     return {
