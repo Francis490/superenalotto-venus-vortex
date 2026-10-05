@@ -1,12 +1,18 @@
 """
 vortex_opportunity.py
-VENUS VORTEX — Opportunity Engine v4.0 (SIMPLIFIED)
+VENUS VORTEX — Opportunity Engine v4.1 (SIMPLIFIED + HONEST)
+
+Cambio di paradigma (2026-10-05):
+- RIMOSSO anti_crowd_factor=2.5 in calculate_ev. Era un numero arbitrario
+  non giustificato che gonfiava l'EV del 150%. Ora l'EV usa il valore atteso
+  matematico: jackpot / expected_winners.
+- Conseguenza: il bot entra in SKIP mode per jackpot < ~80M (prima giocava
+  a 36M). Scelta onesta, non di comodo.
 
 Cambio di paradigma (2026-10-01):
 - RIMOSSI tutti i filtri complessi (anti-crowd, scoring, tiered pool).
 - Generatore semplice: sestina con somma 240-310, seed per determinismo.
 - Mantiene: EV calculator, rollover detector, budget mode, signature, backtest.
-- Coerente con l'approccio di Aurora Engine v5.5.
 """
 import hashlib
 import random
@@ -32,11 +38,26 @@ def estimate_players(jackpot):
         return 300_000_000
 
 
-def calculate_ev(jackpot, anti_crowd_factor=2.5, ticket_cost=1.0):
+def calculate_ev(jackpot, ticket_cost=1.0):
+    """
+    EV matematicamente onesto.
+
+    FIX (2026-10-05): rimosso anti_crowd_factor=2.5.
+    Prima: effective_jackpot = (jackpot / expected_winners) * 2.5
+    Ora:   effective_jackpot = jackpot / expected_winners
+
+    Il fattore 2.5 era arbitrario e non documentato. Lo abbiamo rimosso
+    per non gonfiare artificialmente l'EV. Conseguenza: il bot gioca
+    solo quando l'EV è realmente vicino allo zero (jackpot alto).
+
+    :param jackpot: jackpot corrente in euro
+    :param ticket_cost: costo di una giocata (default 1.0 €)
+    :return: dict con EV breakdown
+    """
     prob_6 = 1 / 622_614_630
     players = estimate_players(jackpot)
     expected_winners = max(1.0, players * prob_6)
-    effective_jackpot = (jackpot / expected_winners) * anti_crowd_factor
+    effective_jackpot = jackpot / expected_winners
     ev_6 = prob_6 * effective_jackpot
     ev_other = 0.35
     total_ev = ev_6 + ev_other - ticket_cost
