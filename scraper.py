@@ -7,13 +7,12 @@ FIX (2026-10-05):
 - detect_wins ora viene chiamato PRIMA di update_with_result.
   Prima era il contrario, quindi result era già settato e
   detect_wins ritornava sempre None -> nessuna notifica di vincita.
+- Rimosso venus_jackpot.json: il jackpot è gestito SOLO da
+  venus_manual_override.json. Il fetch automatico era rotto.
 
 FIX (2026-10-01):
 - Generazione sestina da pool 1-90 (non più dodeca 12 numeri).
 - n_sestinas forzato a 1 (tranne SKIP mode).
-- Rimosso blocco validazione fingerprint.
-- Rimosso blocco get_previous_sestina (seed già garantisce varietà).
-- Rimosso balance_pool (no-op).
 """
 import json
 import os
@@ -112,7 +111,6 @@ DATABASE_FILE = "venus_database.json"
 CHART_FILE = "vortex_chart.png"
 HEATMAP_FILE = "vortex_heatmap.png"
 DISTRIBUTION_FILE = "vortex_distribution.png"
-JACKPOT_FILE = "venus_jackpot.json"
 MANUAL_OVERRIDE_FILE = "venus_manual_override.json"
 
 DASHBOARD_URL = "https://francis490.github.io/superenalotto-venus-vortex/"
@@ -218,6 +216,12 @@ def normalize_history(raw_data):
 # 2. CONFIGURAZIONE RUNTIME
 # ==========================================
 def read_runtime_config():
+    """
+    Legge la configurazione da venus_manual_override.json.
+
+    Il jackpot è gestito SOLO da questo file. Non c'è più
+    fallback su venus_jackpot.json (rimosso).
+    """
     config = {
         "jackpot": None,
         "override_last_draw": None,
@@ -230,27 +234,14 @@ def read_runtime_config():
             if isinstance(mdata.get("jackpot"), int) and mdata["jackpot"] > 0:
                 config["jackpot"] = mdata["jackpot"]
                 config["source"] = "manual_override"
-            if isinstance(mdata.get("last_draw"), dict):
-                config["override_last_draw"] = mdata["last_draw"]
-            if config["jackpot"]:
                 print(f"[+] Config: jackpot da OVERRIDE = "
                       f"{config['jackpot']:,} €")
-            if config["override_last_draw"]:
+            if isinstance(mdata.get("last_draw"), dict):
+                config["override_last_draw"] = mdata["last_draw"]
                 print(f"[+] Config: override last_draw presente "
                       f"(concorso {config['override_last_draw'].get('concorso')})")
         except Exception as e:
             print(f"[!] Errore lettura {MANUAL_OVERRIDE_FILE}: {e}")
-
-    if config["jackpot"] is None and os.path.exists(JACKPOT_FILE):
-        try:
-            jdata = load_json(JACKPOT_FILE, {})
-            if isinstance(jdata.get("jackpot"), int) and jdata["jackpot"] > 0:
-                config["jackpot"] = jdata["jackpot"]
-                config["source"] = "scraped"
-                print(f"[+] Config: jackpot da {JACKPOT_FILE} = "
-                      f"{config['jackpot']:,} €")
-        except Exception as e:
-            print(f"[!] Errore lettura {JACKPOT_FILE}: {e}")
 
     if config["jackpot"] is None:
         config["jackpot"] = DEFAULT_JACKPOT
@@ -312,8 +303,6 @@ def estimate_confidence(z_score):
 # 4. DODECA POOL (solo per grafico)
 # ==========================================
 def build_dodeca_pool_for_chart(history):
-    """Costruisce un pool di 12 numeri per il grafico 'Vortex Numerical Field'.
-    Non usato per la generazione sestine."""
     freq = {i: 0 for i in range(1, 91)}
     for d in history[-30:]:
         for n in d.get("combinazione", []):
@@ -825,7 +814,7 @@ def main():
     if skip_mode:
         print("[*] SKIP: nessuna sestina.")
     else:
-        pool = list(range(1, 91))  # pool completo 1-90
+        pool = list(range(1, 91))
         if VORTEX_ENGINE_AVAILABLE:
             try:
                 vortex_sel = select_vortex_sestinas_multi(
@@ -841,12 +830,10 @@ def main():
             print("[!] VORTEX ENGINE non disponibile.")
 
     # === TRACK RECORD ===
-    # FIX (2026-10-05): detect_wins DEVE girare PRIMA di update_with_result,
-    # altrimenti result è già settato e detect_wins ritorna sempre None.
+    # FIX (2026-10-05): detect_wins DEVE girare PRIMA di update_with_result.
     win_info = None
     if TRACK_AVAILABLE and last_draw and last_draw.get("combinazione"):
         try:
-            # 1) Rileva eventuali vincite sul concorso appena uscito
             win_info = detect_wins(
                 last_draw.get("concorso"),
                 last_draw.get("combinazione")
@@ -855,7 +842,6 @@ def main():
                 print(f"[!] VINCITA RILEVATA! Concorso {win_info['concorso']} "
                       f"-> {win_info['best_hits']} punti")
 
-            # 2) Solo DOPO, aggiorna il track record con il risultato
             update_with_result(
                 last_draw.get("concorso"),
                 last_draw.get("combinazione")
@@ -863,7 +849,6 @@ def main():
         except Exception as e:
             print(f"[!] Errore track record: {e}")
 
-    # Registra le sestine per il prossimo concorso
     if TRACK_AVAILABLE and all_sestinas:
         try:
             record_predictions(next_concorso, all_sestinas,
