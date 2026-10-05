@@ -1,6 +1,6 @@
 """
 fetch_latest_draw.py
-VENUS VORTEX — Recupero estrazioni SuperEnalotto + jackpot.
+VENUS VORTEX — Recupero estrazioni SuperEnalotto.
 
 RISCRITTURA (2026-10-05):
 - Rimossi proxy morti (jina.ai 403, allorigins 522, corsproxy 403).
@@ -8,7 +8,7 @@ RISCRITTURA (2026-10-05):
 - Parser specifico per formato "NNN/YY - weekday DD mese YYYY".
 - Retry con backoff esponenziale (3 tentativi).
 - Fail esplicito (exit 1) se nessun draw recuperato.
-- Jackpot parsing ristretto (contesto + range 10M-200M).
+- Rimosso completamente il fetch del jackpot (dato gestito via override manuale).
 
 Uso:
     python fetch_latest_draw.py
@@ -27,7 +27,6 @@ from venus_utils import load_json, save_json
 
 
 HISTORY_FILE = "venus_history.json"
-JACKPOT_FILE = "venus_jackpot.json"
 DEBUG_LOG_FILE = "fetch_debug.log"
 
 USER_AGENT = (
@@ -43,10 +42,9 @@ HEADERS = {
 }
 
 # ==========================================
-# FONTI
+# FONTE
 # ==========================================
 DRAWS_URL = "https://www.lottologia.com/superenalotto/estrazioni/"
-JACKPOT_URL = "https://www.lottologia.com/superenalotto/"
 
 # Retry policy
 MAX_RETRIES = 3
@@ -88,14 +86,6 @@ def load_history():
 
 def save_history(history):
     save_json(HISTORY_FILE, history)
-
-
-def save_jackpot(jackpot_int):
-    payload = {
-        "jackpot": int(jackpot_int),
-        "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-    }
-    save_json(JACKPOT_FILE, payload)
 
 
 def to_int(value, default=None):
@@ -195,8 +185,6 @@ def parse_draws_from_text(text):
     results = []
     text_norm = re.sub(r"\s+", " ", text)
 
-    # Pattern marker: "158/26 - venerdì 2 ottobre 2026"
-    # Cattura: concorso (158), 2-digit anno (26), giorno (2), mese (ottobre), anno (2026)
     marker_pattern = re.compile(
         r"(\d{2,4})/(\d{2})\s*-\s*"
         r"(?:luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica)\s+"
@@ -211,23 +199,19 @@ def parse_draws_from_text(text):
 
     for i, m in enumerate(matches):
         concorso_raw = m.group(1)
-        year_2digit = m.group(2)
         day = m.group(3)
         month_name = m.group(4)
         year = m.group(5)
 
-        # Concorso: se è "158/26", il numero è 158
         concorso = to_int(concorso_raw)
         if concorso is None:
             continue
 
-        # Data
         data_str = parse_italian_date(day, month_name, year)
         if data_str is None:
             diag(f"    [parse] data non parsabile: {day} {month_name} {year}")
             continue
 
-        # Blocco numeri: da fine marker al prossimo marker (o +600 char)
         start = m.end()
         if i + 1 < len(matches):
             end = matches[i + 1].start()
@@ -236,7 +220,6 @@ def parse_draws_from_text(text):
 
         chunk = text_norm[start:end]
 
-        # Estrai numeri dal chunk
         raw_nums = re.findall(r"\b(\d{1,2})\b", chunk)
         nums = []
         seen = set()
@@ -273,10 +256,6 @@ def parse_draws_from_text(text):
 
 
 def fetch_all_draws():
-    """
-    Scarica l'archivio da lottologia.com.
-    Ritorna lista di estrazioni ordinate per concorso.
-    """
     diag(f"\n[*] === ESTRAZIONI da {DRAWS_URL} ===")
     html = fetch_with_retry(DRAWS_URL)
     if not html:
@@ -294,7 +273,6 @@ def fetch_all_draws():
     if not draws:
         return []
 
-    # Dedup per concorso, ordina
     seen = set()
     clean = []
     for d in sorted(draws, key=lambda x: x["concorso"]):
@@ -307,81 +285,9 @@ def fetch_all_draws():
 
 
 # ==========================================
-# PARSING — Jackpot
-# ==========================================
-def parse_jackpot_text(text):
-    """
-    Cerca il jackpot corrente. Range ristretto: 10M-200M.
-    Priorità: contesto "jackpot/montepremi" esplicito.
-    """
-    if not text:
-        return None
-
-    # Solo match con contesto "jackpot" o "montepremi"
-    context_pattern = re.compile(
-        r"(?:jackpot|montepremi|monte\s*premi)[^\d]{0,120}"
-        r"(\d{1,3}(?:[.\s]\d{3}){1,3}|\d{7,9})",
-        re.IGNORECASE
-    )
-
-    candidates = []
-    for m in context_pattern.finditer(text):
-        clean = re.sub(r"[.\s]", "", m.group(1))
-        try:
-            val = int(clean)
-        except ValueError:
-            continue
-        if 10_000_000 <= val <= 200_000_000:
-            candidates.append(val)
-
-    if candidates:
-        return max(candidates)
-
-    # Fallback: numeri nel range 10M-200M, ma solo se chiaramente isolati
-    # (evita di pescare date, anni, ecc.)
-    fallback_pattern = re.compile(r"\b(\d{2}\.\d{3}\.\d{3})\b")
-    for m in fallback_pattern.finditer(text):
-        clean = m.group(1).replace(".", "")
-        try:
-            val = int(clean)
-        except ValueError:
-            continue
-        if 10_000_000 <= val <= 200_000_000:
-            candidates.append(val)
-
-    if candidates:
-        return max(candidates)
-
-    return None
-
-
-def fetch_jackpot():
-    diag(f"\n[*] === JACKPOT da {JACKPOT_URL} ===")
-    html = fetch_with_retry(JACKPOT_URL, timeout=25)
-    if not html:
-        diag("[!] Jackpot: fetch fallito.")
-        return None
-
-    soup = BeautifulSoup(html, "html.parser")
-    text = soup.get_text(" ", strip=True)
-    diag(f"    [html] testo: {len(text)} char")
-
-    val = parse_jackpot_text(text)
-    if val:
-        diag(f"    ✓ Jackpot trovato: {val:,} €")
-        return val
-
-    diag("    ✗ Jackpot non trovato.")
-    return None
-
-
-# ==========================================
 # MERGE
 # ==========================================
 def merge_history(existing, fetched):
-    """
-    Aggiunge estrazioni nuove. Gestisce anche buchi (concorsi mancanti).
-    """
     existing_ids = {item.get("concorso") for item in existing
                     if isinstance(item.get("concorso"), int)}
 
@@ -403,7 +309,6 @@ def merge_history(existing, fetched):
 
     merged = existing + new_items
 
-    # Sort cronologico (per data, non per concorso — gestisce 2025/2026)
     def sort_key(x):
         try:
             dt = datetime.strptime(x.get("data", ""), "%d/%m/%Y")
@@ -419,7 +324,7 @@ def merge_history(existing, fetched):
 # MAIN
 # ==========================================
 def main():
-    diag("=== FETCH LATEST DRAW + JACKPOT ===")
+    diag("=== FETCH LATEST DRAW ===")
     diag(f"Python: {sys.version}")
     diag(f"requests: {requests.__version__}")
     diag(f"Now: {datetime.now().isoformat()}")
@@ -427,7 +332,6 @@ def main():
     exit_code = 0
 
     try:
-        # 1) Storico attuale
         history = load_history()
         diag(f"\n[*] Storico attuale: {len(history)} estrazioni.")
         if history:
@@ -435,7 +339,6 @@ def main():
             diag(f"[*] Ultima entry: concorso {last.get('concorso')} "
                  f"del {last.get('data')}")
 
-        # 2) Estrazioni
         fetched = fetch_all_draws()
 
         if fetched:
@@ -450,14 +353,6 @@ def main():
         else:
             diag("[!!!] NESSUNA ESTRAZIONE RECUPERATA.")
             exit_code = 1
-
-        # 3) Jackpot (indipendente, non blocca)
-        diag("")
-        jackpot = fetch_jackpot()
-        if jackpot:
-            save_jackpot(jackpot)
-        else:
-            diag("[!] Jackpot non aggiornato.")
 
     except Exception as e:
         diag(f"[!!!] ECCEZIONE: {type(e).__name__}: {e}")
