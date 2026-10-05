@@ -2,21 +2,15 @@
 fetch_latest_draw.py
 VENUS VORTEX — Recupero estrazioni SuperEnalotto.
 
-RISCRITTURA (2026-10-05):
-- Rimossi proxy morti (jina.ai 403, allorigins 522, corsproxy 403).
-- Uso esclusivo di lottologia.com (unica fonte stabile).
-- Parser specifico per formato "NNN/YY - weekday DD mese YYYY".
-- Retry con backoff esponenziale (3 tentativi).
-- Fail esplicito (exit 1) se nessun draw recuperato.
-- Rimosso completamente il fetch del jackpot (dato gestito via override manuale).
-
-FIX (2026-10-05 v2):
-- Aggiunta normalizzazione Unicode NFC prima del parsing.
-  Il carattere "ì" di "venerdì" può essere composto (U+00EC) o decomposto
-  (i + U+0300). Il regex matchava solo la forma composta, causando
-  "marker trovati: 0" con testo che invece li conteneva visivamente.
-- Semplificato pattern del giorno della settimana: \w+ invece di
-  elenco esplicito (più robusto a variazioni di encoding).
+RISCRITTURA (2026-10-05 v3):
+- Parser riscritto per il formato REALE di lottologia.com:
+    "3 Ott 2026 Numeri 05 12 18 25 28 42 jolly 66 superstar 76"
+  (il formato "158/26 - venerdì 2 ottobre" non esiste!)
+- Assegnazione automatica del concorso:
+  confronto con la history esistente; i concorsi nuovi ricevono
+  max_concorso + 1, +2, ... in ordine cronologico.
+- Normalizzazione Unicode NFC.
+- Fetch da lottologia.com (unico che risponde 200).
 
 Uso:
     python fetch_latest_draw.py
@@ -50,23 +44,17 @@ HEADERS = {
     "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
 }
 
-# ==========================================
-# FONTE
-# ==========================================
 DRAWS_URL = "https://www.lottologia.com/superenalotto/estrazioni/"
 
-# Retry policy
 MAX_RETRIES = 3
-RETRY_DELAYS = [5, 15, 45]  # secondi
+RETRY_DELAYS = [5, 15, 45]
 
-# Mesi italiani
-MESI_IT = {
-    "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4,
-    "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
-    "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12,
+# Mesi abbreviati italiani (formato lottologia)
+MESI_ABBR = {
+    "gen": 1, "feb": 2, "mar": 3, "apr": 4, "mag": 5, "giu": 6,
+    "lug": 7, "ago": 8, "set": 9, "ott": 10, "nov": 11, "dic": 12,
 }
 
-# Buffer diagnostico
 DIAG = []
 
 
@@ -104,47 +92,7 @@ def to_int(value, default=None):
         return default
 
 
-def normalize_date(raw):
-    if not raw:
-        return None
-    raw = raw.strip()
-    m = re.match(r"^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$", raw)
-    if m:
-        d, mo, y = m.groups()
-        return f"{int(d):02d}/{int(mo):02d}/{y}"
-    m = re.match(r"^(\d{4})-(\d{1,2})-(\d{1,2})$", raw)
-    if m:
-        y, mo, d = m.groups()
-        return f"{int(d):02d}/{int(mo):02d}/{y}"
-    return None
-
-
-def parse_italian_date(day, month_name, year):
-    """
-    Converte (2, 'ottobre', '2026') -> '02/10/2026'.
-    Ritorna None se mese non riconosciuto.
-    """
-    month_key = month_name.strip().lower()
-    if month_key not in MESI_IT:
-        return None
-    try:
-        d = int(day)
-        y = int(year)
-    except (ValueError, TypeError):
-        return None
-    if not (1 <= d <= 31 and 2000 <= y <= 2100):
-        return None
-    return f"{d:02d}/{MESI_IT[month_key]:02d}/{y}"
-
-
-# ==========================================
-# HTTP CON RETRY
-# ==========================================
 def fetch_with_retry(url, timeout=30):
-    """
-    Fetch con retry esponenziale.
-    Ritorna testo HTML o None se tutti i tentativi falliscono.
-    """
     diag(f"[*] Fetch: {url}")
 
     for attempt in range(1, MAX_RETRIES + 1):
@@ -176,101 +124,74 @@ def fetch_with_retry(url, timeout=30):
 
 
 # ==========================================
-# PARSING — Estrazioni
+# PARSING — Estrazioni (formato lottologia)
 # ==========================================
 def parse_draws_from_text(text):
     """
-    Parser per lottologia.com.
+    Parser per il formato REALE di lottologia.com:
 
-    Formato osservato:
-        "158/26 - venerdì 2 ottobre 2026"
-        seguito dai numeri (6 + jolly + superstar)
+        "3 Ott 2026 Numeri 05 12 18 25 28 42 jolly 66 superstar 76"
 
-    FIX (2026-10-05 v2):
-    - Normalizzazione Unicode NFC applicata PRIMA del regex.
-      Il carattere "ì" può essere composto o decomposto: normalizzare
-      evita falsi negativi (marker visibili ma non matchati).
-    - Pattern del giorno semplificato a \\w+ (meno fragile).
-
-    Strategia:
-    1. Trova tutti i marker "NNN/YY - weekday DD mese YYYY"
-    2. Per ciascuno, prende i ~600 char successivi
-    3. Estrae i primi 8 numeri 1-90 distinti (6 + jolly + superstar)
+    Nessun numero di concorso accanto all'estrazione. Il concorso verrà
+    assegnato in fase di merge, basandosi sulla history esistente.
     """
-    results = []
-
-    # FIX: normalizza Unicode (NFC = forma composta)
+    # Normalizzazione Unicode (evita problemi con accenti composti/decomposti)
     text = unicodedata.normalize("NFC", text)
     text_norm = re.sub(r"\s+", " ", text)
 
-    # Pattern marker: "158/26 - venerdì 2 ottobre 2026"
-    # \w+ matcha qualsiasi parola (anche con accenti normalizzati)
-    marker_pattern = re.compile(
-        r"(\d{2,4})/(\d{2})\s*-\s*"
-        r"\w+\s+"
-        r"(\d{1,2})\s+"
-        r"(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+"
-        r"(\d{4})",
+    # Pattern per il formato reale
+    pattern = re.compile(
+        r"(\d{1,2})\s+"                                             # giorno
+        r"(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)\s+"     # mese
+        r"(\d{4})\s+"                                               # anno
+        r"[Nn]umeri\s+"                                             # keyword
+        r"((?:\d{1,2}\s+){5}\d{1,2})\s+"                            # 6 numeri
+        r"jolly\s+(\d{1,2})\s+"                                     # jolly
+        r"superstar\s+(\d{1,2})",                                   # superstar
         re.IGNORECASE
     )
 
-    matches = list(marker_pattern.finditer(text_norm))
+    matches = list(pattern.finditer(text_norm))
     diag(f"    [parse] marker trovati: {len(matches)}")
 
-    for i, m in enumerate(matches):
-        concorso_raw = m.group(1)
-        day = m.group(3)
-        month_name = m.group(4)
-        year = m.group(5)
+    results = []
+    for m in matches:
+        day = int(m.group(1))
+        month_abbr = m.group(2).lower()
+        year = int(m.group(3))
+        nums_str = m.group(4)
+        jolly = int(m.group(5))
+        superstar = int(m.group(6))
 
-        concorso = to_int(concorso_raw)
-        if concorso is None:
+        month = MESI_ABBR.get(month_abbr)
+        if not month:
             continue
 
-        data_str = parse_italian_date(day, month_name, year)
-        if data_str is None:
-            diag(f"    [parse] data non parsabile: {day} {month_name} {year}")
+        nums = [int(n) for n in re.findall(r"\d{1,2}", nums_str)]
+        if len(nums) != 6:
             continue
 
-        start = m.end()
-        if i + 1 < len(matches):
-            end = matches[i + 1].start()
-        else:
-            end = min(start + 600, len(text_norm))
-
-        chunk = text_norm[start:end]
-
-        raw_nums = re.findall(r"\b(\d{1,2})\b", chunk)
-        nums = []
-        seen = set()
-        for ns in raw_nums:
-            n = to_int(ns)
-            if n is None:
-                continue
-            if not (1 <= n <= 90):
-                continue
-            if n in seen:
-                continue
-            seen.add(n)
-            nums.append(n)
-            if len(nums) == 8:
-                break
-
-        if len(nums) < 8:
-            diag(f"    [parse] concorso {concorso} ({data_str}): "
-                 f"solo {len(nums)} numeri trovati, scarto")
+        # Validazione: numeri distinti 1-90
+        if len(set(nums)) != 6 or not all(1 <= n <= 90 for n in nums):
             continue
+
+        data_str = f"{day:02d}/{month:02d}/{year}"
 
         results.append({
-            "concorso": concorso,
             "data": data_str,
-            "combinazione": nums[:6],
-            "jolly": nums[6],
-            "superstar": nums[7],
-            "sestina": nums[:6],
+            "combinazione": nums,
+            "jolly": jolly,
+            "superstar": superstar,
+            "sestina": nums,
+            "concorso": None,  # Assegnato dopo
         })
-        diag(f"    [parse] ✓ concorso {concorso} ({data_str}): "
-             f"{nums[:6]} | J {nums[6]} | SS {nums[7]}")
+
+    # Ordina per data crescente (le estrazioni del sito sono decrescenti)
+    results.sort(key=lambda x: (
+        int(x["data"][-4:]),  # anno
+        int(x["data"][3:5]),  # mese
+        int(x["data"][:2]),   # giorno
+    ))
 
     return results
 
@@ -286,52 +207,82 @@ def fetch_all_draws():
     text = soup.get_text(" ", strip=True)
     diag(f"    [html] testo estratto: {len(text)} char")
 
-    # FIX: mostra un sample più ampio (3000 char) per diagnostica
-    sample = text[:3000].replace("\n", " ")
-    diag(f"    [html] sample (3000 char): {sample}")
-
     draws = parse_draws_from_text(text)
     diag(f"    [+] {len(draws)} estrazioni estratte")
 
-    if not draws:
-        return []
+    if draws:
+        # Log delle prime 3 e ultime 3
+        for d in draws[-3:]:
+            diag(f"    [parse] recente: {d['data']} -> {d['combinazione']} "
+                 f"J {d['jolly']} SS {d['superstar']}")
 
-    seen = set()
-    clean = []
-    for d in sorted(draws, key=lambda x: x["concorso"]):
-        if d["concorso"] in seen:
-            continue
-        seen.add(d["concorso"])
-        clean.append(d)
-
-    return clean
+    return draws
 
 
 # ==========================================
-# MERGE
+# MERGE + ASSEGNAZIONE CONCORSI
 # ==========================================
 def merge_history(existing, fetched):
-    existing_ids = {item.get("concorso") for item in existing
-                    if isinstance(item.get("concorso"), int)}
+    """
+    Aggiunge estrazioni nuove. Assegna i concorsi mancanti
+    in base alla history esistente.
 
-    new_items = [f for f in fetched
-                 if isinstance(f.get("concorso"), int)
-                 and f["concorso"] not in existing_ids]
+    Logica concorsi:
+    1. Costruisci mappa data → concorso dalla history esistente
+    2. Per ogni nuova estrazione (data non in history), assegna
+       max_concorso + 1 (per il suo anno), in ordine cronologico
+    3. Se la nuova estrazione è dello stesso anno di altre,
+       il numero cresce progressivamente
+    """
+    # Mappa date esistenti
+    date_to_concorso = {}
+    for d in existing:
+        data = d.get("data", "")
+        if data and isinstance(d.get("concorso"), int):
+            date_to_concorso[data] = d["concorso"]
+
+    # Concorso massimo per ogni anno
+    max_concorso_by_year = {}
+    for d in existing:
+        data = d.get("data", "")
+        c = d.get("concorso")
+        if len(data) >= 4 and isinstance(c, int):
+            year = data[-4:]
+            max_concorso_by_year[year] = max(
+                max_concorso_by_year.get(year, 0), c
+            )
+
+    # Filtra: tieni solo estrazioni con data NON già presente
+    new_items = []
+    for item in fetched:
+        data = item.get("data", "")
+        if not data:
+            continue
+        if data in date_to_concorso:
+            continue
+        new_items.append(item)
 
     if not new_items:
         return existing, 0
 
-    new_items.sort(key=lambda x: x["concorso"])
+    # Ordina i nuovi per data crescente (già fatto in parse, ma per sicurezza)
+    new_items.sort(key=lambda x: (
+        int(x["data"][-4:]),
+        int(x["data"][3:5]),
+        int(x["data"][:2]),
+    ))
 
+    # Assegna concorsi in sequenza
     for item in new_items:
-        item["data"] = normalize_date(item.get("data")) or item.get("data", "N/A")
-        item["combinazione"] = [int(n) for n in item["combinazione"]]
-        item["sestina"] = item["combinazione"]
-        item["jolly"] = to_int(item.get("jolly"))
-        item["superstar"] = to_int(item.get("superstar"))
+        year = item["data"][-4:]
+        next_c = max_concorso_by_year.get(year, 0) + 1
+        item["concorso"] = next_c
+        max_concorso_by_year[year] = next_c
 
+    # Merge
     merged = existing + new_items
 
+    # Sort cronologico
     def sort_key(x):
         try:
             dt = datetime.strptime(x.get("data", ""), "%d/%m/%Y")
@@ -371,6 +322,10 @@ def main():
                 save_history(merged)
                 diag(f"[+] Aggiunte {added} nuove estrazioni. "
                      f"Totale: {len(merged)}")
+                # Log delle aggiunte
+                for item in merged[-added:]:
+                    diag(f"    + concorso {item['concorso']} ({item['data']}): "
+                         f"{item['combinazione']}")
             else:
                 diag("[*] Nessuna nuova estrazione. Storico invariato.")
         else:
