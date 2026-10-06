@@ -5,12 +5,26 @@
       "concorso": 149,
       "data": "17/09/2026",
       "giocata_il": "17/09/2026",
-      "costo_eur": 2.00,
+      "costo_eur": 2.0,
       "sestine": [
-        [5, 25, 30, 31, 46, 57],
-        [5, 35, 46, 48, 65, 80]
+        [
+          5,
+          25,
+          30,
+          31,
+          46,
+          57
+        ],
+        [
+          5,
+          35,
+          46,
+          48,
+          65,
+          80
+        ]
       ],
-      "premio_reale": 5.00,
+      "premio_reale": 5.0,
       "esito": "2 punti (35, 46)",
       "esito_verificato": true,
       "esito_verificato_il": "2026-09-18T22:00:00",
@@ -20,9 +34,16 @@
       "concorso": 150,
       "data": "18/09/2026",
       "giocata_il": "18/09/2026",
-      "costo_eur": 1.00,
+      "costo_eur": 1.0,
       "sestine": [
-        [5, 30, 34, 48, 65, 87]
+        [
+          5,
+          30,
+          34,
+          48,
+          65,
+          87
+        ]
       ],
       "premio_reale": 0.0,
       "esito": "0 punti",
@@ -34,9 +55,16 @@
       "concorso": 151,
       "data": "19/09/2026",
       "giocata_il": "19/09/2026",
-      "costo_eur": 1.00,
+      "costo_eur": 1.0,
       "sestine": [
-        [5, 30, 31, 34, 65, 80]
+        [
+          5,
+          30,
+          31,
+          34,
+          65,
+          80
+        ]
       ],
       "premio_reale": 0.0,
       "esito": "0 punti",
@@ -48,9 +76,16 @@
       "concorso": 154,
       "data": "24/09/2026",
       "giocata_il": "24/09/2026",
-      "costo_eur": 1.00,
+      "costo_eur": 1.0,
       "sestine": [
-        [4, 5, 22, 49, 79, 87]
+        [
+          4,
+          5,
+          22,
+          49,
+          79,
+          87
+        ]
       ],
       "premio_reale": 0.0,
       "esito": "0 punti",
@@ -62,9 +97,16 @@
       "concorso": 155,
       "data": "26/09/2026",
       "giocata_il": "26/09/2026",
-      "costo_eur": 1.00,
+      "costo_eur": 1.0,
       "sestine": [
-        [5, 11, 15, 34, 87, 88]
+        [
+          5,
+          11,
+          15,
+          34,
+          87,
+          88
+        ]
       ],
       "premio_reale": 0.0,
       "esito": "0 punti",
@@ -76,15 +118,55 @@
       "concorso": 156,
       "data": "29/09/2026",
       "giocata_il": "28/09/2026",
-      "costo_eur": 1.00,
+      "costo_eur": 1.0,
       "sestine": [
-        [5, 11, 15, 34, 87, 88]
+        [
+          5,
+          11,
+          15,
+          34,
+          87,
+          88
+        ]
       ],
       "premio_reale": 0.0,
       "esito": "0 punti",
       "esito_verificato": true,
       "esito_verificato_il": "2026-09-30T22:00:00",
       "note": "Concorso 156: 1 sestina"
+    },
+    {
+      "concorso": 161,
+      "data": "06/10/2026",
+      "giocata_il": "06/10/2026",
+      "costo_eur": 3.0,
+      "sestine": [
+        [
+          22,
+          24,
+          25,
+          34,
+          38,
+          48
+        ],
+        [
+          12,
+          31,
+          54,
+          55,
+          56,
+          77
+        ],
+        [
+          7,
+          33,
+          53,
+          57,
+          60,
+          90
+        ]
+      ],
+      "note": "Concorso 161: 3 sestine"
     }
   ],
   "config": {
