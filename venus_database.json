@@ -1,27 +1,27 @@
 {
-  "updated_at": "2026-10-24T09:00:47",
+  "updated_at": "2026-10-24T23:52:29",
   "next_contest": {
-    "number": 171,
-    "date": "24/10/2026",
-    "jackpot": 45000000
+    "number": 172,
+    "date": "27/10/2026",
+    "jackpot": 45800000
   },
   "last_draw": {
-    "contest_number": 170,
-    "date": "23/10/2026",
+    "contest_number": 171,
+    "date": "24/10/2026",
     "numbers": [
-      29,
-      34,
-      41,
-      66,
-      81,
-      83
+      11,
+      17,
+      32,
+      50,
+      73,
+      80
     ],
-    "jolly": 37,
-    "superstar": 21
+    "jolly": 62,
+    "superstar": 24
   },
   "risk": {
     "status": "🟠 PRUDENZA STATISTICA",
-    "ev": -0.5777,
+    "ev": -0.5764,
     "level": "PRUDENTE",
     "advice": "EV molto negativo. Salta e risparmia."
   },
@@ -30,7 +30,7 @@
     "emoji": "🚫",
     "n_sestinas": 0,
     "cost_eur": 0.0,
-    "ev": -0.5777,
+    "ev": -0.5764,
     "message": "EV molto negativo. Salta e risparmia."
   },
   "dodeca_pool": [
@@ -39,23 +39,23 @@
     18,
     26,
     28,
+    32,
     37,
     41,
     52,
     54,
     55,
-    76,
     77
   ],
   "titan_predictions": [],
   "vortex": {
     "ev": {
-      "jackpot": 45000000,
+      "jackpot": 45800000,
       "players_estimated": 50000000,
       "expected_winners": 1.0,
-      "effective_jackpot": 45000000.0,
-      "ev_6_solo": 0.0723,
-      "ev_total": -0.5777,
+      "effective_jackpot": 45800000.0,
+      "ev_6_solo": 0.0736,
+      "ev_total": -0.5764,
       "profitable": false,
       "recommendation": "SALTA"
     },

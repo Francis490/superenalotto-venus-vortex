@@ -1,6 +1,6 @@
-# Aggiorna Venus Vortex - Concorso N. 171
+# Aggiorna Venus Vortex - Concorso N. 172
 
-> Ultima generazione automatica: **2026-10-24 09:00:53**
+> Ultima generazione automatica: **2026-10-24 23:52:39**
 
 ---
 
@@ -8,18 +8,18 @@
 
 | Campo | Valore |
 |---|---|
-| **Ultima estrazione** | Concorso N. 170 del 23/10/2026 |
-| **Combinazione** | `[29, 34, 41, 66, 81, 83]` |
-| **Jolly** | 37 |
-| **SuperStar** | 21 |
-| **Prossimo concorso** | N. 171 del 24/10/2026 |
-| **Jackpot attuale** | EUR 45,000,000 |
+| **Ultima estrazione** | Concorso N. 171 del 24/10/2026 |
+| **Combinazione** | `[11, 17, 32, 50, 73, 80]` |
+| **Jolly** | 62 |
+| **SuperStar** | 24 |
+| **Prossimo concorso** | N. 172 del 27/10/2026 |
+| **Jackpot attuale** | EUR 45,800,000 |
 
 ---
 
 ## Procedura aggiornamento (2 minuti)
 
-### STEP 1 - Trova i numeri veri del concorso 171
+### STEP 1 - Trova i numeri veri del concorso 172
 
 Dopo l'estrazione, cerca sul sito ufficiale SuperEnalotto:
 - 6 numeri vincenti
@@ -38,15 +38,15 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 
 ```json
 {
-  "jackpot": 45000000,
+  "jackpot": 45800000,
   "last_draw": {
-    "concorso": 171,
-    "data": "24/10/2026",
+    "concorso": 172,
+    "data": "27/10/2026",
     "combinazione": [0, 0, 0, 0, 0, 0],
     "jolly": 0,
     "superstar": 0
   },
-  "note": "Compila con i numeri reali del concorso 171"
+  "note": "Compila con i numeri reali del concorso 172"
 }
 ```
 
@@ -54,7 +54,7 @@ https://github.com/Francis490/superenalotto-venus-vortex/edit/main/venus_manual_
 - `[0, 0, 0, 0, 0, 0]` con i 6 numeri veri (ordine crescente)
 - `"jolly": 0` con il Jolly vero
 - `"superstar": 0` con il SuperStar vero
-- `"jackpot": 45000000` con il nuovo jackpot (o lascia invariato)
+- `"jackpot": 45800000` con il nuovo jackpot (o lascia invariato)
 
 ### STEP 4 - Commit changes
 
